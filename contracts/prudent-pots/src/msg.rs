@@ -1,4 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cosmwasm_std::Uint128;
 
 use crate::state::{GameConfig, GameState};
 
@@ -18,7 +19,7 @@ pub enum ExecuteMsg {
     ReallocateTokens {
         from_pot_id: u8,
         to_pot_id: u8,
-        amount: u64,
+        amount: Uint128,
     },
     GameEnd {},
 }

@@ -2,7 +2,7 @@ use cosmwasm_std::{attr, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Re
 
 use crate::{
     helpers::is_contract_admin,
-    state::{GameConfig, TokenAllocation, GAME_CONFIG, PLAYER_ALLOCATIONS, POT_STATES},
+    state::{GameConfig, PotState, TokenAllocation, GAME_CONFIG, PLAYER_ALLOCATIONS, POT_STATES},
     ContractError,
 };
 
@@ -111,14 +111,74 @@ pub fn reallocate_tokens(
     info: MessageInfo,
     from_pot_id: u8,
     to_pot_id: u8,
-    amount: u64,
+    amount: Uint128,
 ) -> Result<Response, ContractError> {
-    // Implement token reallocation logic here
-    // This includes updating the player's allocations for both pots
+    // Load the player's allocations
+    let mut player_allocations = PLAYER_ALLOCATIONS.load(deps.storage, info.sender.clone())?;
+
+    // Check if the player has enough tokens in the from_pot to reallocate
+    let from_allocation = player_allocations
+        .allocations
+        .iter_mut()
+        .find(|a| a.pot_id == from_pot_id);
+    match from_allocation {
+        Some(allocation) if allocation.amount >= amount => {
+            // Deduct the amount from the from_pot
+            allocation.amount = allocation.amount.checked_sub(amount).unwrap();
+        }
+        _ => return Err(ContractError::InsufficientFunds {}),
+    }
+
+    // Add the amount to the to_pot
+    let to_allocation = player_allocations
+        .allocations
+        .iter_mut()
+        .find(|a| a.pot_id == to_pot_id);
+    match to_allocation {
+        Some(allocation) => {
+            allocation.amount = allocation.amount.checked_add(amount).unwrap();
+        }
+        None => {
+            player_allocations.allocations.push(TokenAllocation {
+                pot_id: to_pot_id,
+                amount,
+            });
+        }
+    }
+
+    // Save the updated allocations
+    PLAYER_ALLOCATIONS.save(deps.storage, info.sender.clone(), &player_allocations)?;
+
+    // Update the pot's state for the pot from which the tokens are being reallocated
+    POT_STATES.update(
+        deps.storage,
+        from_pot_id,
+        |pot_state| -> Result<_, ContractError> {
+            let state = pot_state.unwrap();
+            let new_total_tokens = state.total_tokens.checked_sub(amount).unwrap();
+            Ok(PotState {
+                total_tokens: new_total_tokens,
+            })
+        },
+    )?;
+
+    // Update the pot's state for the pot to which the tokens are being reallocated
+    POT_STATES.update(
+        deps.storage,
+        to_pot_id,
+        |pot_state| -> Result<_, ContractError> {
+            let state = pot_state.unwrap();
+            let new_total_tokens = state.total_tokens.checked_add(amount).unwrap();
+            Ok(PotState {
+                total_tokens: new_total_tokens,
+            })
+        },
+    )?;
+
     Ok(Response::new().add_attributes(vec![
         attr("method", "execute"),
         attr("action", "reallocate_tokens"),
-        attr("player", info.sender),
+        attr("player", info.sender.to_string()),
         attr("from_pot_id", from_pot_id.to_string()),
         attr("to_pot_id", to_pot_id.to_string()),
         attr("amount", amount.to_string()),
