@@ -63,4 +63,3 @@ The game involves elements of game theory and statistical analysis, as players m
 - **Predictive Analysis**: Players might try to predict others' actions, especially near the game's end, to place their tokens in the winning pot.
 - **Game Theory**: The game involves elements of game theory, where players must consider the best strategies not just based on the game's rules but also on other players' potential actions.
 - **Statistical Analysis**: Over multiple games, patterns might emerge in player behaviors or winning pots, which can be analyzed statistically to inform future strategies.
-
