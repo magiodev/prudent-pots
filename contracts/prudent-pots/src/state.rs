@@ -1,4 +1,4 @@
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -9,13 +9,13 @@ pub struct GameConfig {
     pub fee_reallocation: u64,
     pub fee_allocation_address: Addr,
     pub game_duration: u64,
-    pub initial_pot_tokens: u64,
+    pub game_denom: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TokenAllocation {
     pub pot_id: u8,
-    pub amount: u64,
+    pub amount: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -25,7 +25,7 @@ pub struct PlayerAllocations {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PotState {
-    pub total_tokens: u64,
+    pub total_tokens: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

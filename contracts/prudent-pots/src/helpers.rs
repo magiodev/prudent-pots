@@ -1,15 +1,6 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cosmwasm_std::{Addr, Env, QuerierWrapper};
 
-use cosmwasm_std::{
-    to_json_binary, Addr, CosmosMsg, CustomQuery, Env, Querier, QuerierWrapper, StdResult, WasmMsg,
-    WasmQuery,
-};
-
-use crate::{
-    msg::{ExecuteMsg, QueryMsg},
-    ContractError,
-};
+use crate::ContractError;
 
 pub fn is_contract_admin(
     querier: &QuerierWrapper,

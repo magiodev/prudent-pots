@@ -1,15 +1,10 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
 
 use crate::state::{GameConfig, GameState};
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub fee_allocation: u64,
-    pub fee_reallocation: u64,
-    pub fee_allocation_address: Addr,
-    pub game_duration: u64,
-    pub initial_pot_tokens: u64,
+    pub config: GameConfig,
 }
 
 #[cw_serde]
@@ -19,7 +14,6 @@ pub enum ExecuteMsg {
     },
     AllocateTokens {
         pot_id: u8,
-        amount: u64,
     },
     ReallocateTokens {
         from_pot_id: u8,

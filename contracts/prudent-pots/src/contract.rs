@@ -5,12 +5,9 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryGameStateResponse, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{query_game_config, query_game_state};
-use crate::state::{
-    GameConfig, GameState, PlayerAllocations, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS,
-    POT_STATES,
-};
+use crate::state::GAME_CONFIG;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:prudent-pot";
@@ -25,22 +22,14 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let game_config = GameConfig {
-        fee_allocation: msg.fee_allocation,
-        fee_reallocation: msg.fee_reallocation,
-        fee_allocation_address: msg.fee_allocation_address,
-        game_duration: msg.game_duration,
-        initial_pot_tokens: msg.initial_pot_tokens,
-    };
-
     // TODO: Validate game_config fields
 
-    GAME_CONFIG.save(deps.storage, &game_config)?;
+    GAME_CONFIG.save(deps.storage, &msg.config)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
-        .add_attribute("game_duration", msg.game_duration.to_string())
-        .add_attribute("initial_pot_tokens", msg.initial_pot_tokens.to_string()))
+        .add_attribute("action", "instantiate")
+        .add_attribute("config", format!("{:?}", msg.config)))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -52,9 +41,7 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, config),
-        ExecuteMsg::AllocateTokens { pot_id, amount } => {
-            allocate_tokens(deps, info, pot_id, amount)
-        }
+        ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, info, pot_id),
         ExecuteMsg::ReallocateTokens {
             from_pot_id,
             to_pot_id,
