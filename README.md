@@ -17,8 +17,8 @@ Prudent Pot is a strategic, interactive game where players allocate tokens to va
 #### Token Allocation and Reallocation
 
 - Players can allocate tokens to any pot.
-- Each allocation is subject to a 5% fee, deducted from the tokens being placed.
-- Players can reallocate tokens to a different pot, incurring a 10% reallocation fee.
+- An allocation fee of 2% is deducted from the tokens being placed, supporting operational costs and game development.
+- Players can reallocate tokens to a different pot, incurring a 5% reallocation fee that contributes to the next game's pool.
 
 #### Pot Rules
 
@@ -40,14 +40,14 @@ Prudent Pot is a strategic, interactive game where players allocate tokens to va
 - When a player allocates `x` tokens to pot `i`, the new total is `P_i = P_i + x * (1 - f_a/100)`, where `f_a` is the allocation fee percentage.
 - If `y` tokens are reallocated from pot `i` to pot `j`, then `P_i = P_i - y` and `P_j = P_j + y * (1 - f_r/100)`, where `f_r` is the reallocation fee percentage.
 
+#### Redistribution of Losing Pots Tokens
+
+- 50% of tokens in losing pots are rolled over to the next game's pool.
+- The remaining 50% are distributed to the winning pots, where players receive a share based on their contribution.
+
 #### Distribution at Game End
 
-- The winning share for a player in pot `k` is `a/T_k * ΣP_i`, where `a` is the player's contribution to pot `k`, `T_k` is the total tokens in pot `k`, and `ΣP_i` is the sum of tokens in all pots.
-
-#### Fees
-
-- **Allocation Fee:** `x(1 - f_a/100)` tokens go to the pot, and `x(f_a/100)` are deducted as fees.
-- **Reallocation Fee:** `y(1 - f_r/100)` tokens move to the new pot, and `y(f_r/100)` are deducted.
+- Players in winning pots receive a proportional share of the total tokens, including redistributed tokens from losing pots.
 
 ### Strategic Considerations
 
