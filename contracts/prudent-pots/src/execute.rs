@@ -162,6 +162,17 @@ pub fn reallocate_tokens(
     to_pot_id: u8,
     amount: Uint128,
 ) -> Result<Response, ContractError> {
+    // Ensure the reallocation amount is within the set minimum and maximum bid limits
+    let min_bid = calculate_min_bid(&deps)?;
+    let max_bid = calculate_max_bid(&deps)?;
+
+    if amount < min_bid || amount > max_bid {
+        return Err(ContractError::BidOutOfRange {
+            min: min_bid,
+            max: max_bid,
+        });
+    }
+
     // Load the player's allocations
     let mut player_allocations = PLAYER_ALLOCATIONS.load(deps.storage, info.sender.clone())?;
 
@@ -172,7 +183,6 @@ pub fn reallocate_tokens(
         .find(|a| a.pot_id == from_pot_id);
     match from_allocation {
         Some(allocation) if allocation.amount >= amount => {
-            // Deduct the amount from the from_pot
             allocation.amount = allocation.amount.checked_sub(amount).unwrap();
         }
         _ => return Err(ContractError::InsufficientFunds {}),
