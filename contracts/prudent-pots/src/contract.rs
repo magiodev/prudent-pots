@@ -62,6 +62,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::QueryGameConfig {} => to_json_binary(&query_game_config(deps)?),
         QueryMsg::QueryGameState {} => to_json_binary(&query_game_state(deps)?),
-        // QueryMsg::QueryBidBounds {} => to_json_binary(&query_bid_bounds(&mut deps)?),
+        // QueryMsg::QueryBidRange {} => to_json_binary(&query_bid_range(&mut deps)?),
     }
 }

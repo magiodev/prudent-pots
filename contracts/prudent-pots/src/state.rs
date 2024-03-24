@@ -10,6 +10,7 @@ pub struct GameConfig {
     pub fee_allocation_address: Addr,
     pub game_duration: u64,
     pub game_denom: String,
+    pub min_bid: Uint128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

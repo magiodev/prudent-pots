@@ -248,6 +248,7 @@ mod tests {
             fee_reallocation: 5,
             fee_allocation_address: Addr::unchecked("fee_address"),
             game_denom: "token".to_string(),
+            min_bid: Uint128::new(1000000u128),
         };
         GAME_CONFIG.save(deps.storage, &game_config).unwrap();
 

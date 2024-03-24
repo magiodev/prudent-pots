@@ -32,22 +32,33 @@ pub fn is_contract_admin(
 // Helper to calculate the minimum bid based on the game's current state
 pub fn calculate_min_bid(deps: &DepsMut) -> StdResult<Uint128> {
     let average_tokens = calculate_average_tokens(deps)?;
-    // Set minimum bid as the average tokens in pots
-    Ok(average_tokens)
+    let config = GAME_CONFIG.load(deps.storage)?;
+
+    // If the average is less than the configured min_bid, use min_bid, otherwise use the average
+    let min_bid = std::cmp::max(average_tokens, config.min_bid);
+    Ok(min_bid)
 }
 
 // Helper to calculate the maximum bid based on the game's current state
 pub fn calculate_max_bid(deps: &DepsMut) -> StdResult<Uint128> {
-    let average_tokens = calculate_average_tokens(deps)?;
-    // Set maximum bid as double the average tokens in pots
-    Ok(average_tokens.checked_mul(Uint128::from(2u128))?)
+    let min_bid = calculate_min_bid(deps)?;
+
+    // Set the maximum bid as double the minimum bid or average, whichever is higher
+    let max_bid = min_bid.checked_mul(Uint128::from(2u128))?;
+    Ok(max_bid)
 }
 
 // Helper to calculate the average tokens across all pots
 fn calculate_average_tokens(deps: &DepsMut) -> StdResult<Uint128> {
     let pots = get_all_token_counts(deps)?;
     let total: Uint128 = pots.iter().sum();
-    Ok(total.checked_div(Uint128::from(pots.len() as u128))?)
+
+    if pots.is_empty() {
+        // Avoid division by zero if there are no pots
+        Ok(Uint128::zero())
+    } else {
+        Ok(total.checked_div(Uint128::from(pots.len() as u128))?)
+    }
 }
 
 // Helper to determine if a pot is a winning pot based on its unique rules
@@ -813,7 +824,8 @@ mod tests {
             fee_allocation: 2,                                      // Assuming a 2% allocation fee
             fee_reallocation: 5, // Assuming a 5% reallocation fee
             fee_allocation_address: Addr::unchecked("fee_address"), // An example fee address
-            game_denom: "token".to_string(), // An example token denomination
+            game_denom: "token".to_string(),
+            min_bid: Uint128::new(1000000u128),
         };
         GAME_CONFIG.save(deps.as_mut().storage, &config).unwrap();
 
