@@ -1,12 +1,10 @@
-use cosmwasm_std::{
-    attr, Addr, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response, StdResult, Storage,
-    Uint128,
-};
+use cosmwasm_std::{attr, Addr, DepsMut, Env, MessageInfo, Response, Storage, Uint128};
 
 use crate::{
     helpers::{
-        calculate_total_losing_tokens, get_all_token_counts, is_contract_admin, is_winning_pot,
-        prepare_next_game, redistribute_losing_tokens,
+        calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens, create_fee_message,
+        is_contract_admin, is_winning_pot, prepare_next_game, redistribute_losing_tokens,
+        update_pot_state,
     },
     state::{
         GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
@@ -82,27 +80,6 @@ pub fn allocate_tokens(
     ]))
 }
 
-// Helper to calculate the minimum bid based on the game's current state
-pub fn calculate_min_bid(deps: &DepsMut) -> StdResult<Uint128> {
-    let average_tokens = calculate_average_tokens(deps)?;
-    // Set minimum bid as the average tokens in pots
-    Ok(average_tokens)
-}
-
-// Helper to calculate the maximum bid based on the game's current state
-pub fn calculate_max_bid(deps: &DepsMut) -> StdResult<Uint128> {
-    let average_tokens = calculate_average_tokens(deps)?;
-    // Set maximum bid as double the average tokens in pots
-    Ok(average_tokens.checked_mul(Uint128::from(2u128))?)
-}
-
-// Helper to calculate the average tokens across all pots
-fn calculate_average_tokens(deps: &DepsMut) -> StdResult<Uint128> {
-    let pots = get_all_token_counts(deps)?;
-    let total: Uint128 = pots.iter().sum();
-    Ok(total.checked_div(Uint128::from(pots.len() as u128))?)
-}
-
 // Helper to update the player's allocation
 fn update_player_allocation(
     storage: &mut dyn Storage,
@@ -124,35 +101,6 @@ fn update_player_allocation(
         },
     )?;
     Ok(())
-}
-
-// Helper to update the pot's state
-fn update_pot_state(
-    storage: &mut dyn Storage,
-    pot_id: u8,
-    amount: Uint128,
-) -> Result<(), ContractError> {
-    POT_STATES.update(storage, pot_id, |pot_state| -> Result<_, ContractError> {
-        let mut state = pot_state.unwrap();
-        state = state.checked_add(amount).unwrap();
-        Ok(state)
-    })?;
-    Ok(())
-}
-
-// Helper to create a bank message for the fee transaction
-fn create_fee_message(config: &GameConfig, fee: Uint128) -> StdResult<Vec<CosmosMsg>> {
-    if fee.is_zero() {
-        Ok(vec![])
-    } else {
-        Ok(vec![CosmosMsg::Bank(BankMsg::Send {
-            to_address: config.fee_allocation_address.to_string(),
-            amount: vec![Coin {
-                denom: config.game_denom.clone(),
-                amount: fee,
-            }],
-        })])
-    }
 }
 
 pub fn reallocate_tokens(
@@ -283,4 +231,73 @@ pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> 
         attr("winning_pots", format!("{:?}", winning_pots)),
         attr("total_losing_tokens", total_losing_tokens),
     ]))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::{mock_dependencies_with_balance, mock_env};
+    use cosmwasm_std::{coins, Addr, Env, Uint128};
+
+    use crate::state::GameState;
+
+    fn setup_game_end(deps: &mut DepsMut, env: &mut Env) {
+        let game_config = GameConfig {
+            game_duration: 3600, // 1 hour
+            fee_allocation: 2,
+            fee_reallocation: 5,
+            fee_allocation_address: Addr::unchecked("fee_address"),
+            game_denom: "token".to_string(),
+        };
+        GAME_CONFIG.save(deps.storage, &game_config).unwrap();
+
+        let game_state = GameState {
+            start_time: env.block.time.seconds() - 3600, // Started 1 hour ago
+            end_time: env.block.time.seconds(),          // Ends now
+        };
+        GAME_STATE.save(deps.storage, &game_state).unwrap();
+
+        // Initialize the REALLOCATION_FEE_POOL with zero
+        REALLOCATION_FEE_POOL
+            .save(deps.storage, &Uint128::zero())
+            .unwrap();
+
+        // Set up pots with a simulated initial balance
+        for pot_id in 1..=5 {
+            POT_STATES
+                .save(deps.storage, pot_id, &Uint128::from(1000u128))
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn test_game_end_with_no_player_allocations() {
+        let mut deps = mock_dependencies_with_balance(&coins(5000, "token"));
+        let mut env = mock_env();
+        setup_game_end(&mut deps.as_mut(), &mut env);
+
+        game_end(deps.as_mut(), env.clone()).unwrap();
+
+        let new_game_state = GAME_STATE.load(deps.as_ref().storage).unwrap();
+        assert!(
+            new_game_state.start_time > env.block.time.seconds(),
+            "New game should start in the future"
+        );
+
+        for pot_id in 1..=5 {
+            let pot_state = POT_STATES.load(deps.as_ref().storage, pot_id).unwrap();
+            assert!(
+                pot_state > Uint128::zero(),
+                "Pot {} should have initial tokens for the next game",
+                pot_id
+            );
+        }
+
+        let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.as_ref().storage).unwrap();
+        assert_eq!(
+            reallocation_fee_pool,
+            Uint128::zero(),
+            "Reallocation fee pool should be reset to zero for the next game"
+        );
+    }
 }

@@ -1,7 +1,7 @@
 use cosmwasm_std::{Deps, DepsMut, StdResult};
 
 use crate::{
-    execute::{calculate_max_bid, calculate_min_bid},
+    helpers::{calculate_max_bid, calculate_min_bid},
     msg::{QueryBidBoundsResponse, QueryGameConfigResponse, QueryGameStateResponse},
     state::{GAME_CONFIG, GAME_STATE},
 };
