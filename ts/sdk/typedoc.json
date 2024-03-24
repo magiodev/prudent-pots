@@ -1,0 +1,7 @@
+{
+  "out": "./docs",
+  "name": "prudent-pots",
+  "theme": "markdown",
+  "readme": "none",
+  "tsconfig": "./tsconfig.bundle.json"
+}
