@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct GameConfig {
     pub fee_allocation: u64,
     pub fee_reallocation: u64,
-    pub team_fee_address: Addr,
+    pub fee_allocation_address: Addr,
     pub game_duration: u64,
     pub initial_pot_tokens: u64,
 }

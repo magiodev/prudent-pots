@@ -1,12 +1,15 @@
-use cosmwasm_std::{attr, Addr, BankMsg, Coin, CosmosMsg, DepsMut, MessageInfo, Response};
+use cosmwasm_std::{attr, Addr, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response};
 
-use crate::{state::GameConfig, ContractError};
+use crate::{helpers::is_contract_admin, state::GameConfig, ContractError};
 
 pub fn update_config(
     deps: DepsMut,
+    env: Env,
     info: MessageInfo,
     config: GameConfig,
 ) -> Result<Response, ContractError> {
+    is_contract_admin(&deps.querier, &env, &info.sender)?;
+
     // Implement update config logic here
     Ok(Response::new().add_attributes(vec![
         attr("action", "update_config"),

@@ -23,14 +23,18 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
     let game_config = GameConfig {
         fee_allocation: msg.fee_allocation,
         fee_reallocation: msg.fee_reallocation,
-        team_fee_address: msg.team_fee_address,
+        fee_allocation_address: msg.fee_allocation_address,
         game_duration: msg.game_duration,
         initial_pot_tokens: msg.initial_pot_tokens,
     };
-    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    // TODO: Validate game_config fields
+
     GAME_CONFIG.save(deps.storage, &game_config)?;
 
     Ok(Response::new()
@@ -42,12 +46,12 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdateConfig { config } => update_config(deps, info, config),
+        ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, config),
         ExecuteMsg::AllocateTokens { pot_id, amount } => {
             allocate_tokens(deps, info, pot_id, amount)
         }
