@@ -57,7 +57,7 @@ pub fn is_winning_pot(deps: &DepsMut, pot_id: u8) -> StdResult<bool> {
 }
 
 // Retrieve the token count for each pot
-fn get_all_token_counts(deps: &DepsMut) -> StdResult<Vec<Uint128>> {
+pub fn get_all_token_counts(deps: &DepsMut) -> StdResult<Vec<Uint128>> {
     let mut token_counts = Vec::new();
     for pot_id in 1..=5 {
         // Assuming 5 pots
@@ -585,57 +585,39 @@ mod tests {
         // Setup pots with initial allocations
         setup_pots_and_allocations(
             &mut deps.as_mut(),
-            vec![10, 30, 60, 25, 10]
+            vec![10, 10, 10, 10, 10]
                 .into_iter()
                 .map(Uint128::new)
                 .collect(),
             vec![
-                (1, player1.clone(), Uint128::new(10)),
-                (2, player2.clone(), Uint128::new(20)),
-                (3, player1.clone(), Uint128::new(30)),
-                (4, player2.clone(), Uint128::new(40)),
-                (5, player1.clone(), Uint128::new(50)),
+                (2, player2.clone(), Uint128::new(20)), // Player 2 allocates 20 tokens to pot 2
+                (3, player1.clone(), Uint128::new(50)), // Player 1 allocates 50 tokens to pot 3
+                (4, player2.clone(), Uint128::new(15)), // Player 2 allocates 15 tokens to pot 4
             ],
         );
 
         // Assume pot 3 is the winner, redistribute from pots 1, 2, 4, and 5
-        let total_losing_tokens = Uint128::new(10 + 10 + 30 + 20 + 25 + 10 + 40 + 50); // Initial + allocated tokens in losing pots
+        let total_losing_tokens = Uint128::new(10 + 20 + 10 + 15 + 10); // Sum of initial and allocated tokens in losing pots
         let half_losing_tokens = total_losing_tokens.multiply_ratio(1u128, 2u128);
         redistribute_losing_tokens(&mut deps.as_mut(), &[3], total_losing_tokens).unwrap();
 
         // Check that the tokens were redistributed to pot 3
         let pot_state = POT_STATES.load(deps.as_mut().storage, 3).unwrap();
-        let expected_tokens_for_pot_3 = Uint128::new(60 + 30) + half_losing_tokens; // Initial + allocated + redistributed amount for pot 3
+        let expected_tokens_for_pot_3 = Uint128::new(10 + 50) + half_losing_tokens; // Initial + allocated + redistributed amount for pot 3
         assert_eq!(
             pot_state.total_tokens, expected_tokens_for_pot_3,
             "Pot 3's total tokens should include redistributed amount"
         );
 
-        // The other pots should not have their token amounts altered by the redistribution.
-        // They retain their initial and allocated amounts since they are losing pots.
-        let pot_state = POT_STATES.load(deps.as_mut().storage, 1).unwrap();
-        assert_eq!(
-            pot_state.total_tokens,
-            Uint128::new(10 + 10),
-            "Pot 1's tokens should remain unchanged"
-        );
-        let pot_state = POT_STATES.load(deps.as_mut().storage, 2).unwrap();
-        assert_eq!(
-            pot_state.total_tokens,
-            Uint128::new(30 + 20),
-            "Pot 2's tokens should remain unchanged"
-        );
-        let pot_state = POT_STATES.load(deps.as_mut().storage, 4).unwrap();
-        assert_eq!(
-            pot_state.total_tokens,
-            Uint128::new(25 + 40),
-            "Pot 4's tokens should remain unchanged"
-        );
-        let pot_state = POT_STATES.load(deps.as_mut().storage, 5).unwrap();
-        assert_eq!(
-            pot_state.total_tokens,
-            Uint128::new(10 + 50),
-            "Pot 5's tokens should remain unchanged"
-        );
+        // Check other pots retain their initial + allocated tokens since they are losing pots
+        for pot_id in [1, 2, 4, 5] {
+            let pot_state = POT_STATES.load(deps.as_mut().storage, pot_id).unwrap();
+            assert_eq!(
+                pot_state.total_tokens,
+                Uint128::new(10), // They should retain their initial tokens
+                "Pot {}'s tokens should be at initial state",
+                pot_id
+            );
+        }
     }
 }

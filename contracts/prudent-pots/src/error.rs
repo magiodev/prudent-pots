@@ -1,4 +1,4 @@
-use cosmwasm_std::StdError;
+use cosmwasm_std::{StdError, Uint128};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -21,8 +21,10 @@ pub enum ContractError {
     #[error("GameStillActive")]
     GameStillActive {},
 
-    #[error("Custom Error val: {val:?}")]
-    CustomError { val: String },
+    #[error("BidOutOfRange. Min: {min:?}, Max: {max:?}")]
+    BidOutOfRange { min: Uint128, max: Uint128 },
+    // #[error("Custom Error val: {val:?}")]
+    // CustomError { val: String },
     // Add any other custom errors you like here.
     // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
 }
