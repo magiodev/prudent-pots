@@ -8,7 +8,10 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::query::{query_game_config, query_game_state};
+use crate::query::{
+    query_bid_range, query_game_config, query_game_state, query_player_allocations,
+    query_pot_state, query_reallocation_fee_pool,
+};
 use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
@@ -62,6 +65,13 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::QueryGameConfig {} => to_json_binary(&query_game_config(deps)?),
         QueryMsg::QueryGameState {} => to_json_binary(&query_game_state(deps)?),
-        // QueryMsg::QueryBidRange {} => to_json_binary(&query_bid_range(&mut deps)?),
+        QueryMsg::QueryBidRange {} => to_json_binary(&query_bid_range(deps)?),
+        QueryMsg::QueryPotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
+        QueryMsg::QueryPlayerAllocations { address } => {
+            to_json_binary(&query_player_allocations(deps, address)?)
+        }
+        QueryMsg::QueryReallocationFeePool {} => {
+            to_json_binary(&query_reallocation_fee_pool(deps)?)
+        }
     }
 }

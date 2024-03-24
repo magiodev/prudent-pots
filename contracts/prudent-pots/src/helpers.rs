@@ -30,7 +30,7 @@ pub fn is_contract_admin(
 }
 
 // Helper to calculate the minimum bid based on the game's current state
-pub fn calculate_min_bid(deps: &DepsMut) -> StdResult<Uint128> {
+pub fn calculate_min_bid(deps: &Deps) -> StdResult<Uint128> {
     let average_tokens = calculate_average_tokens(deps)?;
     let config = GAME_CONFIG.load(deps.storage)?;
 
@@ -40,7 +40,7 @@ pub fn calculate_min_bid(deps: &DepsMut) -> StdResult<Uint128> {
 }
 
 // Helper to calculate the maximum bid based on the game's current state
-pub fn calculate_max_bid(deps: &DepsMut) -> StdResult<Uint128> {
+pub fn calculate_max_bid(deps: &Deps) -> StdResult<Uint128> {
     let min_bid = calculate_min_bid(deps)?;
 
     // Set the maximum bid as double the minimum bid or average, whichever is higher
@@ -49,7 +49,7 @@ pub fn calculate_max_bid(deps: &DepsMut) -> StdResult<Uint128> {
 }
 
 // Helper to calculate the average tokens across all pots
-fn calculate_average_tokens(deps: &DepsMut) -> StdResult<Uint128> {
+fn calculate_average_tokens(deps: &Deps) -> StdResult<Uint128> {
     let pots = get_all_token_counts(deps)?;
     let total: Uint128 = pots.iter().sum();
 
@@ -68,7 +68,7 @@ pub fn is_winning_pot(deps: &DepsMut, pot_id: u8) -> StdResult<bool> {
     match pot_id {
         1 => {
             // For Median Pot: Compare with other pots to determine if it's the median
-            let token_counts = get_all_token_counts(deps)?;
+            let token_counts = get_all_token_counts(&deps.as_ref())?;
             Ok(is_median(&token_counts, pot_state))
         }
         2 => {
@@ -94,7 +94,7 @@ pub fn is_winning_pot(deps: &DepsMut, pot_id: u8) -> StdResult<bool> {
 }
 
 // Retrieve the token count for each pot
-fn get_all_token_counts(deps: &DepsMut) -> StdResult<Vec<Uint128>> {
+fn get_all_token_counts(deps: &Deps) -> StdResult<Vec<Uint128>> {
     let mut token_counts = Vec::new();
     for pot_id in 1..=5 {
         // Assuming 5 pots
@@ -119,13 +119,13 @@ fn is_median(token_counts: &Vec<Uint128>, value: Uint128) -> bool {
 
 // Get the maximum token count from all pots
 fn get_max_tokens(deps: &DepsMut) -> StdResult<Uint128> {
-    let token_counts = get_all_token_counts(deps)?;
+    let token_counts = get_all_token_counts(&deps.as_ref())?;
     Ok(*token_counts.iter().max().unwrap_or(&Uint128::zero()))
 }
 
 // Get the minimum token count from all pots
 fn get_min_tokens(deps: &DepsMut) -> StdResult<Uint128> {
-    let token_counts = get_all_token_counts(deps)?;
+    let token_counts = get_all_token_counts(&deps.as_ref())?;
     Ok(*token_counts.iter().min().unwrap_or(&Uint128::zero()))
 }
 

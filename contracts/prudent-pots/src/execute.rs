@@ -50,8 +50,8 @@ pub fn allocate_tokens(
     }
 
     // Implementing dynamic bid constraints
-    let min_bid = calculate_min_bid(&deps)?;
-    let max_bid = calculate_max_bid(&deps)?;
+    let min_bid = calculate_min_bid(&deps.as_ref())?;
+    let max_bid = calculate_max_bid(&deps.as_ref())?;
 
     if total_amount < min_bid || total_amount > max_bid {
         return Err(ContractError::BidOutOfRange {
@@ -122,8 +122,8 @@ pub fn reallocate_tokens(
     })?;
 
     // Ensure the reallocation amount is within the set minimum and maximum bid limits
-    let min_bid = calculate_min_bid(&deps)?;
-    let max_bid = calculate_max_bid(&deps)?;
+    let min_bid = calculate_min_bid(&deps.as_ref())?; // Convert DepsMut to Deps with as_ref()
+    let max_bid = calculate_max_bid(&deps.as_ref())?;
 
     if amount < min_bid || amount > max_bid {
         return Err(ContractError::BidOutOfRange {
