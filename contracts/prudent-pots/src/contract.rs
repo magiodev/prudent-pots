@@ -4,8 +4,13 @@ use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Resp
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
-use crate::state::{State, STATE};
+use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryGameStateResponse, QueryMsg};
+use crate::query::{query_game_config, query_game_state};
+use crate::state::{
+    GameConfig, GameState, PlayerAllocations, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS,
+    POT_STATES,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:prudent-pot";
@@ -15,20 +20,23 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let state = State {
-        count: msg.count,
-        owner: info.sender.clone(),
+    let game_config = GameConfig {
+        fee_allocation: msg.fee_allocation,
+        fee_reallocation: msg.fee_reallocation,
+        team_fee_address: msg.team_fee_address,
+        game_duration: msg.game_duration,
+        initial_pot_tokens: msg.initial_pot_tokens,
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    STATE.save(deps.storage, &state)?;
+    GAME_CONFIG.save(deps.storage, &game_config)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender)
-        .add_attribute("count", msg.count.to_string()))
+        .add_attribute("game_duration", msg.game_duration.to_string())
+        .add_attribute("initial_pot_tokens", msg.initial_pot_tokens.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -39,118 +47,94 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Increment {} => execute::increment(deps),
-        ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
-    }
-}
-
-pub mod execute {
-    use super::*;
-
-    pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
-        STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-            state.count += 1;
-            Ok(state)
-        })?;
-
-        Ok(Response::new().add_attribute("action", "increment"))
-    }
-
-    pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
-        STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-            if info.sender != state.owner {
-                return Err(ContractError::Unauthorized {});
-            }
-            state.count = count;
-            Ok(state)
-        })?;
-        Ok(Response::new().add_attribute("action", "reset"))
+        ExecuteMsg::UpdateConfig { config } => update_config(deps, info, config),
+        ExecuteMsg::AllocateTokens { pot_id, amount } => {
+            allocate_tokens(deps, info, pot_id, amount)
+        }
+        ExecuteMsg::ReallocateTokens {
+            from_pot_id,
+            to_pot_id,
+            amount,
+        } => reallocate_tokens(deps, info, from_pot_id, to_pot_id, amount),
+        ExecuteMsg::GameEnd {} => game_end(deps, info),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetCount {} => to_json_binary(&query::count(deps)?),
+        QueryMsg::QueryGameConfig {} => to_json_binary(&query_game_config(deps)?),
+        QueryMsg::QueryGameState {} => to_json_binary(&query_game_state(deps)?),
     }
 }
 
-pub mod query {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+//     use cosmwasm_std::{coins, from_json};
 
-    pub fn count(deps: Deps) -> StdResult<GetCountResponse> {
-        let state = STATE.load(deps.storage)?;
-        Ok(GetCountResponse { count: state.count })
-    }
-}
+//     #[test]
+//     fn proper_initialization() {
+//         let mut deps = mock_dependencies();
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary};
+//         let msg = InstantiateMsg { count: 17 };
+//         let info = mock_info("creator", &coins(1000, "earth"));
 
-    #[test]
-    fn proper_initialization() {
-        let mut deps = mock_dependencies();
+//         // we can just call .unwrap() to assert this was a success
+//         let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+//         assert_eq!(0, res.messages.len());
 
-        let msg = InstantiateMsg { count: 17 };
-        let info = mock_info("creator", &coins(1000, "earth"));
+//         // it worked, let's query the state
+//         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
+//         let value: GetCountResponse = from_json(&res).unwrap();
+//         assert_eq!(17, value.count);
+//     }
 
-        // we can just call .unwrap() to assert this was a success
-        let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
-        assert_eq!(0, res.messages.len());
+//     #[test]
+//     fn increment() {
+//         let mut deps = mock_dependencies();
 
-        // it worked, let's query the state
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-        let value: GetCountResponse = from_binary(&res).unwrap();
-        assert_eq!(17, value.count);
-    }
+//         let msg = InstantiateMsg { count: 17 };
+//         let info = mock_info("creator", &coins(2, "token"));
+//         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-    #[test]
-    fn increment() {
-        let mut deps = mock_dependencies();
+//         // beneficiary can release it
+//         let info = mock_info("anyone", &coins(2, "token"));
+//         let msg = ExecuteMsg::Increment {};
+//         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let msg = InstantiateMsg { count: 17 };
-        let info = mock_info("creator", &coins(2, "token"));
-        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+//         // should increase counter by 1
+//         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
+//         let value: GetCountResponse = from_json(&res).unwrap();
+//         assert_eq!(18, value.count);
+//     }
 
-        // beneficiary can release it
-        let info = mock_info("anyone", &coins(2, "token"));
-        let msg = ExecuteMsg::Increment {};
-        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+//     #[test]
+//     fn reset() {
+//         let mut deps = mock_dependencies();
 
-        // should increase counter by 1
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-        let value: GetCountResponse = from_binary(&res).unwrap();
-        assert_eq!(18, value.count);
-    }
+//         let msg = InstantiateMsg { count: 17 };
+//         let info = mock_info("creator", &coins(2, "token"));
+//         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-    #[test]
-    fn reset() {
-        let mut deps = mock_dependencies();
+//         // beneficiary can release it
+//         let unauth_info = mock_info("anyone", &coins(2, "token"));
+//         let msg = ExecuteMsg::Reset { count: 5 };
+//         let res = execute(deps.as_mut(), mock_env(), unauth_info, msg);
+//         match res {
+//             Err(ContractError::Unauthorized {}) => {}
+//             _ => panic!("Must return unauthorized error"),
+//         }
 
-        let msg = InstantiateMsg { count: 17 };
-        let info = mock_info("creator", &coins(2, "token"));
-        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+//         // only the original creator can reset the counter
+//         let auth_info = mock_info("creator", &coins(2, "token"));
+//         let msg = ExecuteMsg::Reset { count: 5 };
+//         let _res = execute(deps.as_mut(), mock_env(), auth_info, msg).unwrap();
 
-        // beneficiary can release it
-        let unauth_info = mock_info("anyone", &coins(2, "token"));
-        let msg = ExecuteMsg::Reset { count: 5 };
-        let res = execute(deps.as_mut(), mock_env(), unauth_info, msg);
-        match res {
-            Err(ContractError::Unauthorized {}) => {}
-            _ => panic!("Must return unauthorized error"),
-        }
-
-        // only the original creator can reset the counter
-        let auth_info = mock_info("creator", &coins(2, "token"));
-        let msg = ExecuteMsg::Reset { count: 5 };
-        let _res = execute(deps.as_mut(), mock_env(), auth_info, msg).unwrap();
-
-        // should now be 5
-        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-        let value: GetCountResponse = from_binary(&res).unwrap();
-        assert_eq!(5, value.count);
-    }
-}
+//         // should now be 5
+//         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
+//         let value: GetCountResponse = from_json(&res).unwrap();
+//         assert_eq!(5, value.count);
+//     }
+// }
