@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::query::{query_game_config, query_game_state};
+use crate::query::{query_bid_bounds, query_game_config, query_game_state};
 use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
@@ -62,5 +62,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::QueryGameConfig {} => to_json_binary(&query_game_config(deps)?),
         QueryMsg::QueryGameState {} => to_json_binary(&query_game_state(deps)?),
+        // QueryMsg::QueryBidBounds {} => to_json_binary(&query_bid_bounds(&mut deps)?),
     }
 }

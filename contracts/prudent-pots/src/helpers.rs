@@ -208,11 +208,11 @@ pub fn prepare_next_game(deps: &mut DepsMut, env: &Env) -> StdResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::state::{PlayerAllocations, TokenAllocation};
+    use crate::state::{GameConfig, PlayerAllocations, TokenAllocation};
 
     use super::*;
-    use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::Uint128;
+    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+    use cosmwasm_std::{Coin, Uint128};
 
     // Setup fixtures
 
@@ -612,7 +612,6 @@ mod tests {
         // Assume pot 3 is the winner, redistribute from pots 1, 2, 4, and 5
         let total_losing_tokens = Uint128::new(10 + 10 + 10 + 10 + 20 + 15); // Sum of initial and allocated tokens in losing pots
         let half_losing_tokens = total_losing_tokens.multiply_ratio(1u128, 2u128);
-        println!("half_losing_tokens {}", half_losing_tokens); // we are losing .5 here due to Uint128 so 37.5 becomes 37
         redistribute_losing_tokens(&mut deps.as_mut(), &[3], total_losing_tokens).unwrap();
 
         // Check that the tokens were redistributed to pot 3
@@ -651,5 +650,63 @@ mod tests {
             pot_state, expected_tokens_for_pot_5,
             "Pot 5's total tokens should include initial amount"
         );
+
+        // TODO: Assert contract balance
+    }
+
+    #[test]
+    fn prepare_next_game_works() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let config = GameConfig {
+            game_duration: 3600,                                    // 1 hour in seconds
+            fee_allocation: 2,                                      // Assuming a 2% allocation fee
+            fee_reallocation: 5, // Assuming a 5% reallocation fee
+            fee_allocation_address: Addr::unchecked("fee_address"), // An example fee address
+            game_denom: "token".to_string(), // An example token denomination
+        };
+        GAME_CONFIG.save(deps.as_mut().storage, &config).unwrap();
+
+        // Simulate some initial state for pots and reallocation fee pool
+        let initial_pots = vec![10, 10, 10, 10, 10]
+            .into_iter()
+            .map(Uint128::new)
+            .collect();
+
+        setup_pots(&mut deps.as_mut(), initial_pots);
+        REALLOCATION_FEE_POOL
+            .save(deps.as_mut().storage, &Uint128::new(100))
+            .unwrap(); // example value
+
+        // Invoke prepare_next_game
+        prepare_next_game(&mut deps.as_mut(), &env).unwrap();
+
+        // Verify GAME_STATE
+        let game_state = GAME_STATE.load(deps.as_mut().storage).unwrap();
+        assert_eq!(game_state.start_time, env.block.time.seconds());
+        assert_eq!(
+            game_state.end_time,
+            env.block.time.seconds() + config.game_duration
+        );
+
+        // Verify pots have been reset and include the reallocation fee pool
+        // let expected_token_per_pot = (deps
+        //     .querier
+        //     .query_all_balances(&env.contract.address)
+        //     .unwrap()
+        //     .iter()
+        //     .sum::<Coin>()
+        //     .amount
+        //     + Uint128::new(100))
+        // .u128()
+        //     / 5;
+        // for pot_id in 1..=5 {
+        //     let pot_state = POT_STATES.load(deps.as_mut().storage, pot_id).unwrap();
+        //     assert_eq!(pot_state, Uint128::new(expected_token_per_pot));
+        // }
+
+        // Verify reallocation fee pool reset
+        let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.as_mut().storage).unwrap();
+        assert_eq!(reallocation_fee_pool, Uint128::zero());
     }
 }

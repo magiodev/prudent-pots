@@ -82,25 +82,25 @@ pub fn allocate_tokens(
     ]))
 }
 
-// Helper to calculate the average tokens across all pots
-fn calculate_average_tokens(deps: &DepsMut) -> StdResult<Uint128> {
-    let pots = get_all_token_counts(deps)?;
-    let total: Uint128 = pots.iter().sum();
-    Ok(total.checked_div(Uint128::from(pots.len() as u128))?)
-}
-
 // Helper to calculate the minimum bid based on the game's current state
-fn calculate_min_bid(deps: &DepsMut) -> StdResult<Uint128> {
+pub fn calculate_min_bid(deps: &DepsMut) -> StdResult<Uint128> {
     let average_tokens = calculate_average_tokens(deps)?;
     // Set minimum bid as the average tokens in pots
     Ok(average_tokens)
 }
 
 // Helper to calculate the maximum bid based on the game's current state
-fn calculate_max_bid(deps: &DepsMut) -> StdResult<Uint128> {
+pub fn calculate_max_bid(deps: &DepsMut) -> StdResult<Uint128> {
     let average_tokens = calculate_average_tokens(deps)?;
     // Set maximum bid as double the average tokens in pots
     Ok(average_tokens.checked_mul(Uint128::from(2u128))?)
+}
+
+// Helper to calculate the average tokens across all pots
+fn calculate_average_tokens(deps: &DepsMut) -> StdResult<Uint128> {
+    let pots = get_all_token_counts(deps)?;
+    let total: Uint128 = pots.iter().sum();
+    Ok(total.checked_div(Uint128::from(pots.len() as u128))?)
 }
 
 // Helper to update the player's allocation

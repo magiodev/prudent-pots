@@ -31,6 +31,8 @@ pub enum QueryMsg {
     QueryGameConfig {},
     #[returns(QueryGameStateResponse)]
     QueryGameState {},
+    // #[returns(QueryBidBoundsResponse)]
+    // QueryBidBounds {},
 }
 
 #[cw_serde]
@@ -41,4 +43,10 @@ pub struct QueryGameConfigResponse {
 #[cw_serde]
 pub struct QueryGameStateResponse {
     pub state: GameState,
+}
+
+#[cw_serde]
+pub struct QueryBidBoundsResponse {
+    pub min_bid: Uint128,
+    pub max_bid: Uint128,
 }
