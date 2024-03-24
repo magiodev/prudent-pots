@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, Deps, DepsMut, Env, QuerierWrapper, StdError, StdResult, Uint128};
 
 use crate::{
-    state::{PotState, PLAYER_ALLOCATIONS, POT_STATES},
+    state::{GameState, PotState, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES},
     ContractError,
 };
 
@@ -24,7 +24,7 @@ pub fn is_contract_admin(
 }
 
 // Helper to determine if a pot is a winning pot based on its unique rules
-pub fn is_winning_pot(deps: &Deps, pot_id: u8) -> StdResult<bool> {
+pub fn is_winning_pot(deps: &DepsMut, pot_id: u8) -> StdResult<bool> {
     let pot_state = POT_STATES.load(deps.storage, pot_id)?;
     let total_tokens = pot_state.total_tokens;
 
@@ -57,7 +57,7 @@ pub fn is_winning_pot(deps: &Deps, pot_id: u8) -> StdResult<bool> {
 }
 
 // Retrieve the token count for each pot
-fn get_all_token_counts(deps: &Deps) -> StdResult<Vec<Uint128>> {
+fn get_all_token_counts(deps: &DepsMut) -> StdResult<Vec<Uint128>> {
     let mut token_counts = Vec::new();
     for pot_id in 1..=5 {
         // Assuming 5 pots
@@ -81,13 +81,13 @@ fn is_median(token_counts: &Vec<Uint128>, value: Uint128) -> bool {
 }
 
 // Get the maximum token count from all pots
-fn get_max_tokens(deps: &Deps) -> StdResult<Uint128> {
+fn get_max_tokens(deps: &DepsMut) -> StdResult<Uint128> {
     let token_counts = get_all_token_counts(deps)?;
     Ok(*token_counts.iter().max().unwrap_or(&Uint128::zero()))
 }
 
 // Get the minimum token count from all pots
-fn get_min_tokens(deps: &Deps) -> StdResult<Uint128> {
+fn get_min_tokens(deps: &DepsMut) -> StdResult<Uint128> {
     let token_counts = get_all_token_counts(deps)?;
     Ok(*token_counts.iter().min().unwrap_or(&Uint128::zero()))
 }
@@ -120,7 +120,7 @@ pub fn calculate_total_losing_tokens(deps: &Deps, winning_pots: &[u8]) -> StdRes
 
 // Helper to redistribute losing tokens
 pub fn redistribute_losing_tokens(
-    deps: DepsMut,
+    deps: &mut DepsMut,
     winning_pots: &[u8],
     total_losing_tokens: Uint128,
 ) -> StdResult<()> {
@@ -177,46 +177,317 @@ pub fn redistribute_losing_tokens(
 }
 
 // Helper to prepare for the next game
-pub fn prepare_next_game(deps: &Deps, redistribution: Uint128) -> StdResult<()> {
-    // Placeholder logic: Prepare the game state and pots for the next game
-    // This might involve resetting pot states or setting initial tokens for the next game
+pub fn prepare_next_game(deps: &mut DepsMut, env: &Env) -> StdResult<()> {
+    // Load game duration from GameConfig state
+    let config = GAME_CONFIG.load(deps.storage)?;
+    let game_duration = config.game_duration;
+
+    // Calculate the end time for the next game based on the loaded game duration
+    let next_game_start = env.block.time.seconds(); // Assuming the next game starts immediately
+    let next_game_end = next_game_start + game_duration;
+
+    // Reset the game state for the next game
+    let new_game_state = GameState {
+        start_time: next_game_start,
+        end_time: next_game_end,
+    };
+    GAME_STATE.save(deps.storage, &new_game_state)?;
+
+    // Get the current contract balance, which is the leftover from the previous game
+    let contract_balance = deps
+        .querier
+        .query_balance(&env.contract.address, &config.game_denom)?;
+
+    // Calculate the initial tokens for each pot by dividing the contract balance by the number of pots
+    let initial_tokens_per_pot = contract_balance
+        .amount
+        .checked_div(Uint128::from(5u128))
+        .unwrap();
+
+    // Reset pot states for the next game with the calculated initial tokens
+    for pot_id in 1..=5 {
+        // Assuming 5 pots
+        let new_pot_state = PotState {
+            total_tokens: initial_tokens_per_pot,
+        };
+        POT_STATES.save(deps.storage, pot_id, &new_pot_state)?;
+    }
+
     Ok(())
 }
 
-// /// CwTemplateContract is a wrapper around Addr that provides a lot of helpers
-// /// for working with this.
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-// pub struct CwTemplateContract(pub Addr);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::mock_dependencies;
+    use cosmwasm_std::Uint128;
 
-// impl CwTemplateContract {
-//     pub fn addr(&self) -> Addr {
-//         self.0.clone()
-//     }
+    // Helper function to initialize pots with a given state for testing
+    fn setup_pots(deps: &mut DepsMut, tokens: Vec<Uint128>) {
+        for (i, &amount) in tokens.iter().enumerate() {
+            let pot_id = i as u8 + 1; // Pot IDs are 1-indexed
+            let pot_state = PotState {
+                total_tokens: amount,
+            };
+            POT_STATES.save(deps.storage, pot_id, &pot_state).unwrap();
+        }
+    }
 
-//     pub fn call<T: Into<ExecuteMsg>>(&self, msg: T) -> StdResult<CosmosMsg> {
-//         let msg = to_json_binary(&msg.into())?;
-//         Ok(WasmMsg::Execute {
-//             contract_addr: self.addr().into(),
-//             msg,
-//             funds: vec![],
-//         }
-//         .into())
-//     }
+    #[test]
+    fn identify_all_winning_pots_for_median() {
+        let mut deps = mock_dependencies();
 
-//     // /// Get Count
-//     // pub fn count<Q, T, CQ>(&self, querier: &Q) -> StdResult<GetCountResponse>
-//     // where
-//     //     Q: Querier,
-//     //     T: Into<String>,
-//     //     CQ: CustomQuery,
-//     // {
-//     //     let msg = QueryMsg::GetCount {};
-//     //     let query = WasmQuery::Smart {
-//     //         contract_addr: self.addr().into(),
-//     //         msg: to_json_binary(&msg)?,
-//     //     }
-//     //     .into();
-//     //     let res: GetCountResponse = QuerierWrapper::<CQ>::new(querier).query(&query)?;
-//     //     Ok(res)
-//     // }
-// }
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(27), // Median
+                Uint128::new(27), // Highest
+                Uint128::new(31), // Even
+                Uint128::new(25), // Lowest
+                Uint128::new(10), // Prime
+            ],
+        );
+
+        // Pot 1 has 27 tokens and should be the median in this setup
+        let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
+        assert_eq!(
+            result, true,
+            "Pot 1 should be winning as it has the median token count when tie-breaking by pot ID"
+        );
+
+        // Ensure that other pots are not falsely reported as winners
+        let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
+        assert_eq!(result, false, "Pot 2 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
+        assert_eq!(result, false, "Pot 3 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
+        assert_eq!(result, false, "Pot 4 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
+        assert_eq!(result, false, "Pot 5 should not be winning.");
+    }
+
+    #[test]
+    fn is_winning_pot_highest() {
+        let mut deps = mock_dependencies();
+
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10), // Median
+                Uint128::new(60), // Highest
+                Uint128::new(31), // Even
+                Uint128::new(25), // Lowest
+                Uint128::new(10), // Prime
+            ],
+        );
+
+        // Pot 2 has 60 tokens and should be the highest in this setup
+        let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
+        assert_eq!(
+            result, true,
+            "Pot 2 should be winning as it has the highest token count when"
+        );
+
+        // Ensure that other pots are not falsely reported as winners
+        let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
+        assert_eq!(result, false, "Pot 1 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
+        assert_eq!(result, false, "Pot 3 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
+        assert_eq!(result, false, "Pot 4 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
+        assert_eq!(result, false, "Pot 5 should not be winning.");
+    }
+
+    #[test]
+    fn is_winning_pot_even() {
+        let mut deps = mock_dependencies();
+
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10), // Median
+                Uint128::new(30), // Highest
+                Uint128::new(60), // Even
+                Uint128::new(25), // Lowest
+                Uint128::new(10), // Prime
+            ],
+        );
+
+        // Pot 3 has 60 tokens and should be the even in this setup
+        let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
+        assert_eq!(
+            result, true,
+            "Pot 3 should be winning as it has the even token count when"
+        );
+
+        // Ensure that other pots are not falsely reported as winners
+        let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
+        assert_eq!(result, false, "Pot 1 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
+        assert_eq!(result, false, "Pot 3 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
+        assert_eq!(result, false, "Pot 4 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
+        assert_eq!(result, false, "Pot 5 should not be winning.");
+    }
+
+    #[test]
+    fn is_winning_pot_lowest() {
+        let mut deps = mock_dependencies();
+
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(32), // Median
+                Uint128::new(30), // Highest
+                Uint128::new(61), // Even
+                Uint128::new(1),  // Lowest
+                Uint128::new(10), // Prime
+            ],
+        );
+
+        // Pot 4 has 1 tokens and should be the lowest in this setup
+        let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
+        assert_eq!(
+            result, true,
+            "Pot 4 should be winning as it has the lowest token count when"
+        );
+
+        // Ensure that other pots are not falsely reported as winners
+        let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
+        assert_eq!(result, false, "Pot 1 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
+        assert_eq!(result, false, "Pot 3 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
+        assert_eq!(result, false, "Pot 3 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
+        assert_eq!(result, false, "Pot 5 should not be winning.");
+    }
+
+    #[test]
+    fn is_winning_pot_prime() {
+        let mut deps = mock_dependencies();
+
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(32), // Median
+                Uint128::new(30), // Highest
+                Uint128::new(61), // Even
+                Uint128::new(4),  // Lowest
+                Uint128::new(3),  // Prime
+            ],
+        );
+
+        // Pot 5 has 3 tokens and should be the prime in this setup
+        let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
+        assert_eq!(
+            result, true,
+            "Pot 5 should be winning as it has the prime token count when"
+        );
+
+        // Ensure that other pots are not falsely reported as winners
+        let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
+        assert_eq!(result, false, "Pot 1 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
+        assert_eq!(result, false, "Pot 3 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
+        assert_eq!(result, false, "Pot 3 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
+        assert_eq!(result, false, "Pot 4 should not be winning.");
+    }
+
+    #[test]
+    fn total_losing_tokens_single_winner() {
+        let mut deps = mock_dependencies();
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10),
+                Uint128::new(20),
+                Uint128::new(30),
+                Uint128::new(40),
+                Uint128::new(50),
+            ],
+        );
+
+        // Let's say pot 3 is the winner
+        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[3]).unwrap();
+        assert_eq!(
+            total_losing_tokens,
+            Uint128::new(10 + 20 + 40 + 50),
+            "Should sum tokens from all pots except pot 3"
+        );
+    }
+
+    #[test]
+    fn total_losing_tokens_multiple_winners() {
+        let mut deps = mock_dependencies();
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10),
+                Uint128::new(20),
+                Uint128::new(30),
+                Uint128::new(40),
+                Uint128::new(50),
+            ],
+        );
+
+        // Let's say pots 2 and 4 are winners
+        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[2, 4]).unwrap();
+        assert_eq!(
+            total_losing_tokens,
+            Uint128::new(10 + 30 + 50),
+            "Should sum tokens from pots 1, 3, and 5"
+        );
+    }
+
+    #[test]
+    fn total_losing_tokens_no_winners() {
+        let mut deps = mock_dependencies();
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10),
+                Uint128::new(20),
+                Uint128::new(30),
+                Uint128::new(40),
+                Uint128::new(50),
+            ],
+        );
+
+        // No winners
+        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[]).unwrap();
+        assert_eq!(
+            total_losing_tokens,
+            Uint128::new(10 + 20 + 30 + 40 + 50),
+            "Should sum all pots' tokens"
+        );
+    }
+
+    #[test]
+    fn total_losing_tokens_all_winners() {
+        let mut deps = mock_dependencies();
+        setup_pots(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10),
+                Uint128::new(20),
+                Uint128::new(30),
+                Uint128::new(40),
+                Uint128::new(50),
+            ],
+        );
+
+        // All pots are winners
+        let total_losing_tokens =
+            calculate_total_losing_tokens(&deps.as_ref(), &[1, 2, 3, 4, 5]).unwrap();
+        assert_eq!(
+            total_losing_tokens,
+            Uint128::zero(),
+            "Should not sum any tokens as all pots are winners"
+        );
+    }
+}

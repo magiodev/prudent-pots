@@ -1,8 +1,14 @@
 use cosmwasm_std::{attr, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
 
 use crate::{
-    helpers::is_contract_admin,
-    state::{GameConfig, PotState, TokenAllocation, GAME_CONFIG, PLAYER_ALLOCATIONS, POT_STATES},
+    helpers::{
+        calculate_total_losing_tokens, is_contract_admin, is_winning_pot, prepare_next_game,
+        redistribute_losing_tokens,
+    },
+    state::{
+        GameConfig, PotState, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS,
+        POT_STATES,
+    },
     ContractError,
 };
 
@@ -185,12 +191,34 @@ pub fn reallocate_tokens(
     ]))
 }
 
-pub fn game_end(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
-    // Implement game end logic here
+pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> {
+    // Verify if the game's end time has been reached
+    let game_state = GAME_STATE.load(deps.storage)?;
+    if env.block.time.seconds() < game_state.end_time {
+        return Err(ContractError::GameStillActive {});
+    }
+
+    // Determine the winning pot(s) based on the unique rules for each pot
+    let mut winning_pots = Vec::new();
+    for pot_id in 1..=5 {
+        if is_winning_pot(&deps, pot_id)? {
+            winning_pots.push(pot_id);
+        }
+    }
+
+    // Calculate the total amount in losing pots to be redistributed
+    let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &winning_pots)?;
+
+    // Redistribute the tokens from losing pots:
+    redistribute_losing_tokens(&mut deps, &winning_pots, total_losing_tokens)?;
+
+    // Prepare for the next game
+    prepare_next_game(&mut deps, &env)?;
+
+    // Construct the response with appropriate attributes
     Ok(Response::new().add_attributes(vec![
         attr("method", "execute"),
         attr("action", "game_end"),
-        attr("sender", info.sender),
-        // More attributes representing winner pots, token distribution to winners, next game allocaation, etc.
+        // Additional attributes can include details about the winning pots, redistributed amounts, etc.
     ]))
 }

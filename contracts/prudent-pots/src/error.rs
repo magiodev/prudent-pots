@@ -18,6 +18,9 @@ pub enum ContractError {
     #[error("NoFunds")]
     InsufficientFunds {},
 
+    #[error("GameStillActive")]
+    GameStillActive {},
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
     // Add any other custom errors you like here.

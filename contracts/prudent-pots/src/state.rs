@@ -30,7 +30,6 @@ pub struct PotState {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct GameState {
-    pub is_active: bool,
     pub start_time: u64,
     pub end_time: u64,
 }
