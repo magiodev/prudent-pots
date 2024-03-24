@@ -9,8 +9,8 @@ use crate::{
         prepare_next_game, redistribute_losing_tokens,
     },
     state::{
-        GameConfig, PotState, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS,
-        POT_STATES,
+        GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
+        REALLOCATION_FEE_POOL,
     },
     ContractError,
 };
@@ -133,8 +133,8 @@ fn update_pot_state(
     amount: Uint128,
 ) -> Result<(), ContractError> {
     POT_STATES.update(storage, pot_id, |pot_state| -> Result<_, ContractError> {
-        let state = pot_state.unwrap();
-        state.total_tokens.checked_add(amount).unwrap();
+        let mut state = pot_state.unwrap();
+        state = state.checked_add(amount).unwrap();
         Ok(state)
     })?;
     Ok(())
@@ -160,8 +160,19 @@ pub fn reallocate_tokens(
     info: MessageInfo,
     from_pot_id: u8,
     to_pot_id: u8,
-    amount: Uint128,
+    mut amount: Uint128,
 ) -> Result<Response, ContractError> {
+    let config = GAME_CONFIG.load(deps.storage)?;
+
+    let fee = amount.multiply_ratio(config.fee_reallocation, 100u128);
+    amount = amount.checked_sub(fee).unwrap();
+
+    // Deduct the reallocation fee and update the reallocation fee pool
+    REALLOCATION_FEE_POOL.update(deps.storage, |mut current| -> Result<_, ContractError> {
+        current = current.checked_add(fee).unwrap();
+        Ok(current)
+    })?;
+
     // Ensure the reallocation amount is within the set minimum and maximum bid limits
     let min_bid = calculate_min_bid(&deps)?;
     let max_bid = calculate_max_bid(&deps)?;
@@ -213,11 +224,9 @@ pub fn reallocate_tokens(
         deps.storage,
         from_pot_id,
         |pot_state| -> Result<_, ContractError> {
-            let state = pot_state.unwrap();
-            let new_total_tokens = state.total_tokens.checked_sub(amount).unwrap();
-            Ok(PotState {
-                total_tokens: new_total_tokens,
-            })
+            let mut state = pot_state.unwrap();
+            state = state.checked_sub(amount).unwrap();
+            Ok(state)
         },
     )?;
 
@@ -226,11 +235,9 @@ pub fn reallocate_tokens(
         deps.storage,
         to_pot_id,
         |pot_state| -> Result<_, ContractError> {
-            let state = pot_state.unwrap();
-            let new_total_tokens = state.total_tokens.checked_add(amount).unwrap();
-            Ok(PotState {
-                total_tokens: new_total_tokens,
-            })
+            let mut state = pot_state.unwrap();
+            state = state.checked_add(amount).unwrap();
+            Ok(state)
         },
     )?;
 
@@ -241,6 +248,7 @@ pub fn reallocate_tokens(
         attr("from_pot_id", from_pot_id.to_string()),
         attr("to_pot_id", to_pot_id.to_string()),
         attr("amount", amount.to_string()),
+        attr("fee", fee.to_string()),
     ]))
 }
 
@@ -272,6 +280,7 @@ pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> 
     Ok(Response::new().add_attributes(vec![
         attr("method", "execute"),
         attr("action", "game_end"),
-        // Additional attributes can include details about the winning pots, redistributed amounts, etc.
+        attr("winning_pots", format!("{:?}", winning_pots)),
+        attr("total_losing_tokens", total_losing_tokens),
     ]))
 }

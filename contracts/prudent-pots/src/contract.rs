@@ -1,13 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{query_game_config, query_game_state};
-use crate::state::GAME_CONFIG;
+use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:prudent-pot";
@@ -25,6 +27,10 @@ pub fn instantiate(
     // TODO: Validate game_config fields
 
     GAME_CONFIG.save(deps.storage, &msg.config)?;
+    // pub const PLAYER_ALLOCATIONS: Map<Addr, PlayerAllocations> = Map::new("player_allocations");
+    // pub const POT_STATES: Map<u8, PotState> = Map::new("pot_states");
+    // pub const GAME_STATE: Item<GameState> = Item::new("game_state");
+    REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")

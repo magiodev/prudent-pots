@@ -1,7 +1,9 @@
 use cosmwasm_std::{Addr, Deps, DepsMut, Env, QuerierWrapper, StdError, StdResult, Uint128};
 
 use crate::{
-    state::{GameState, PotState, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES},
+    state::{
+        GameState, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES, REALLOCATION_FEE_POOL,
+    },
     ContractError,
 };
 
@@ -26,31 +28,30 @@ pub fn is_contract_admin(
 // Helper to determine if a pot is a winning pot based on its unique rules
 pub fn is_winning_pot(deps: &DepsMut, pot_id: u8) -> StdResult<bool> {
     let pot_state = POT_STATES.load(deps.storage, pot_id)?;
-    let total_tokens = pot_state.total_tokens;
 
     match pot_id {
         1 => {
             // For Median Pot: Compare with other pots to determine if it's the median
             let token_counts = get_all_token_counts(deps)?;
-            Ok(is_median(&token_counts, total_tokens))
+            Ok(is_median(&token_counts, pot_state))
         }
         2 => {
             // For Highest Pot: Compare with other pots to determine if it's the highest
             let max_tokens = get_max_tokens(deps)?;
-            Ok(total_tokens == max_tokens)
+            Ok(pot_state == max_tokens)
         }
         3 => {
             // For Even Pot: Check if the token count is even
-            Ok(total_tokens % Uint128::from(2u128) == Uint128::zero())
+            Ok(pot_state % Uint128::from(2u128) == Uint128::zero())
         }
         4 => {
             // For Lowest Pot: Compare with other pots to determine if it's the lowest
             let min_tokens = get_min_tokens(deps)?;
-            Ok(total_tokens == min_tokens)
+            Ok(pot_state == min_tokens)
         }
         5 => {
             // For Prime Pot: Check if the token count is a prime number
-            Ok(is_prime(total_tokens.u128()))
+            Ok(is_prime(pot_state.u128()))
         }
         _ => Err(StdError::generic_err("Invalid pot ID")),
     }
@@ -62,7 +63,7 @@ pub fn get_all_token_counts(deps: &DepsMut) -> StdResult<Vec<Uint128>> {
     for pot_id in 1..=5 {
         // Assuming 5 pots
         let pot_state = POT_STATES.load(deps.storage, pot_id)?;
-        token_counts.push(pot_state.total_tokens);
+        token_counts.push(pot_state);
     }
     Ok(token_counts)
 }
@@ -112,7 +113,7 @@ pub fn calculate_total_losing_tokens(deps: &Deps, winning_pots: &[u8]) -> StdRes
         // Assuming 5 pots
         if !winning_pots.contains(&pot_id) {
             let pot_state = POT_STATES.load(deps.storage, pot_id)?;
-            total_losing_tokens += pot_state.total_tokens;
+            total_losing_tokens = total_losing_tokens.checked_add(pot_state)?;
         }
     }
     Ok(total_losing_tokens)
@@ -122,8 +123,13 @@ pub fn calculate_total_losing_tokens(deps: &Deps, winning_pots: &[u8]) -> StdRes
 pub fn redistribute_losing_tokens(
     deps: &mut DepsMut,
     winning_pots: &[u8],
-    total_losing_tokens: Uint128,
+    mut total_losing_tokens: Uint128,
 ) -> StdResult<()> {
+    let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.storage)?;
+
+    // Subtract the reallocation fee pool from the total losing tokens before redistribution
+    total_losing_tokens = total_losing_tokens.checked_sub(reallocation_fee_pool)?;
+
     // Calculate the amount to redistribute to the winning pots (50% of the losing tokens)
     let redistribution = total_losing_tokens.multiply_ratio(Uint128::new(1), Uint128::new(2));
 
@@ -134,7 +140,6 @@ pub fn redistribute_losing_tokens(
         }
 
         let pot_state = POT_STATES.load(deps.storage, pot_id)?;
-        let total_pot_tokens = pot_state.total_tokens;
         let mut total_redistributed = Uint128::zero();
 
         // Collect updates first to avoid borrowing issues
@@ -151,8 +156,7 @@ pub fn redistribute_losing_tokens(
                 .iter_mut()
                 .find(|a| a.pot_id == pot_id)
             {
-                let player_share =
-                    redistribution.multiply_ratio(allocation.amount, total_pot_tokens);
+                let player_share = redistribution.multiply_ratio(allocation.amount, pot_state);
                 allocation.amount = allocation.amount.checked_add(player_share)?;
                 total_redistributed += player_share;
                 allocation_updates.push((addr, allocations.clone()));
@@ -166,10 +170,9 @@ pub fn redistribute_losing_tokens(
 
         // Update the pot's state with the total redistributed amount
         POT_STATES.update(deps.storage, pot_id, |pot_state| -> StdResult<_> {
-            let state = pot_state.unwrap();
-            Ok(PotState {
-                total_tokens: state.total_tokens.checked_add(total_redistributed)?,
-            })
+            let mut state = pot_state.unwrap();
+            state = state.checked_add(total_redistributed)?;
+            Ok(state)
         })?;
     }
 
@@ -178,12 +181,10 @@ pub fn redistribute_losing_tokens(
 
 // Helper to prepare for the next game
 pub fn prepare_next_game(deps: &mut DepsMut, env: &Env) -> StdResult<()> {
-    // Load game duration from GameConfig state
     let config = GAME_CONFIG.load(deps.storage)?;
     let game_duration = config.game_duration;
 
-    // Calculate the end time for the next game based on the loaded game duration
-    let next_game_start = env.block.time.seconds(); // Assuming the next game starts immediately
+    let next_game_start = env.block.time.seconds();
     let next_game_end = next_game_start + game_duration;
 
     // Reset the game state for the next game
@@ -193,25 +194,22 @@ pub fn prepare_next_game(deps: &mut DepsMut, env: &Env) -> StdResult<()> {
     };
     GAME_STATE.save(deps.storage, &new_game_state)?;
 
-    // Get the current contract balance, which is the leftover from the previous game
-    let contract_balance = deps
+    // Calculate the initial tokens for each pot, considering the reallocation fee pool
+    let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.storage)?;
+    let total_tokens_for_next_game = deps
         .querier
-        .query_balance(&env.contract.address, &config.game_denom)?;
-
-    // Calculate the initial tokens for each pot by dividing the contract balance by the number of pots
-    let initial_tokens_per_pot = contract_balance
+        .query_balance(&env.contract.address, &config.game_denom)?
         .amount
-        .checked_div(Uint128::from(5u128))
-        .unwrap();
+        + reallocation_fee_pool;
 
-    // Reset pot states for the next game with the calculated initial tokens
+    // Distribute the initial tokens and the reallocation fee pool to the pots for the next game
+    let initial_tokens_per_pot = total_tokens_for_next_game.checked_div(Uint128::from(5u128))?;
     for pot_id in 1..=5 {
-        // Assuming 5 pots
-        let new_pot_state = PotState {
-            total_tokens: initial_tokens_per_pot,
-        };
-        POT_STATES.save(deps.storage, pot_id, &new_pot_state)?;
+        POT_STATES.save(deps.storage, pot_id, &initial_tokens_per_pot)?;
     }
+
+    // Reset the reallocation fee pool for the next game
+    REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     Ok(())
 }
@@ -229,10 +227,7 @@ mod tests {
     fn setup_pots(deps: &mut DepsMut, tokens: Vec<Uint128>) {
         for (i, &amount) in tokens.iter().enumerate() {
             let pot_id = i as u8 + 1; // Pot IDs are 1-indexed
-            let pot_state = PotState {
-                total_tokens: amount,
-            };
-            POT_STATES.save(deps.storage, pot_id, &pot_state).unwrap();
+            POT_STATES.save(deps.storage, pot_id, &amount).unwrap();
         }
     }
 
@@ -241,12 +236,13 @@ mod tests {
         pots: Vec<Uint128>,
         allocations: Vec<(u8, Addr, Uint128)>,
     ) {
+        REALLOCATION_FEE_POOL
+            .save(deps.storage, &Uint128::zero())
+            .unwrap();
+
         for (i, &amount) in pots.iter().enumerate() {
             let pot_id = i as u8 + 1; // Pot IDs are 1-indexed
-            let pot_state = PotState {
-                total_tokens: amount,
-            };
-            POT_STATES.save(deps.storage, pot_id, &pot_state).unwrap();
+            POT_STATES.save(deps.storage, pot_id, &amount).unwrap();
         }
 
         for (pot_id, player, amount) in allocations {
@@ -270,8 +266,8 @@ mod tests {
             // Update the pot's total tokens to reflect the player's allocation
             POT_STATES
                 .update(deps.storage, pot_id, |pot_state| -> Result<_, StdError> {
-                    let mut state = pot_state.unwrap(); // Use default if not found
-                    state.total_tokens += amount;
+                    let mut state = pot_state.unwrap();
+                    state = state.checked_add(amount).unwrap();
                     Ok(state)
                 })
                 .unwrap();
@@ -372,7 +368,7 @@ mod tests {
         let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
-        assert_eq!(result, false, "Pot 3 should not be winning.");
+        assert_eq!(result, false, "Pot 2 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
         assert_eq!(result, false, "Pot 4 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
@@ -405,7 +401,7 @@ mod tests {
         let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
-        assert_eq!(result, false, "Pot 3 should not be winning.");
+        assert_eq!(result, false, "2 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
         assert_eq!(result, false, "Pot 3 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
@@ -438,7 +434,7 @@ mod tests {
         let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
-        assert_eq!(result, false, "Pot 3 should not be winning.");
+        assert_eq!(result, false, "Pot 2 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
         assert_eq!(result, false, "Pot 3 should not be winning.");
         let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
@@ -585,27 +581,53 @@ mod tests {
         // Setup pots with initial allocations
         setup_pots_and_allocations(
             &mut deps.as_mut(),
-            vec![10, 10, 10, 10, 10]
-                .into_iter()
-                .map(Uint128::new)
-                .collect(),
             vec![
-                (2, player2.clone(), Uint128::new(20)), // Player 2 allocates 20 tokens to pot 2
-                (3, player1.clone(), Uint128::new(50)), // Player 1 allocates 50 tokens to pot 3
-                (4, player2.clone(), Uint128::new(15)), // Player 2 allocates 15 tokens to pot 4
+                Uint128::new(10),
+                Uint128::new(10),
+                Uint128::new(10), // 10 winning tokens
+                Uint128::new(10),
+                Uint128::new(10), // 40 losing tokens
+            ],
+            vec![
+                (2, player2.clone(), Uint128::new(20)), // Player 2 allocates 20 tokens to pot 2 <- losing
+                (3, player1.clone(), Uint128::new(50)), // Player 1 allocates 50 tokens to pot 3 <- winning
+                (4, player2.clone(), Uint128::new(15)), // Player 2 allocates 15 tokens to pot 4 <- losing
             ],
         );
 
+        let result = is_winning_pot(&deps.as_mut(), 3).unwrap();
+        assert_eq!(result, true, "Pot 3 should be winning.");
+
+        // Ensure that other pots are not falsely reported as winners
+        let result = is_winning_pot(&deps.as_mut(), 1).unwrap();
+        assert_eq!(result, false, "Pot 1 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 2).unwrap();
+        assert_eq!(result, false, "Pot 2 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 4).unwrap();
+        assert_eq!(result, false, "Pot 4 should not be winning.");
+        let result = is_winning_pot(&deps.as_mut(), 5).unwrap();
+        assert_eq!(result, false, "Pot 5 should not be winning.");
+
+        // Here we have 75 loosing tokens and 60 winning tokens.
+        // So we should distribute 37.5 to the 60. And maintain 37.5 for next game.
+
+        assert_eq!(
+            REALLOCATION_FEE_POOL.load(&deps.storage).unwrap(),
+            Uint128::zero(),
+            "Reallocation fee pool should be 0."
+        );
+
         // Assume pot 3 is the winner, redistribute from pots 1, 2, 4, and 5
-        let total_losing_tokens = Uint128::new(10 + 20 + 10 + 15 + 10); // Sum of initial and allocated tokens in losing pots
+        let total_losing_tokens = Uint128::new(10 + 10 + 10 + 10 + 20 + 15); // Sum of initial and allocated tokens in losing pots
         let half_losing_tokens = total_losing_tokens.multiply_ratio(1u128, 2u128);
+        println!("half_losing_tokens {}", half_losing_tokens); // we are losing .5 here due to Uint128 so 37.5 becomes 37
         redistribute_losing_tokens(&mut deps.as_mut(), &[3], total_losing_tokens).unwrap();
 
         // Check that the tokens were redistributed to pot 3
         let pot_state = POT_STATES.load(deps.as_mut().storage, 3).unwrap();
         let expected_tokens_for_pot_3 = Uint128::new(10 + 50) + half_losing_tokens; // Initial + allocated + redistributed amount for pot 3
         assert_eq!(
-            pot_state.total_tokens, expected_tokens_for_pot_3,
+            pot_state, expected_tokens_for_pot_3,
             "Pot 3's total tokens should include redistributed amount"
         );
 
@@ -613,7 +635,7 @@ mod tests {
         for pot_id in [1, 2, 4, 5] {
             let pot_state = POT_STATES.load(deps.as_mut().storage, pot_id).unwrap();
             assert_eq!(
-                pot_state.total_tokens,
+                pot_state,
                 Uint128::new(10), // They should retain their initial tokens
                 "Pot {}'s tokens should be at initial state",
                 pot_id

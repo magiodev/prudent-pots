@@ -19,13 +19,7 @@ Prudent Pot is a strategic, interactive game where players allocate tokens to va
 - Each game of Prudent Pot lasts for a fixed duration of 1 hour.
 - After the distribution of winnings at the end of a game, the next game starts immediately.
 
-#### Token Allocation and Reallocation
-
-- Players can allocate tokens to any pot.
-- An allocation fee of 2% is deducted from the tokens being placed, supporting operational costs and game development.
-- Players can reallocate tokens to a different pot, incurring a 5% reallocation fee that contributes to the next game's pool.
-
-#### Pot Rules
+### Pot Rules
 
 - **Pot 1 (Median Pot):** Wins if it holds the median number of tokens.
 - **Pot 2 (Highest Pot):** Wins if it has the highest token count.
@@ -33,10 +27,24 @@ Prudent Pot is a strategic, interactive game where players allocate tokens to va
 - **Pot 4 (Lowest Pot):** Wins if it has the lowest token count.
 - **Pot 5 (Prime Pot):** Wins if its token count is a prime number.
 
-#### Winning Pot Determination
+### Token Allocation and Reallocation
+
+- **Allocation**: Players can allocate tokens to any pot. An allocation fee of 2% is deducted from the tokens being placed, supporting operational costs and game development.
+- **Reallocation**: Players can reallocate tokens to a different pot, incurring a 5% reallocation fee that contributes to the next game's pool. This fee encourages players to make thoughtful decisions when reallocating.
+
+### Dynamic Bid Constraints and Reallocation Limits
+
+- **Minimum Bid**: The minimum amount a player can allocate or reallocate is dynamically set based on the average token count across all pots. This prevents players from placing insignificantly small bets and ensures engagement with the game's strategic elements.
+- **Maximum Bid**: The maximum bid is set to double the average token count across all pots, preventing overwhelmingly large bets that could unbalance the game.
+- **Reallocation Limits**: During reallocation, players must adhere to the same minimum and maximum bid constraints, ensuring consistency and fairness in strategic decisions throughout the game.
+
+These rules are designed to promote strategic depth, prevent exploitation, and ensure a balanced and engaging game experience for all players.
+
+### Winning Pot Determination
 
 - The game ends at a predetermined time or upon meeting a specific condition.
 - The winning pot is determined by its unique rule set.
+- Players in winning pots receive a proportional share of the total tokens, including redistributed tokens from losing pots.
 
 For detailed gameplay examples and strategic insights, see [Example Scenarios](./ExampleScenarios.md).
 
@@ -51,10 +59,6 @@ For detailed gameplay examples and strategic insights, see [Example Scenarios](.
 
 - 50% of tokens in losing pots are rolled over to the next game's pool.
 - The remaining 50% are distributed to the winning pots, where players receive a share based on their contribution.
-
-#### Distribution at Game End
-
-- Players in winning pots receive a proportional share of the total tokens, including redistributed tokens from losing pots.
 
 ### Strategic Considerations
 

@@ -24,11 +24,6 @@ pub struct PlayerAllocations {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct PotState {
-    pub total_tokens: Uint128,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct GameState {
     pub start_time: u64,
     pub end_time: u64,
@@ -36,5 +31,6 @@ pub struct GameState {
 
 pub const GAME_CONFIG: Item<GameConfig> = Item::new("game_config");
 pub const PLAYER_ALLOCATIONS: Map<Addr, PlayerAllocations> = Map::new("player_allocations");
-pub const POT_STATES: Map<u8, PotState> = Map::new("pot_states");
+pub const POT_STATES: Map<u8, Uint128> = Map::new("pot_states");
 pub const GAME_STATE: Item<GameState> = Item::new("game_state");
+pub const REALLOCATION_FEE_POOL: Item<Uint128> = Item::new("reallocation_fee_pool");
