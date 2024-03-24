@@ -218,11 +218,14 @@ pub fn prepare_next_game(deps: &mut DepsMut, env: &Env) -> StdResult<()> {
 
 #[cfg(test)]
 mod tests {
+    use crate::state::{PlayerAllocations, TokenAllocation};
+
     use super::*;
     use cosmwasm_std::testing::mock_dependencies;
     use cosmwasm_std::Uint128;
 
-    // Helper function to initialize pots with a given state for testing
+    // Setup fixtures
+
     fn setup_pots(deps: &mut DepsMut, tokens: Vec<Uint128>) {
         for (i, &amount) in tokens.iter().enumerate() {
             let pot_id = i as u8 + 1; // Pot IDs are 1-indexed
@@ -232,6 +235,50 @@ mod tests {
             POT_STATES.save(deps.storage, pot_id, &pot_state).unwrap();
         }
     }
+
+    fn setup_pots_and_allocations(
+        deps: &mut DepsMut,
+        pots: Vec<Uint128>,
+        allocations: Vec<(u8, Addr, Uint128)>,
+    ) {
+        for (i, &amount) in pots.iter().enumerate() {
+            let pot_id = i as u8 + 1; // Pot IDs are 1-indexed
+            let pot_state = PotState {
+                total_tokens: amount,
+            };
+            POT_STATES.save(deps.storage, pot_id, &pot_state).unwrap();
+        }
+
+        for (pot_id, player, amount) in allocations {
+            // Load existing allocations or initialize if not found
+            let mut player_allocations = PLAYER_ALLOCATIONS
+                .load(deps.storage, player.clone())
+                .unwrap_or_else(|_| PlayerAllocations {
+                    allocations: vec![],
+                });
+
+            // Add new allocation
+            player_allocations
+                .allocations
+                .push(TokenAllocation { pot_id, amount });
+
+            // Save the updated allocations
+            PLAYER_ALLOCATIONS
+                .save(deps.storage, player, &player_allocations)
+                .unwrap();
+
+            // Update the pot's total tokens to reflect the player's allocation
+            POT_STATES
+                .update(deps.storage, pot_id, |pot_state| -> Result<_, StdError> {
+                    let mut state = pot_state.unwrap(); // Use default if not found
+                    state.total_tokens += amount;
+                    Ok(state)
+                })
+                .unwrap();
+        }
+    }
+
+    // is_winning_pot
 
     #[test]
     fn identify_all_winning_pots_for_median() {
@@ -398,6 +445,8 @@ mod tests {
         assert_eq!(result, false, "Pot 4 should not be winning.");
     }
 
+    // calculate_total_losing_tokens
+
     #[test]
     fn total_losing_tokens_single_winner() {
         let mut deps = mock_dependencies();
@@ -488,6 +537,118 @@ mod tests {
             total_losing_tokens,
             Uint128::zero(),
             "Should not sum any tokens as all pots are winners"
+        );
+    }
+
+    #[test]
+    fn total_losing_tokens_with_player_allocations() {
+        let mut deps = mock_dependencies();
+
+        let player1 = Addr::unchecked("player1");
+        let player2 = Addr::unchecked("player2");
+
+        // Setup pots and player allocations
+        setup_pots_and_allocations(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+            ], // Initialize pots with 10 tokens like very first game after instantiation
+            vec![
+                (1, player1.clone(), Uint128::new(10)), // Player 1 allocates 10 tokens to pot 1
+                (2, player1.clone(), Uint128::new(20)), // Player 1 allocates 20 tokens to pot 2
+                (1, player2.clone(), Uint128::new(15)), // Player 2 allocates 15 tokens to pot 1
+                (3, player2.clone(), Uint128::new(25)), // Player 2 allocates 25 tokens to pot 3
+            ],
+        );
+
+        // Let's say pot 2 is the winner
+        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[2]).unwrap();
+        assert_eq!(
+            total_losing_tokens,
+            Uint128::new(10 + 15 + 25),
+            "Should sum tokens from all pots except pot 2"
+        );
+    }
+
+    // redistribute_losing_tokens
+
+    #[test]
+    fn redistribute_losing_tokens_basic() {
+        let mut deps = mock_dependencies();
+        let player1 = Addr::unchecked("player1");
+        let player2 = Addr::unchecked("player2");
+
+        // Setup pots with initial allocations
+        setup_pots_and_allocations(
+            &mut deps.as_mut(),
+            vec![
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+                Uint128::new(10u128),
+            ], // Initialize pots with 10 tokens like very first game after instantiation
+            vec![
+                (1, player1.clone(), Uint128::new(10)),
+                (2, player2.clone(), Uint128::new(20)),
+                (3, player1.clone(), Uint128::new(30)),
+                (4, player2.clone(), Uint128::new(40)),
+                (5, player1.clone(), Uint128::new(50)),
+            ],
+        );
+
+        // Assume pot 3 is the winner, redistribute from pots 1, 2, 4, and 5
+        let total_losing_tokens = Uint128::new(10 + 20 + 40 + 50);
+        redistribute_losing_tokens(&mut deps.as_mut(), &[3], total_losing_tokens).unwrap();
+
+        // Check that the tokens were redistributed to pot 3
+        let pot_state = POT_STATES.load(deps.as_mut().storage, 3).unwrap();
+        // The total tokens in pot 3 should now include the redistributed amount (half of the total losing tokens)
+        assert_eq!(
+            pot_state.total_tokens,
+            Uint128::new(30 + (total_losing_tokens / Uint128::new(2)).u128())
+        );
+
+        // Confirm that other pots' tokens remain unchanged (since they are losing pots)
+        for pot_id in [1, 2, 4, 5] {
+            let pot_state = POT_STATES.load(deps.as_mut().storage, pot_id).unwrap();
+            assert_eq!(
+                pot_state.total_tokens,
+                Uint128::zero(),
+                "Pot {} should not have its token count changed",
+                pot_id
+            );
+        }
+
+        // Verify that the players' allocations in the winning pot have been updated
+        let player1_allocations = PLAYER_ALLOCATIONS
+            .load(deps.as_mut().storage, player1)
+            .unwrap();
+        let player1_pot3_allocation = player1_allocations
+            .allocations
+            .into_iter()
+            .find(|a| a.pot_id == 3)
+            .unwrap();
+        assert!(
+            player1_pot3_allocation.amount > Uint128::new(30),
+            "Player 1's allocation in pot 3 should have increased due to redistribution"
+        );
+
+        let player2_allocations = PLAYER_ALLOCATIONS
+            .load(deps.as_mut().storage, player2)
+            .unwrap();
+        let player2_pot3_allocation = player2_allocations
+            .allocations
+            .into_iter()
+            .find(|a| a.pot_id == 3)
+            .unwrap();
+        assert!(
+            player2_pot3_allocation.amount > Uint128::zero(),
+            "Player 2 should now have an allocation in pot 3 due to redistribution"
         );
     }
 }
