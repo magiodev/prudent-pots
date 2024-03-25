@@ -216,7 +216,7 @@ pub fn redistribute_losing_tokens(
 }
 
 // Helper to prepare for the next game
-pub fn prepare_next_game(deps: &mut DepsMut, env: &Env) -> StdResult<()> {
+pub fn prepare_next_game(deps: DepsMut, env: &Env) -> StdResult<()> {
     let config = GAME_CONFIG.load(deps.storage)?;
     let game_duration = config.game_duration;
 
@@ -877,7 +877,7 @@ mod tests {
             .unwrap(); // example value
 
         // Invoke prepare_next_game
-        prepare_next_game(&mut deps.as_mut(), &env).unwrap();
+        prepare_next_game(deps.as_mut(), &env).unwrap();
 
         // Verify GAME_STATE
         let game_state = GAME_STATE.load(deps.as_mut().storage).unwrap();

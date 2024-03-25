@@ -8,7 +8,7 @@ use crate::{
         QueryReallocationFeePoolResponse, QueryWinningPotsReponse,
     },
     state::{
-        PlayerAllocations, PotState, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
+        PlayerAllocations, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
         REALLOCATION_FEE_POOL,
     },
 };

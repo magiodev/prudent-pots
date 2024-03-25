@@ -234,7 +234,7 @@ pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> 
     redistribute_losing_tokens(&mut deps, &winning_pots, total_losing_tokens)?;
 
     // Prepare for the next game
-    prepare_next_game(&mut deps, &env)?;
+    prepare_next_game(deps, &env)?;
 
     // Construct the response with appropriate attributes
     Ok(Response::new().add_attributes(vec![
