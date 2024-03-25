@@ -37,17 +37,7 @@ pub fn allocate_tokens(
 ) -> Result<Response, ContractError> {
     let config = GAME_CONFIG.load(deps.storage)?;
 
-    let total_amount = info.funds.iter().fold(Uint128::zero(), |acc, coin| {
-        if coin.denom == config.game_denom {
-            acc.checked_add(coin.amount).unwrap()
-        } else {
-            acc
-        }
-    });
-
-    if total_amount.is_zero() {
-        return Err(ContractError::NoFunds {});
-    }
+    let total_amount = validate_and_sum_funds(&info, &config.game_denom)?;
 
     // Implementing dynamic bid constraints
     let min_bid = calculate_min_bid(&deps.as_ref())?;
@@ -78,6 +68,26 @@ pub fn allocate_tokens(
         attr("amount", net_amount.to_string()),
         attr("fee", fee.to_string()),
     ]))
+}
+
+// Helper to validate and sum the funds in the specified denomination
+pub fn validate_and_sum_funds(
+    info: &MessageInfo,
+    expected_denom: &str,
+) -> Result<Uint128, ContractError> {
+    let total_amount = info.funds.iter().fold(Uint128::zero(), |acc, coin| {
+        if coin.denom == expected_denom {
+            acc.checked_add(coin.amount).unwrap()
+        } else {
+            acc
+        }
+    });
+
+    if total_amount.is_zero() {
+        return Err(ContractError::InvalidFunds {});
+    }
+
+    Ok(total_amount)
 }
 
 // Helper to update the player's allocation

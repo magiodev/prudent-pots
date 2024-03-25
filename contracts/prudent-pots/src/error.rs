@@ -12,8 +12,8 @@ pub enum ContractError {
     #[error("InvalidFunds")]
     InvalidFunds {},
 
-    #[error("NoFunds")]
-    NoFunds {},
+    #[error("InvalidInput")]
+    InvalidInput {},
 
     #[error("NoFunds")]
     InsufficientFunds {},

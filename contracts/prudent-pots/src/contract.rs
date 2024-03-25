@@ -1,18 +1,19 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
-};
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::execute::{
+    allocate_tokens, game_end, reallocate_tokens, update_config, validate_and_sum_funds,
+};
+use crate::helpers::prepare_next_game;
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::query::{
     query_bid_range, query_game_config, query_game_state, query_player_allocations,
     query_pot_state, query_reallocation_fee_pool,
 };
-use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
+use crate::state::GAME_CONFIG;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:prudent-pot";
@@ -20,24 +21,35 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    mut deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // TODO: Validate game_config fields
+    // Validate game_config fields and initial funds
+    if msg.config.fee_allocation > 100 || msg.config.fee_reallocation > 100 {
+        return Err(ContractError::InvalidInput {});
+    }
+    if msg.config.game_duration == 0 {
+        return Err(ContractError::InvalidInput {});
+    }
+    if msg.config.min_bid.is_zero() {
+        return Err(ContractError::InvalidInput {});
+    }
+
+    // Validate and sum initial funds
+    validate_and_sum_funds(&info, &msg.config.game_denom)?;
 
     GAME_CONFIG.save(deps.storage, &msg.config)?;
-    // pub const PLAYER_ALLOCATIONS: Map<Addr, PlayerAllocations> = Map::new("player_allocations");
-    // pub const POT_STATES: Map<u8, PotState> = Map::new("pot_states");
-    // pub const GAME_STATE: Item<GameState> = Item::new("game_state");
-    REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
+
+    // Initialize game state and pots for the next game
+    prepare_next_game(&mut deps, &env)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
-        .add_attribute("action", "instantiate")
+        .add_attribute("action", "initialize_game")
         .add_attribute("config", format!("{:?}", msg.config)))
 }
 
@@ -74,4 +86,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_json_binary(&query_reallocation_fee_pool(deps)?)
         }
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    Ok(Response::new().add_attribute("migrate", "successful"))
 }
