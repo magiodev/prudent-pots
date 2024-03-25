@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
 
-use prudent_pot::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use prudent_pots::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 fn main() {
     write_api! {
