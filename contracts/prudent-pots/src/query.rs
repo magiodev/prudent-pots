@@ -37,7 +37,7 @@ pub fn query_pot_state(deps: Deps, pot_id: u8) -> StdResult<QueryPotStateRespons
 pub fn query_pots_state(deps: Deps) -> StdResult<QueryPotsStateResponse> {
     let mut pots = Vec::new();
 
-    for pot_id in 0..5 {
+    for pot_id in 1..=5 {
         if let Ok(pot_state) = POT_STATES.load(deps.storage, pot_id) {
             pots.push(pot_state);
         }
@@ -49,7 +49,7 @@ pub fn query_pots_state(deps: Deps) -> StdResult<QueryPotsStateResponse> {
 pub fn query_winning_pots(deps: Deps) -> StdResult<QueryWinningPotsReponse> {
     let mut pots = Vec::new();
 
-    for pot_id in 0..5 {
+    for pot_id in 1..=5 {
         if is_winning_pot(&deps, pot_id)? {
             pots.push(pot_id);
         }
