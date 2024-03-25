@@ -18,7 +18,7 @@ use crate::query::{
 use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:prudent-pot";
+const CONTRACT_NAME: &str = "crates.io:prudent-pots";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
