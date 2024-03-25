@@ -222,6 +222,9 @@ pub fn prepare_next_game(deps: &mut DepsMut, env: &Env) -> StdResult<()> {
     };
     GAME_STATE.save(deps.storage, &new_game_state)?;
 
+    // Reset player allocations for the next game
+    PLAYER_ALLOCATIONS.clear(deps.storage);
+
     // Calculate the initial tokens for each pot, considering the reallocation fee pool
     let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.storage)?;
     let total_tokens_for_next_game = deps

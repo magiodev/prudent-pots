@@ -7,8 +7,8 @@ use crate::{
         update_pot_state,
     },
     state::{
-        GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
-        REALLOCATION_FEE_POOL,
+        GameConfig, PlayerAllocations, TokenAllocation, GAME_CONFIG, GAME_STATE,
+        PLAYER_ALLOCATIONS, POT_STATES, REALLOCATION_FEE_POOL,
     },
     ContractError,
 };
@@ -100,10 +100,12 @@ fn update_player_allocation(
     PLAYER_ALLOCATIONS.update(
         storage,
         player.clone(),
-        |allocations| -> Result<_, ContractError> {
-            let mut allocs = allocations.unwrap();
+        |existing_allocations| -> Result<_, ContractError> {
+            let mut allocs = existing_allocations.unwrap_or_else(|| PlayerAllocations {
+                allocations: Vec::new(),
+            });
             if let Some(allocation) = allocs.allocations.iter_mut().find(|a| a.pot_id == pot_id) {
-                allocation.amount.checked_add(amount).unwrap();
+                allocation.amount = allocation.amount.checked_add(amount).unwrap();
             } else {
                 allocs.allocations.push(TokenAllocation { pot_id, amount });
             }

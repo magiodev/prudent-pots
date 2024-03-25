@@ -6,7 +6,10 @@ use crate::{
         QueryBidRangeResponse, QueryGameConfigResponse, QueryGameStateResponse,
         QueryPlayerAllocationsResponse, QueryPotStateResponse, QueryReallocationFeePoolResponse,
     },
-    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES, REALLOCATION_FEE_POOL},
+    state::{
+        PlayerAllocations, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
+        REALLOCATION_FEE_POOL,
+    },
 };
 
 pub fn query_game_config(deps: Deps) -> StdResult<QueryGameConfigResponse> {
@@ -34,7 +37,13 @@ pub fn query_player_allocations(
     deps: Deps,
     address: Addr,
 ) -> StdResult<QueryPlayerAllocationsResponse> {
-    let allocations = PLAYER_ALLOCATIONS.load(deps.storage, address)?;
+    // Attempt to load player allocations. If not found, return an empty PlayerAllocations struct.
+    let allocations = PLAYER_ALLOCATIONS
+        .may_load(deps.storage, address)?
+        .unwrap_or_else(|| PlayerAllocations {
+            allocations: Vec::new(),
+        });
+
     Ok(QueryPlayerAllocationsResponse { allocations })
 }
 

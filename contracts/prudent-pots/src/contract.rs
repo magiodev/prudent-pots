@@ -1,6 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -13,7 +15,7 @@ use crate::query::{
     query_bid_range, query_game_config, query_game_state, query_player_allocations,
     query_pot_state, query_reallocation_fee_pool,
 };
-use crate::state::GAME_CONFIG;
+use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:prudent-pot";
@@ -43,6 +45,7 @@ pub fn instantiate(
     validate_and_sum_funds(&info, &msg.config.game_denom)?;
 
     GAME_CONFIG.save(deps.storage, &msg.config)?;
+    REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Initialize game state and pots for the next game
     prepare_next_game(&mut deps, &env)?;
