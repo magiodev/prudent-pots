@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 
-use crate::state::{GameConfig, GameState, PlayerAllocations};
+use crate::state::{GameConfig, GameState, PlayerAllocations, PotState};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -38,6 +38,10 @@ pub enum QueryMsg {
     QueryBidRange {},
     #[returns(QueryPotStateResponse)]
     QueryPotState { pot_id: u8 },
+    #[returns(QueryPotsStateResponse)]
+    QueryPotsState {},
+    #[returns(QueryWinningPotsReponse)]
+    QueryWinningPots {},
     #[returns(QueryPlayerAllocationsResponse)]
     QueryPlayerAllocations { address: Addr },
     #[returns(QueryReallocationFeePoolResponse)]
@@ -62,8 +66,17 @@ pub struct QueryBidRangeResponse {
 
 #[cw_serde]
 pub struct QueryPotStateResponse {
-    pub pot_id: u8,
-    pub pot_state: Uint128,
+    pub pot: PotState,
+}
+
+#[cw_serde]
+pub struct QueryPotsStateResponse {
+    pub pots: Vec<PotState>,
+}
+
+#[cw_serde]
+pub struct QueryWinningPotsReponse {
+    pub pots: Vec<u8>,
 }
 
 #[cw_serde]

@@ -1,13 +1,14 @@
 use cosmwasm_std::{Addr, Deps, StdResult};
 
 use crate::{
-    helpers::{calculate_max_bid, calculate_min_bid},
+    helpers::{calculate_max_bid, calculate_min_bid, is_winning_pot},
     msg::{
         QueryBidRangeResponse, QueryGameConfigResponse, QueryGameStateResponse,
-        QueryPlayerAllocationsResponse, QueryPotStateResponse, QueryReallocationFeePoolResponse,
+        QueryPlayerAllocationsResponse, QueryPotStateResponse, QueryPotsStateResponse,
+        QueryReallocationFeePoolResponse, QueryWinningPotsReponse,
     },
     state::{
-        PlayerAllocations, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
+        PlayerAllocations, PotState, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
         REALLOCATION_FEE_POOL,
     },
 };
@@ -29,8 +30,32 @@ pub fn query_bid_range(deps: Deps) -> StdResult<QueryBidRangeResponse> {
 }
 
 pub fn query_pot_state(deps: Deps, pot_id: u8) -> StdResult<QueryPotStateResponse> {
-    let pot_state = POT_STATES.load(deps.storage, pot_id)?;
-    Ok(QueryPotStateResponse { pot_id, pot_state })
+    let pot = POT_STATES.load(deps.storage, pot_id)?;
+    Ok(QueryPotStateResponse { pot })
+}
+
+pub fn query_pots_state(deps: Deps) -> StdResult<QueryPotsStateResponse> {
+    let mut pots = Vec::new();
+
+    for pot_id in 0..5 {
+        if let Ok(pot_state) = POT_STATES.load(deps.storage, pot_id) {
+            pots.push(pot_state);
+        }
+    }
+
+    Ok(QueryPotsStateResponse { pots })
+}
+
+pub fn query_winning_pots(deps: Deps) -> StdResult<QueryWinningPotsReponse> {
+    let mut pots = Vec::new();
+
+    for pot_id in 0..5 {
+        if is_winning_pot(&deps, pot_id)? {
+            pots.push(pot_id);
+        }
+    }
+
+    Ok(QueryWinningPotsReponse { pots })
 }
 
 pub fn query_player_allocations(

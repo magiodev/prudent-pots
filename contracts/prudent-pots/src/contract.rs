@@ -13,7 +13,7 @@ use crate::helpers::prepare_next_game;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::query::{
     query_bid_range, query_game_config, query_game_state, query_player_allocations,
-    query_pot_state, query_reallocation_fee_pool,
+    query_pot_state, query_pots_state, query_reallocation_fee_pool, query_winning_pots,
 };
 use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
@@ -23,7 +23,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    mut deps: DepsMut,
+    deps: &mut DepsMut,
     env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
@@ -48,7 +48,7 @@ pub fn instantiate(
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Initialize game state and pots for the next game
-    prepare_next_game(&mut deps, &env)?;
+    prepare_next_game(deps, &env)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -82,6 +82,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::QueryGameState {} => to_json_binary(&query_game_state(deps)?),
         QueryMsg::QueryBidRange {} => to_json_binary(&query_bid_range(deps)?),
         QueryMsg::QueryPotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
+        QueryMsg::QueryPotsState {} => to_json_binary(&query_pots_state(deps)?),
+        QueryMsg::QueryWinningPots {} => to_json_binary(&query_winning_pots(deps)?),
         QueryMsg::QueryPlayerAllocations { address } => {
             to_json_binary(&query_player_allocations(deps, address)?)
         }

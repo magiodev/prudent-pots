@@ -185,7 +185,7 @@ pub fn reallocate_tokens(
         from_pot_id,
         |pot_state| -> Result<_, ContractError> {
             let mut state = pot_state.unwrap();
-            state = state.checked_sub(amount+fee).unwrap(); // remove it adding the fee to avoid inflating
+            state.pot_state = state.pot_state.checked_sub(amount + fee).unwrap(); // remove it adding the fee to avoid inflating
             Ok(state)
         },
     )?;
@@ -196,7 +196,7 @@ pub fn reallocate_tokens(
         to_pot_id,
         |pot_state| -> Result<_, ContractError> {
             let mut state = pot_state.unwrap();
-            state = state.checked_add(amount).unwrap();
+            state.pot_state = state.pot_state.checked_add(amount).unwrap();
             Ok(state)
         },
     )?;
@@ -222,7 +222,7 @@ pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> 
     // Determine the winning pot(s) based on the unique rules for each pot
     let mut winning_pots = Vec::new();
     for pot_id in 1..=5 {
-        if is_winning_pot(&deps, pot_id)? {
+        if is_winning_pot(&deps.as_ref(), pot_id)? {
             winning_pots.push(pot_id);
         }
     }
@@ -251,7 +251,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies_with_balance, mock_env};
     use cosmwasm_std::{coins, Addr, Env, Uint128};
 
-    use crate::state::GameState;
+    use crate::state::{GameState, PotState};
 
     fn setup_game_end(deps: &mut DepsMut, env: &mut Env) {
         let game_config = GameConfig {
@@ -278,7 +278,14 @@ mod tests {
         // Set up pots with a simulated initial balance
         for pot_id in 1..=5 {
             POT_STATES
-                .save(deps.storage, pot_id, &Uint128::from(1000u128))
+                .save(
+                    deps.storage,
+                    pot_id,
+                    &PotState {
+                        pot_id,
+                        pot_state: Uint128::from(1000u128),
+                    },
+                )
                 .unwrap();
         }
     }
@@ -300,7 +307,7 @@ mod tests {
         for pot_id in 1..=5 {
             let pot_state = POT_STATES.load(deps.as_ref().storage, pot_id).unwrap();
             assert!(
-                pot_state > Uint128::zero(),
+                pot_state.pot_state.gt(&Uint128::zero()),
                 "Pot {} should have initial tokens for the next game",
                 pot_id
             );
