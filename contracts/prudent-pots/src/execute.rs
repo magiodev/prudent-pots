@@ -185,7 +185,7 @@ pub fn reallocate_tokens(
         from_pot_id,
         |pot_state| -> Result<_, ContractError> {
             let mut state = pot_state.unwrap();
-            state = state.checked_sub(amount).unwrap();
+            state = state.checked_sub(amount+fee).unwrap(); // remove it adding the fee to avoid inflating
             Ok(state)
         },
     )?;

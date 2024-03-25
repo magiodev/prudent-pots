@@ -19,7 +19,7 @@ pub enum ExecuteMsg {
     ReallocateTokens {
         from_pot_id: u8,
         to_pot_id: u8,
-        amount: Uint128,
+        amount: Uint128, // TODO: Think if this is dangerous and we should do all or nothing
     },
     GameEnd {},
 }
