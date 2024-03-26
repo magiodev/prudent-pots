@@ -185,7 +185,7 @@ pub fn reallocate_tokens(
         from_pot_id,
         |pot_state| -> Result<_, ContractError> {
             let mut state = pot_state.unwrap();
-            state.pot_state = state.pot_state.checked_sub(amount + fee).unwrap(); // remove it adding the fee to avoid inflating
+            state.amount = state.amount.checked_sub(amount + fee).unwrap(); // remove it adding the fee to avoid inflating
             Ok(state)
         },
     )?;
@@ -196,7 +196,7 @@ pub fn reallocate_tokens(
         to_pot_id,
         |pot_state| -> Result<_, ContractError> {
             let mut state = pot_state.unwrap();
-            state.pot_state = state.pot_state.checked_add(amount).unwrap();
+            state.amount = state.amount.checked_add(amount).unwrap();
             Ok(state)
         },
     )?;
@@ -231,13 +231,13 @@ pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> 
     let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &winning_pots)?;
 
     // Redistribute the tokens from losing pots:
-    redistribute_losing_tokens(&mut deps, &winning_pots, total_losing_tokens)?;
+    let messages = redistribute_losing_tokens(&mut deps, &winning_pots, total_losing_tokens)?;
 
     // Prepare for the next game
     prepare_next_game(deps, &env)?;
 
     // Construct the response with appropriate attributes
-    Ok(Response::new().add_attributes(vec![
+    Ok(Response::new().add_messages(messages).add_attributes(vec![
         attr("method", "execute"),
         attr("action", "game_end"),
         attr("winning_pots", format!("{:?}", winning_pots)),
@@ -251,7 +251,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies_with_balance, mock_env};
     use cosmwasm_std::{coins, Addr, Env, Uint128};
 
-    use crate::state::{GameState, PotState};
+    use crate::state::{GameState, TokenAllocation};
 
     fn setup_game_end(deps: &mut DepsMut, env: &mut Env) {
         let game_config = GameConfig {
@@ -281,9 +281,9 @@ mod tests {
                 .save(
                     deps.storage,
                     pot_id,
-                    &PotState {
+                    &TokenAllocation {
                         pot_id,
-                        pot_state: Uint128::from(1000u128),
+                        amount: Uint128::from(1000u128),
                     },
                 )
                 .unwrap();
@@ -307,7 +307,7 @@ mod tests {
         for pot_id in 1..=5 {
             let pot_state = POT_STATES.load(deps.as_ref().storage, pot_id).unwrap();
             assert!(
-                pot_state.pot_state.gt(&Uint128::zero()),
+                pot_state.amount.gt(&Uint128::zero()),
                 "Pot {} should have initial tokens for the next game",
                 pot_id
             );

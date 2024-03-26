@@ -3,54 +3,53 @@
     <!-- TODO: Highlight the pot red or green based on if its currently winning or not. -->
     <div class="pot-header">
       <h5>{{ getPotName(pot.pot_id) }}</h5>
+
+      <span>Status: {{isPotWinning ? "Winner" : "Looser"}}</span>
     </div>
+
     <div class="pot-content">
       <p>{{ getPotDescription(pot.pot_id) }}</p>
       <!-- TODO cut decimals to 6 only if more-->
-      <span class="pot-tokens p-1">{{ Number(pot.pot_state / 1000000) }} $OSMO</span>
+      <span class="pot-tokens p-1">{{ Number(pot.amount / 1000000) }} $OSMO</span>
     </div>
+
     <div class="pot-footer mt-3">
-      <button @click="onAllocateClick">Allocate</button>
+      <button @click="onPotClick(pot.pot_id)">Select</button>
     </div>
   </div>
 </template>
 
 <script>
+import {mapGetters, mapMutations} from "vuex";
+import mxPot from "@/mixin/pot";
+
 export default {
   name: "PotItemComponent",
+
+  mixins: [mxPot],
+
   props: {
     pot: {
       type: Object,
       required: true
     }
   },
-  methods: {
-    getPotName(potId) {
-      const potNames = {
-        1: 'Median Pot',
-        2: 'Highest Pot',
-        3: 'Even Pot',
-        4: 'Lowest Pot',
-        5: 'Prime Pot'
-      };
-      return potNames[potId] || 'Unknown Pot';
-    },
 
-    getPotDescription(potId) {
-      const potDescriptions = {
-        1: 'This pot wins if it has the median number of tokens.',
-        2: 'This pot wins if it has the most tokens.',
-        3: 'This pot wins if it has an even number of tokens.',
-        4: 'This pot wins if it has the fewest tokens.',
-        5: 'This pot wins if its number of tokens is a prime number.'
-      };
-      return potDescriptions[potId] || 'No description available.';
-    },
+  computed: {
+    ...mapGetters(['winningPots']),
+
+    isPotWinning() {
+      return !!this.winningPots.find(pot => pot === Number(this.pot.pot_id))
+    }
+  },
+
+  methods: {
+    ...mapMutations(['setSelectedPot']),
 
     // TODO: Implement this.electedPot Vuex store item
-    onPotClick() {
+    onPotClick(potId) {
       // Do something with userSigner
-      alert("TODO!")
+      this.setSelectedPot(potId)
     }
   }
 };

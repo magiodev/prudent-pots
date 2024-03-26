@@ -3,14 +3,13 @@
     <div class="offset-md-3 col-md-6">
       <div class="accordion" id="gameInfoAccordion" v-if="gameConfig">
         <div class="accordion-item">
-          <h2 class="accordion-header" id="gameConfigHeading">
+          <h2 class="accordion-header" id="headingTwo">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#gameConfig"
-                    aria-expanded="true" aria-controls="gameConfig">
+                    aria-expanded="false" aria-controls="gameConfig">
               Game Configuration
             </button>
           </h2>
-          <div id="gameConfig" class="accordion-collapse collapse show" aria-labelledby="gameConfigHeading"
-               data-bs-parent="#gameInfoAccordion">
+          <div id="gameConfig" class="accordion-collapse collapse" aria-labelledby="gameConfigHeading" data-bs-parent="#gameInfoAccordion">
             <div class="accordion-body">
               <ul>
                 <li>Fee Allocation: {{ gameConfig.fee_allocation }}%</li>

@@ -13,7 +13,9 @@ export default createStore({
       signer: null,
       querier: null,
       address: null,
+      allocations: []
     },
+
     gameConfig: null,
     gameState: null,
     pots: [],
@@ -23,6 +25,10 @@ export default createStore({
       max_bid: null,
     },
     reallocationFeePool: null,
+
+    utils: {
+      selectedPot: null
+    }
   },
 
   getters: {
@@ -36,6 +42,10 @@ export default createStore({
 
     userAddress(state) {
       return state.user.address;
+    },
+
+    userAllocations(state) {
+      return state.user.allocations
     },
 
     gameConfig(state) {
@@ -64,6 +74,10 @@ export default createStore({
 
     reallocationFeePool(state) {
       return state.reallocationFeePool;
+    },
+
+    utils(state) {
+      return state.utils
     }
   },
 
@@ -78,6 +92,10 @@ export default createStore({
 
     setUserQuerier(state, querier) {
       state.user.querier = querier;
+    },
+
+    setUserAllocations(state, allocations) {
+      state.user.allocations = allocations;
     },
 
     // Game
@@ -106,6 +124,12 @@ export default createStore({
     setReallocationFeePool(state, reallocationFeePool) {
       state.reallocationFeePool = reallocationFeePool;
     },
+
+    // Utils
+    setSelectedPot(state, potId) {
+      state.utils.selectedPot = Number(potId);
+
+    }
   },
 
   actions: {
@@ -146,6 +170,24 @@ export default createStore({
         const queryClient = await CosmWasmClient.connect(process.env.VUE_APP_RPC);
         commit("setUserQuerier", queryClient);
       }
+    },
+
+    async fetchUserAllocations({state, commit}) {
+      if (!state.user.address || !state.user.querier) {
+        console.error("Address or Querier is not initialized");
+        return;
+      }
+
+      // Use CosmWasmClient for the query
+      const data = await state.user.querier.queryContractSmart(
+        process.env.VUE_APP_CONTRACT,
+        {
+          query_player_allocations: {
+            address: state.user.address
+          }
+        }
+      );
+      commit("setUserAllocations", data.allocations);
     },
 
     async fetchGameConfig({state, commit}) {
@@ -219,7 +261,7 @@ export default createStore({
         process.env.VUE_APP_CONTRACT,
         {query_bid_range: {}}
       );
-      commit("setBidRange", {min_bid: data.min_bid, max_bid: data.max_bid});
+      commit("setBidRange", {min_bid: Number(data.min_bid), max_bid: Number(data.max_bid)});
     },
 
     async fetchReallocationFeePool({state, commit}) {

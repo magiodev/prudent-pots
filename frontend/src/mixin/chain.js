@@ -97,11 +97,9 @@ const mxChain = {
       //   baseFee = 0.0025; // Fallback base fee if the request fails
       // }
       const baseFee = 0.0025
-      console.log("baseFee", baseFee)
 
       // baseFee * 3 doesn't seem to be necessary after v23 upgrade, but leaving that here for the moment
       const amount = Math.ceil(baseFee * 1 * gas).toString();
-      console.log("amount", amount)
       return {
         amount: [{denom: this.gameConfig.game_denom, amount}],
         gas: gas.toString(),

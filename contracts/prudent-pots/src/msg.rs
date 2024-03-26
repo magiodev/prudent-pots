@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 
-use crate::state::{GameConfig, GameState, PlayerAllocations, PotState};
+use crate::state::{GameConfig, GameState, PlayerAllocations, TokenAllocation};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -66,12 +66,12 @@ pub struct QueryBidRangeResponse {
 
 #[cw_serde]
 pub struct QueryPotStateResponse {
-    pub pot: PotState,
+    pub pot: TokenAllocation,
 }
 
 #[cw_serde]
 pub struct QueryPotsStateResponse {
-    pub pots: Vec<PotState>,
+    pub pots: Vec<TokenAllocation>,
 }
 
 #[cw_serde]
