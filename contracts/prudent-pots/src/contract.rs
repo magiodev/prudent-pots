@@ -48,7 +48,7 @@ pub fn instantiate(
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Initialize game state and pots for the next game
-    prepare_next_game(deps, &env)?;
+    prepare_next_game(deps, &env, &vec![])?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")

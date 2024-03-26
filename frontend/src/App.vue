@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import {mapActions} from "vuex";
+import {mapActions, mapGetters} from "vuex";
 import NavbarComponent from "@/components/Layout/NavbarComponent.vue";
 import LoadingComponent from "@/components/Layout/LoadingComponent.vue";
 import FooterComponent from "@/components/Layout/FooterComponent.vue";
@@ -19,6 +19,10 @@ export default {
   name: "App",
 
   components: {FooterComponent, LoadingComponent, NavbarComponent},
+
+  computed: {
+    ...mapGetters(['userAddress'])
+  },
 
   data() {
     return {
@@ -29,6 +33,7 @@ export default {
   async created() {
     // User
     await this.initUser();
+    if (this.userAddress) await this.fetchUserAllocations()
     this.isBusy = false;
 
     // Game
@@ -43,7 +48,7 @@ export default {
   // TODO: We should be add intervals to fetch gameState, pots, winningPots and reallocationFeePool. Basically everything less gameConfig and initUser. This should be on a short interval to allow UI updates. lets set a different time foreach one so i can fine tune it later
 
   methods: {
-    ...mapActions(['initUser', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool'])
+    ...mapActions(['initUser', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool', 'fetchUserAllocations'])
   }
 };
 </script>

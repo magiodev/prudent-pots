@@ -187,7 +187,8 @@ export default createStore({
           }
         }
       );
-      commit("setUserAllocations", data.allocations);
+      console.log(data)
+      commit("setUserAllocations", data.allocations.allocations);
     },
 
     async fetchGameConfig({state, commit}) {

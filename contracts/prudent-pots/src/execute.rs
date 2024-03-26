@@ -3,8 +3,7 @@ use cosmwasm_std::{attr, Addr, DepsMut, Env, MessageInfo, Response, Storage, Uin
 use crate::{
     helpers::{
         calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens, create_fee_message,
-        is_contract_admin, is_winning_pot, prepare_next_game, redistribute_losing_tokens,
-        update_pot_state,
+        distribute_tokens, is_contract_admin, is_winning_pot, prepare_next_game, update_pot_state,
     },
     state::{
         GameConfig, PlayerAllocations, TokenAllocation, GAME_CONFIG, GAME_STATE,
@@ -231,10 +230,10 @@ pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> 
     let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &winning_pots)?;
 
     // Redistribute the tokens from losing pots:
-    let messages = redistribute_losing_tokens(&mut deps, &winning_pots, total_losing_tokens)?;
+    let messages = distribute_tokens(&mut deps, &winning_pots, total_losing_tokens)?;
 
     // Prepare for the next game
-    prepare_next_game(deps, &env)?;
+    prepare_next_game(deps, &env, &messages)?;
 
     // Construct the response with appropriate attributes
     Ok(Response::new().add_messages(messages).add_attributes(vec![

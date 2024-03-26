@@ -68,7 +68,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchGameState', 'fetchPots', 'fetchBidRange', 'fetchWinningPots', 'fetchReallocationFeePool']),
+    ...mapActions(['fetchGameState', 'fetchPots', 'fetchBidRange', 'fetchWinningPots', 'fetchReallocationFeePool', 'fetchUserAllocations']),
 
     setMinBid() {
       this.bidAmount = this.minBid;
@@ -99,6 +99,7 @@ export default {
         // TODO: Create wrapper as fetchGameInit()
         await this.fetchGameState()
         await this.fetchPots()
+        await this.fetchUserAllocations()
         await this.fetchBidRange()
         this.setMinBid()
         await this.fetchWinningPots()

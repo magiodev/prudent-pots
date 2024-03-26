@@ -1,10 +1,8 @@
 <template>
-  <div class="pot-item-component col-md-2 text-center text-black">
+  <div class="pot-item-component col-md-2 text-center text-black" :class="isPotWinning ? 'bg-success' : 'bg-danger'">
     <!-- TODO: Highlight the pot red or green based on if its currently winning or not. -->
     <div class="pot-header">
       <h5>{{ getPotName(pot.pot_id) }}</h5>
-
-      <span>Status: {{isPotWinning ? "Winner" : "Looser"}}</span>
     </div>
 
     <div class="pot-content">
@@ -15,6 +13,13 @@
 
     <div class="pot-footer mt-3">
       <button @click="onPotClick(pot.pot_id)">Select</button>
+    </div>
+
+    <hr/>
+
+    <div class="allocations card">
+      <h6>Your allocation:</h6>
+      <span>{{ allocations }} $OSMO</span>
     </div>
   </div>
 </template>
@@ -36,10 +41,14 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['winningPots']),
+    ...mapGetters(['winningPots', 'userAllocations']),
 
     isPotWinning() {
       return !!this.winningPots.find(pot => pot === Number(this.pot.pot_id))
+    },
+
+    allocations() {
+      return this.userAllocations.find(a => a.pot_id === Number(this.pot.pot_id))?.amount || 0
     }
   },
 
