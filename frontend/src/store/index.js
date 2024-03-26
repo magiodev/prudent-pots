@@ -1,6 +1,8 @@
 import {createStore} from "vuex";
-import {SigningStargateClient} from "@cosmjs/stargate";
+import {AminoTypes, SigningStargateClient} from "@cosmjs/stargate";
 import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
+import {Registry} from "@cosmjs/proto-signing";
+import {cosmosAminoConverters, cosmosProtoRegistry, cosmwasmAminoConverters, cosmwasmProtoRegistry} from "osmojs";
 
 export default createStore({
   /**
@@ -118,10 +120,25 @@ export default createStore({
         const accounts = await offlineSigner.getAccounts();
         commit("setUserAddress", accounts[0].address);
 
+        const protoRegistry = [
+          ...cosmosProtoRegistry,
+          ...cosmwasmProtoRegistry,
+        ];
+        const aminoConverters = {
+          ...cosmosAminoConverters,
+          ...cosmwasmAminoConverters,
+        };
+        const registry = new Registry(protoRegistry);
+        const aminoTypes = new AminoTypes(aminoConverters);
+
         const signingClient = await SigningStargateClient.connectWithSigner(
           process.env.VUE_APP_RPC,
           offlineSigner,
           // other options
+          {
+            registry,
+            aminoTypes
+          }
         );
         commit("setUserSigner", signingClient);
 

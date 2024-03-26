@@ -35,6 +35,7 @@ export default {
       };
       return potNames[potId] || 'Unknown Pot';
     },
+
     getPotDescription(potId) {
       const potDescriptions = {
         1: 'This pot wins if it has the median number of tokens.',
@@ -45,7 +46,9 @@ export default {
       };
       return potDescriptions[potId] || 'No description available.';
     },
-    onAllocateClick() {
+
+    // TODO: Implement this.electedPot Vuex store item
+    onPotClick() {
       // Do something with userSigner
       alert("TODO!")
     }

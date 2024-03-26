@@ -8,7 +8,7 @@
           <p v-else class="card-text text-danger">The game has ended. Please trigger the end game process.</p>
 
           <!-- Button is only shown when timeLeft is falsy, meaning the game has ended -->
-          <button v-if="!timeLeft" class="btn btn-primary mb-3" @click="endGame">End Game</button>
+          <button v-if="!timeLeft" class="btn btn-primary mb-3" @click="onEndGame">End Game</button>
 
           <p>Game started @ {{ new Date(gameState.start_time * 1000).toLocaleString() }}, and will end @
             {{ new Date(gameState.end_time * 1000).toLocaleString() }}.</p>
@@ -19,13 +19,14 @@
 </template>
 
 <script>
-import {mapGetters} from "vuex";
+import {mapActions, mapGetters} from "vuex";
 import mxChain from "@/mixin/chain";
+import mxToast from "@/mixin/toast";
 
 export default {
   name: "TimerComponent",
 
-  mixins: [mxChain],
+  mixins: [mxChain, mxToast],
 
   computed: {
     ...mapGetters(['gameState']),
@@ -62,8 +63,26 @@ export default {
   },
 
   methods: {
+    ...mapActions(['fetchGameState', 'fetchPots', 'fetchBidRange', 'fetchWinningPots', 'fetchReallocationFeePool']),
+
     updateCurrentTime() {
       this.currentTime = new Date().getTime();
+    },
+
+    async onEndGame() {
+      try {
+        await this.endGame()
+        this.toast.success("Tx successful")
+        // Fetch new game information after ending the previous match
+        // TODO: Create wrapper as fetchGameInit()
+        await this.fetchGameState()
+        await this.fetchPots()
+        await this.fetchBidRange()
+        await this.fetchWinningPots()
+        await this.fetchReallocationFeePool()
+      } catch (e) {
+        this.toast.success("Tx error")
+      }
     }
   }
 }

@@ -27,7 +27,7 @@ const mxChain = {
           ],
         }
       }
-      return this.submitTx(msg)
+      return this._submitTx(msg)
     },
 
     async reallocateTokens(fromPotId, toPotId, amount) {
@@ -48,17 +48,15 @@ const mxChain = {
           ],
         }
       }
-      return this.submitTx(msg)
+      return this._submitTx(msg)
     },
 
     async endGame() {
-      const address = this.userAddress
-
       /** @type {import("@cosmjs/proto-signing").EncodeObject} */
       const msg = {
         typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
         value: {
-          sender: address,
+          sender: this.userAddress,
           contract: process.env.VUE_APP_CONTRACT,
           msg: toUtf8(JSON.stringify({
             game_end: {}
@@ -66,16 +64,16 @@ const mxChain = {
           funds: [],
         }
       }
-      return this.submitTx(msg)
+      return this._submitTx(msg)
     },
 
     // PRIVATE
 
-    async submitTx(message) {
+    async _submitTx(message) {
       try {
-        const gasWanted = await this.userSigner.simulate(this.address, [message])
-        const fee = await this.calculateFee(gasWanted);
-        const response = await this.userSigner.signAndBroadcast(this.address, [message], fee);
+        const gasWanted = await this.userSigner.simulate(this.userAddress, [message])
+        const fee = this._calculateFee(gasWanted);
+        const response = await this.userSigner.signAndBroadcast(this.userAddress, [message], fee);
 
         // Log and return success immediately if transaction succeeds
         console.log(`Transaction successful: ${response.transactionHash}`)
@@ -87,7 +85,7 @@ const mxChain = {
     },
 
     // This has implemented as: https://hackmd.io/@3DOBr1TJQ3mQAFDEO0BXgg/S1N09wpQp
-    async calculateFee(gasWanted) {
+    _calculateFee(gasWanted) {
       const gas = Math.ceil(gasWanted * 1.3);
       // let baseFee;
       //
@@ -99,9 +97,11 @@ const mxChain = {
       //   baseFee = 0.0025; // Fallback base fee if the request fails
       // }
       const baseFee = 0.0025
+      console.log("baseFee", baseFee)
 
       // baseFee * 3 doesn't seem to be necessary after v23 upgrade, but leaving that here for the moment
-      const amount = String(Math.ceil((baseFee * 1) * gas));
+      const amount = Math.ceil(baseFee * 1 * gas).toString();
+      console.log("amount", amount)
       return {
         amount: [{denom: this.gameConfig.game_denom, amount}],
         gas: gas.toString(),
