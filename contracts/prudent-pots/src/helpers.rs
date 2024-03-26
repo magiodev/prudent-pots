@@ -186,13 +186,10 @@ pub fn distribute_tokens(
         }
     }
 
-    // Distribute only half of the total tokens from unallocated winning pots
-    let total_redistribution_amount =
-        distribution_amount + (total_in_unallocated_winning_pots.multiply_ratio(1u128, 2u128));
+    // Redistribute unallocated pots' amount to allocated pots
+    let total_redistribution_amount = distribution_amount + total_in_unallocated_winning_pots;
 
     let mut messages: Vec<CosmosMsg> = vec![];
-    let mut total_distributed_to_players = Uint128::zero();
-
     if !total_in_allocated_winning_pots.is_zero() {
         for pot_id in &winning_pots_with_allocations {
             let pot_state = POT_STATES.load(deps.storage, *pot_id)?;
@@ -200,15 +197,12 @@ pub fn distribute_tokens(
                 .multiply_ratio(pot_state.amount, total_in_allocated_winning_pots);
 
             // Iterate over player allocations for the pot
-            let player_allocations =
-                PLAYER_ALLOCATIONS.range(deps.storage, None, None, cosmwasm_std::Order::Ascending);
+            let player_allocations = PLAYER_ALLOCATIONS.range(deps.storage, None, None, cosmwasm_std::Order::Ascending);
             for item in player_allocations {
                 let (addr, allocations) = item?;
                 for allocation in &allocations.allocations {
                     if allocation.pot_id == *pot_id {
-                        let player_share =
-                            pot_share.multiply_ratio(allocation.amount, pot_state.amount);
-                        total_distributed_to_players += player_share;
+                        let player_share = pot_share.multiply_ratio(allocation.amount, pot_state.amount);
                         messages.push(CosmosMsg::Bank(BankMsg::Send {
                             to_address: addr.to_string(),
                             amount: vec![Coin {
@@ -222,9 +216,8 @@ pub fn distribute_tokens(
         }
     }
 
-    // Calculate the remaining amount for the next game
-    let remaining_for_next_game = tokens_for_redistribution - total_distributed_to_players;
-    REALLOCATION_FEE_POOL.save(deps.storage, &remaining_for_next_game)?;
+    // Save the remaining tokens to the reallocation fee pool
+    REALLOCATION_FEE_POOL.save(deps.storage, &reallocation_fee_pool)?;
 
     Ok(messages)
 }
