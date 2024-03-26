@@ -8,8 +8,8 @@ use crate::{
         validate_and_sum_funds,
     },
     state::{
-        GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE,
-        PLAYER_ALLOCATIONS, POT_STATES, REALLOCATION_FEE_POOL,
+        GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
+        REALLOCATION_FEE_POOL,
     },
     ContractError,
 };
@@ -45,8 +45,8 @@ pub fn allocate_tokens(
     let total_amount = validate_and_sum_funds(&info, &config.game_denom)?;
 
     // Implementing dynamic bid constraints
-    let min_bid = calculate_min_bid(&deps.as_ref())?;
-    let max_bid = calculate_max_bid(&deps.as_ref())?;
+    let min_bid = calculate_min_bid(deps.storage)?;
+    let max_bid = calculate_max_bid(deps.storage)?;
 
     if total_amount < min_bid || total_amount > max_bid {
         return Err(ContractError::BidOutOfRange {
@@ -98,8 +98,8 @@ pub fn reallocate_tokens(
     })?;
 
     // Ensure the reallocation amount is within the set minimum and maximum bid limits
-    let min_bid = calculate_min_bid(&deps.as_ref())?; // Convert DepsMut to Deps with as_ref()
-    let max_bid = calculate_max_bid(&deps.as_ref())?;
+    let min_bid = calculate_min_bid(deps.storage)?; // Convert DepsMut to Deps with as_ref()
+    let max_bid = calculate_max_bid(deps.storage)?;
 
     if amount < min_bid || amount > max_bid {
         return Err(ContractError::BidOutOfRange {
@@ -176,7 +176,7 @@ pub fn reallocate_tokens(
     ]))
 }
 
-pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> {
+pub fn game_end(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
     // Verify if the game's end time has been reached
     let game_state = GAME_STATE.load(deps.storage)?;
     if env.block.time.seconds() < game_state.end_time {
@@ -186,16 +186,16 @@ pub fn game_end(mut deps: DepsMut, env: Env) -> Result<Response, ContractError> 
     // Determine the winning pot(s) based on the unique rules for each pot
     let mut winning_pots = Vec::new();
     for pot_id in 1..=5 {
-        if is_winning_pot(&deps.as_ref(), pot_id)? {
+        if is_winning_pot(deps.storage, pot_id)? {
             winning_pots.push(pot_id);
         }
     }
 
     // Calculate the total amount in losing pots to be redistributed
-    let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &winning_pots)?;
+    let total_losing_tokens = calculate_total_losing_tokens(deps.storage, &winning_pots)?;
 
     // Redistribute the tokens from losing pots:
-    let messages = distribute_tokens(&mut deps, &winning_pots, total_losing_tokens)?;
+    let messages = distribute_tokens(deps.storage, &winning_pots, total_losing_tokens)?;
 
     // Prepare for the next game
     prepare_next_game(deps, &env, &messages)?;

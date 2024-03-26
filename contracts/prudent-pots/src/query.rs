@@ -24,8 +24,8 @@ pub fn query_game_state(deps: Deps) -> StdResult<QueryGameStateResponse> {
 }
 
 pub fn query_bid_range(deps: Deps) -> StdResult<QueryBidRangeResponse> {
-    let min_bid = calculate_min_bid(&deps)?;
-    let max_bid = calculate_max_bid(&deps)?;
+    let min_bid = calculate_min_bid(deps.storage)?;
+    let max_bid = calculate_max_bid(deps.storage)?;
     Ok(QueryBidRangeResponse { min_bid, max_bid })
 }
 
@@ -50,7 +50,7 @@ pub fn query_winning_pots(deps: Deps) -> StdResult<QueryWinningPotsReponse> {
     let mut pots = Vec::new();
 
     for pot_id in 1..=5 {
-        if is_winning_pot(&deps, pot_id)? {
+        if is_winning_pot(deps.storage, pot_id)? {
             pots.push(pot_id);
         }
     }

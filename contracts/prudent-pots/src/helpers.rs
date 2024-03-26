@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    Addr, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QuerierWrapper, StdError,
-    StdResult, Storage, Uint128,
+    Addr, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, QuerierWrapper, StdError, StdResult,
+    Storage, Uint128,
 };
 
 use crate::{
@@ -30,9 +30,9 @@ pub fn is_contract_admin(
 }
 
 // Helper to calculate the minimum bid based on the game's current state
-pub fn calculate_min_bid(deps: &Deps) -> StdResult<Uint128> {
-    let average_tokens = calculate_average_tokens(deps)?;
-    let config = GAME_CONFIG.load(deps.storage)?;
+pub fn calculate_min_bid(storage: &dyn Storage) -> StdResult<Uint128> {
+    let average_tokens = calculate_average_tokens(storage)?;
+    let config = GAME_CONFIG.load(storage)?;
 
     // If the average is less than the configured min_bid, use min_bid, otherwise use the average
     let min_bid = std::cmp::max(average_tokens, config.min_bid);
@@ -40,8 +40,8 @@ pub fn calculate_min_bid(deps: &Deps) -> StdResult<Uint128> {
 }
 
 // Helper to calculate the maximum bid based on the game's current state
-pub fn calculate_max_bid(deps: &Deps) -> StdResult<Uint128> {
-    let min_bid = calculate_min_bid(deps)?;
+pub fn calculate_max_bid(storage: &dyn Storage) -> StdResult<Uint128> {
+    let min_bid = calculate_min_bid(storage)?;
 
     // Set the maximum bid as double the minimum bid or average, whichever is higher
     let max_bid = min_bid.checked_mul(Uint128::from(2u128))?;
@@ -49,8 +49,8 @@ pub fn calculate_max_bid(deps: &Deps) -> StdResult<Uint128> {
 }
 
 // Helper to calculate the average tokens across all pots
-fn calculate_average_tokens(deps: &Deps) -> StdResult<Uint128> {
-    let pots = get_all_token_counts(deps)?;
+fn calculate_average_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
+    let pots = get_all_token_counts(storage)?;
     let total: Uint128 = pots.iter().sum();
 
     if pots.is_empty() {
@@ -61,19 +61,30 @@ fn calculate_average_tokens(deps: &Deps) -> StdResult<Uint128> {
     }
 }
 
+// Retrieve the token count for each pot
+fn get_all_token_counts(storage: &dyn Storage) -> StdResult<Vec<Uint128>> {
+    let mut token_counts = Vec::new();
+    for pot_id in 1..=5 {
+        // Assuming 5 pots
+        let pot_state = POT_STATES.load(storage, pot_id)?;
+        token_counts.push(pot_state.amount);
+    }
+    Ok(token_counts)
+}
+
 // Helper to determine if a pot is a winning pot based on its unique rules
-pub fn is_winning_pot(deps: &Deps, pot_id: u8) -> StdResult<bool> {
-    let pot_state = POT_STATES.load(deps.storage, pot_id)?;
+pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
+    let pot_state = POT_STATES.load(storage, pot_id)?;
 
     match pot_id {
         1 => {
             // For Median Pot: Compare with other pots to determine if it's the median
-            let token_counts = get_all_token_counts(&deps)?;
+            let token_counts = get_all_token_counts(storage)?;
             Ok(is_median(&token_counts, pot_state.amount))
         }
         2 => {
             // For Highest Pot: Compare with other pots to determine if it's the highest
-            let max_tokens = get_max_tokens(deps)?;
+            let max_tokens = get_max_tokens(storage)?;
             Ok(pot_state.amount == max_tokens)
         }
         3 => {
@@ -82,7 +93,7 @@ pub fn is_winning_pot(deps: &Deps, pot_id: u8) -> StdResult<bool> {
         }
         4 => {
             // For Lowest Pot: Compare with other pots to determine if it's the lowest
-            let min_tokens = get_min_tokens(deps)?;
+            let min_tokens = get_min_tokens(storage)?;
             Ok(pot_state.amount == min_tokens)
         }
         5 => {
@@ -91,17 +102,6 @@ pub fn is_winning_pot(deps: &Deps, pot_id: u8) -> StdResult<bool> {
         }
         _ => Err(StdError::generic_err("Invalid pot ID")),
     }
-}
-
-// Retrieve the token count for each pot
-fn get_all_token_counts(deps: &Deps) -> StdResult<Vec<Uint128>> {
-    let mut token_counts = Vec::new();
-    for pot_id in 1..=5 {
-        // Assuming 5 pots
-        let pot_state = POT_STATES.load(deps.storage, pot_id)?;
-        token_counts.push(pot_state.amount);
-    }
-    Ok(token_counts)
 }
 
 // Check if a value is the median in a vector of token counts
@@ -118,14 +118,14 @@ fn is_median(token_counts: &Vec<Uint128>, value: Uint128) -> bool {
 }
 
 // Get the maximum token count from all pots
-fn get_max_tokens(deps: &Deps) -> StdResult<Uint128> {
-    let token_counts = get_all_token_counts(&deps)?;
+fn get_max_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
+    let token_counts = get_all_token_counts(storage)?;
     Ok(*token_counts.iter().max().unwrap_or(&Uint128::zero()))
 }
 
 // Get the minimum token count from all pots
-fn get_min_tokens(deps: &Deps) -> StdResult<Uint128> {
-    let token_counts = get_all_token_counts(&deps)?;
+fn get_min_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
+    let token_counts = get_all_token_counts(storage)?;
     Ok(*token_counts.iter().min().unwrap_or(&Uint128::zero()))
 }
 
@@ -143,16 +143,19 @@ fn is_prime(number: u128) -> bool {
 }
 
 // Helper to calculate the total tokens in losing pots and winning pots without allocations
-pub fn calculate_total_losing_tokens(deps: &Deps, winning_pots: &[u8]) -> StdResult<Uint128> {
+pub fn calculate_total_losing_tokens(
+    storage: &dyn Storage,
+    winning_pots: &[u8],
+) -> StdResult<Uint128> {
     let mut total_losing_tokens = Uint128::zero();
 
     // Iterate through all pots
     for pot_id in 1..=5 {
         // Assuming 5 pots
-        let pot_state = POT_STATES.load(deps.storage, pot_id)?;
+        let pot_state = POT_STATES.load(storage, pot_id)?;
 
         // Check if the pot is a losing pot or a winning pot without allocations
-        if !winning_pots.contains(&pot_id) || !has_player_allocations(deps, pot_id)? {
+        if !winning_pots.contains(&pot_id) || !has_player_allocations(storage, pot_id)? {
             total_losing_tokens = total_losing_tokens.checked_add(pot_state.amount)?;
         }
     }
@@ -160,12 +163,30 @@ pub fn calculate_total_losing_tokens(deps: &Deps, winning_pots: &[u8]) -> StdRes
     Ok(total_losing_tokens)
 }
 
+// Helper to check if a pot has player allocations
+pub fn has_player_allocations(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
+    let allocations = PLAYER_ALLOCATIONS.range(storage, None, None, cosmwasm_std::Order::Ascending);
+
+    for item in allocations {
+        let (_, player_allocations) = item?;
+        if player_allocations
+            .allocations
+            .iter()
+            .any(|a| a.pot_id == pot_id)
+        {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
 pub fn distribute_tokens(
-    deps: &mut DepsMut,
+    storage: &dyn Storage,
     winning_pots: &[u8],
     total_losing_tokens: Uint128,
 ) -> StdResult<Vec<CosmosMsg>> {
-    let config = GAME_CONFIG.load(deps.storage)?;
+    let config = GAME_CONFIG.load(storage)?;
 
     // Calculate the amount to distribute (50% of the total losing tokens)
     let distribution_amount = total_losing_tokens.multiply_ratio(1u128, 2u128);
@@ -175,9 +196,9 @@ pub fn distribute_tokens(
     // Iterate through the winning pots
     for pot_id in winning_pots {
         // Check if the pot has player allocations
-        if has_player_allocations(&deps.as_ref(), *pot_id)? {
+        if has_player_allocations(storage, *pot_id)? {
             let player_allocations: Vec<_> = PLAYER_ALLOCATIONS
-                .range(deps.storage, None, None, cosmwasm_std::Order::Ascending)
+                .range(storage, None, None, cosmwasm_std::Order::Ascending)
                 .filter_map(Result::ok)
                 .collect();
 
@@ -217,26 +238,8 @@ pub fn distribute_tokens(
     Ok(messages)
 }
 
-// Helper to check if a pot has player allocations
-pub fn has_player_allocations(deps: &Deps, pot_id: u8) -> StdResult<bool> {
-    let allocations =
-        PLAYER_ALLOCATIONS.range(deps.storage, None, None, cosmwasm_std::Order::Ascending);
-
-    for item in allocations {
-        let (_, player_allocations) = item?;
-        if player_allocations
-            .allocations
-            .iter()
-            .any(|a| a.pot_id == pot_id)
-        {
-            return Ok(true);
-        }
-    }
-
-    Ok(false)
-}
-
 // Helper to prepare for the next game
+// TODO: Pass only storage and querier rather then whole deps.
 pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) -> StdResult<()> {
     let config = GAME_CONFIG.load(deps.storage)?;
     let game_duration = config.game_duration;
@@ -488,20 +491,20 @@ mod tests {
         );
 
         // Pot 1 has 27 tokens and should be the median in this setup
-        let result = is_winning_pot(&deps.as_ref(), 1).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 1).unwrap();
         assert_eq!(
             result, true,
             "Pot 1 should be winning as it has the median token count when tie-breaking by pot ID"
         );
 
         // Ensure that other pots are not falsely reported as winners
-        let result = is_winning_pot(&deps.as_ref(), 2).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 2).unwrap();
         assert_eq!(result, false, "Pot 2 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 3).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 3).unwrap();
         assert_eq!(result, false, "Pot 3 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 4).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 4).unwrap();
         assert_eq!(result, false, "Pot 4 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 5).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 5).unwrap();
         assert_eq!(result, false, "Pot 5 should not be winning.");
     }
 
@@ -521,20 +524,20 @@ mod tests {
         );
 
         // Pot 2 has 60 tokens and should be the highest in this setup
-        let result = is_winning_pot(&deps.as_ref(), 2).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 2).unwrap();
         assert_eq!(
             result, true,
             "Pot 2 should be winning as it has the highest token count when"
         );
 
         // Ensure that other pots are not falsely reported as winners
-        let result = is_winning_pot(&deps.as_ref(), 1).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 3).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 3).unwrap();
         assert_eq!(result, false, "Pot 3 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 4).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 4).unwrap();
         assert_eq!(result, false, "Pot 4 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 5).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 5).unwrap();
         assert_eq!(result, false, "Pot 5 should not be winning.");
     }
 
@@ -554,20 +557,20 @@ mod tests {
         );
 
         // Pot 3 has 60 tokens and should be the even in this setup
-        let result = is_winning_pot(&deps.as_ref(), 3).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 3).unwrap();
         assert_eq!(
             result, true,
             "Pot 3 should be winning as it has the even token count when"
         );
 
         // Ensure that other pots are not falsely reported as winners
-        let result = is_winning_pot(&deps.as_ref(), 1).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 2).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 2).unwrap();
         assert_eq!(result, false, "Pot 2 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 4).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 4).unwrap();
         assert_eq!(result, false, "Pot 4 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 5).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 5).unwrap();
         assert_eq!(result, false, "Pot 5 should not be winning.");
     }
 
@@ -587,20 +590,20 @@ mod tests {
         );
 
         // Pot 4 has 1 tokens and should be the lowest in this setup
-        let result = is_winning_pot(&deps.as_ref(), 4).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 4).unwrap();
         assert_eq!(
             result, true,
             "Pot 4 should be winning as it has the lowest token count when"
         );
 
         // Ensure that other pots are not falsely reported as winners
-        let result = is_winning_pot(&deps.as_ref(), 1).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 2).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 2).unwrap();
         assert_eq!(result, false, "2 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 3).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 3).unwrap();
         assert_eq!(result, false, "Pot 3 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 5).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 5).unwrap();
         assert_eq!(result, false, "Pot 5 should not be winning.");
     }
 
@@ -620,20 +623,20 @@ mod tests {
         );
 
         // Pot 5 has 3 tokens and should be the prime in this setup
-        let result = is_winning_pot(&deps.as_ref(), 5).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 5).unwrap();
         assert_eq!(
             result, true,
             "Pot 5 should be winning as it has the prime token count when"
         );
 
         // Ensure that other pots are not falsely reported as winners
-        let result = is_winning_pot(&deps.as_ref(), 1).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 2).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 2).unwrap();
         assert_eq!(result, false, "Pot 2 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 3).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 3).unwrap();
         assert_eq!(result, false, "Pot 3 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 4).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 4).unwrap();
         assert_eq!(result, false, "Pot 4 should not be winning.");
     }
 
@@ -654,7 +657,7 @@ mod tests {
         );
 
         // Let's say pot 3 is the winner
-        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[3]).unwrap();
+        let total_losing_tokens = calculate_total_losing_tokens(&mut deps.storage, &[3]).unwrap();
         assert_eq!(
             total_losing_tokens,
             Uint128::new(10 + 20 + 40 + 50),
@@ -677,7 +680,8 @@ mod tests {
         );
 
         // Let's say pots 2 and 4 are winners
-        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[2, 4]).unwrap();
+        let total_losing_tokens =
+            calculate_total_losing_tokens(&mut deps.storage, &[2, 4]).unwrap();
         assert_eq!(
             total_losing_tokens,
             Uint128::new(10 + 30 + 50),
@@ -700,7 +704,7 @@ mod tests {
         );
 
         // No winners
-        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[]).unwrap();
+        let total_losing_tokens = calculate_total_losing_tokens(&mut deps.storage, &[]).unwrap();
         assert_eq!(
             total_losing_tokens,
             Uint128::new(10 + 20 + 30 + 40 + 50),
@@ -724,7 +728,7 @@ mod tests {
 
         // All pots are winners
         let total_losing_tokens =
-            calculate_total_losing_tokens(&deps.as_ref(), &[1, 2, 3, 4, 5]).unwrap();
+            calculate_total_losing_tokens(&mut deps.storage, &[1, 2, 3, 4, 5]).unwrap();
         assert_eq!(
             total_losing_tokens,
             Uint128::zero(),
@@ -758,7 +762,7 @@ mod tests {
         );
 
         // Let's say pot 2 is the winner
-        let total_losing_tokens = calculate_total_losing_tokens(&deps.as_ref(), &[2]).unwrap();
+        let total_losing_tokens = calculate_total_losing_tokens(&mut deps.storage, &[2]).unwrap();
         assert_eq!(
             total_losing_tokens,
             Uint128::new(10 + 10 + 10 + 10 + 10 + 10 + 20 + 15 + 25 - 10 - 20), // Exclude pot 2's initial tokens and allocations
@@ -836,7 +840,7 @@ mod tests {
 
     //     // Assert that no pot wins
     //     for pot_id in 1..=5 {
-    //         let result = is_winning_pot(&deps.as_ref(), pot_id).unwrap();
+    //         let result = is_winning_pot(&mut deps.storage, pot_id).unwrap();
     //         assert!(!result, "Pot {} should not be winning.", pot_id);
     //     }
 
@@ -883,17 +887,17 @@ mod tests {
             ],
         );
 
-        let result = is_winning_pot(&deps.as_ref(), 3).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 3).unwrap();
         assert_eq!(result, true, "Pot 3 should be winning.");
 
         // Ensure that other pots are not falsely reported as winners
-        let result = is_winning_pot(&deps.as_ref(), 1).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 1).unwrap();
         assert_eq!(result, false, "Pot 1 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 2).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 2).unwrap();
         assert_eq!(result, false, "Pot 2 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 4).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 4).unwrap();
         assert_eq!(result, false, "Pot 4 should not be winning.");
-        let result = is_winning_pot(&deps.as_ref(), 5).unwrap();
+        let result = is_winning_pot(&mut deps.storage, 5).unwrap();
         assert_eq!(result, false, "Pot 5 should not be winning.");
 
         // Here we have 75 loosing tokens and 60 winning tokens.
@@ -909,7 +913,7 @@ mod tests {
         let total_losing_tokens =
             Uint128::new(1000000 + 1000000 + 1000000 + 1000000 + 2000000 + 1500000); // Sum of initial and allocated tokens in losing pots
         let half_losing_tokens = total_losing_tokens.multiply_ratio(1u128, 2u128);
-        distribute_tokens(&mut deps.as_mut(), &[3], total_losing_tokens).unwrap();
+        distribute_tokens(deps.as_mut().storage, &[3], total_losing_tokens).unwrap();
 
         // Check that the tokens were redistributed to pot 3
         let pot_state = POT_STATES.load(deps.as_mut().storage, 3).unwrap();
