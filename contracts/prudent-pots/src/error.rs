@@ -18,6 +18,9 @@ pub enum ContractError {
     #[error("NoFunds")]
     InsufficientFunds {},
 
+    #[error("GameAlreadyEnded")]
+    GameAlreadyEnded {},
+
     #[error("GameStillActive")]
     GameStillActive {},
 

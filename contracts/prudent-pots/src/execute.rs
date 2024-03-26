@@ -1,12 +1,14 @@
-use cosmwasm_std::{attr, Addr, DepsMut, Env, MessageInfo, Response, Storage, Uint128};
+use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response, Uint128};
 
 use crate::{
     helpers::{
         calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens, create_fee_message,
-        distribute_tokens, is_contract_admin, is_winning_pot, prepare_next_game, update_pot_state,
+        distribute_tokens, is_contract_admin, is_winning_pot, prepare_next_game,
+        update_player_allocation, update_pot_state, validate_and_extend_game_time,
+        validate_and_sum_funds,
     },
     state::{
-        GameConfig, PlayerAllocations, TokenAllocation, GAME_CONFIG, GAME_STATE,
+        GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE,
         PLAYER_ALLOCATIONS, POT_STATES, REALLOCATION_FEE_POOL,
     },
     ContractError,
@@ -31,9 +33,13 @@ pub fn update_config(
 
 pub fn allocate_tokens(
     deps: DepsMut,
+    env: Env,
     info: MessageInfo,
     pot_id: u8,
 ) -> Result<Response, ContractError> {
+    // Validate the game's end time and extend it if necessary
+    validate_and_extend_game_time(deps.storage, &env)?;
+
     let config = GAME_CONFIG.load(deps.storage)?;
 
     let total_amount = validate_and_sum_funds(&info, &config.game_denom)?;
@@ -69,58 +75,17 @@ pub fn allocate_tokens(
     ]))
 }
 
-// Helper to validate and sum the funds in the specified denomination
-pub fn validate_and_sum_funds(
-    info: &MessageInfo,
-    expected_denom: &str,
-) -> Result<Uint128, ContractError> {
-    let total_amount = info.funds.iter().fold(Uint128::zero(), |acc, coin| {
-        if coin.denom == expected_denom {
-            acc.checked_add(coin.amount).unwrap()
-        } else {
-            acc
-        }
-    });
-
-    if total_amount.is_zero() {
-        return Err(ContractError::InvalidFunds {});
-    }
-
-    Ok(total_amount)
-}
-
-// Helper to update the player's allocation
-fn update_player_allocation(
-    storage: &mut dyn Storage,
-    player: &Addr,
-    pot_id: u8,
-    amount: Uint128,
-) -> Result<(), ContractError> {
-    PLAYER_ALLOCATIONS.update(
-        storage,
-        player.clone(),
-        |existing_allocations| -> Result<_, ContractError> {
-            let mut allocs = existing_allocations.unwrap_or_else(|| PlayerAllocations {
-                allocations: Vec::new(),
-            });
-            if let Some(allocation) = allocs.allocations.iter_mut().find(|a| a.pot_id == pot_id) {
-                allocation.amount = allocation.amount.checked_add(amount).unwrap();
-            } else {
-                allocs.allocations.push(TokenAllocation { pot_id, amount });
-            }
-            Ok(allocs)
-        },
-    )?;
-    Ok(())
-}
-
 pub fn reallocate_tokens(
     deps: DepsMut,
+    env: Env,
     info: MessageInfo,
     from_pot_id: u8,
     to_pot_id: u8,
     mut amount: Uint128,
 ) -> Result<Response, ContractError> {
+    // Validate the game's end time and extend it if necessary
+    validate_and_extend_game_time(deps.storage, &env)?;
+
     let config = GAME_CONFIG.load(deps.storage)?;
 
     let fee = amount.multiply_ratio(config.fee_reallocation, 100u128);

@@ -21,6 +21,7 @@
                   :min="minBid"
                   :max="maxBid"
                   placeholder="Token Amount"
+                  :disabled="!utils.selectedPot || isBusy"
                   required
                 />
                 <button class="btn btn-outline-secondary" type="button" @click="setMinBid">Min</button>

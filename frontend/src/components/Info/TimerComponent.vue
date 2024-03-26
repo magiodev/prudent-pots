@@ -63,7 +63,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchGameState', 'fetchPots', 'fetchBidRange', 'fetchWinningPots', 'fetchReallocationFeePool']),
+    ...mapActions(['fetchGameState', 'fetchPots', 'fetchBidRange', 'fetchWinningPots', 'fetchReallocationFeePool', 'fetchUserAllocations']),
 
     updateCurrentTime() {
       this.currentTime = new Date().getTime();
@@ -77,6 +77,7 @@ export default {
         // TODO: Create wrapper as fetchGameInit()
         await this.fetchGameState()
         await this.fetchPots()
+        await this.fetchUserAllocations()
         await this.fetchBidRange()
         await this.fetchWinningPots()
         await this.fetchReallocationFeePool()
