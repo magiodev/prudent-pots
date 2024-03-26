@@ -17,12 +17,15 @@ import FooterComponent from "@/components/Layout/FooterComponent.vue";
 
 export default {
   name: "App",
+
   components: {FooterComponent, LoadingComponent, NavbarComponent},
+
   data() {
     return {
       isBusy: true,
     };
   },
+
   async created() {
     // User
     await this.initUser();
@@ -36,6 +39,9 @@ export default {
     await this.fetchBidRange()
     await this.fetchReallocationFeePool()
   },
+
+  // TODO: We should be add intervals to fetch gameState, pots, winningPots and reallocationFeePool. Basically everything less gameConfig and initUser. This should be on a short interval to allow UI updates. lets set a different time foreach one so i can fine tune it later
+
   methods: {
     ...mapActions(['initUser', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool'])
   }

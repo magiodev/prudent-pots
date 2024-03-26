@@ -2,11 +2,14 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col">
-        <pre>{{gameConfig}}</pre>
-        <pre>{{gameState}}</pre>
-        <pre>{{winningPots}}</pre>
-        <PotsComponent />
-        <BidComponent />
+        <TimerComponent class="mb-3" v-if="gameState"/>
+
+        <PotsComponent/>
+        <BidComponent/>
+
+        <hr/>
+
+        <ConfigComponent v-if="gameConfig"/>
       </div>
     </div>
   </div>
@@ -15,13 +18,17 @@
 <script>
 import PotsComponent from "@/components/Game/PotsComponent.vue";
 import BidComponent from "@/components/Game/BidComponent.vue";
+import TimerComponent from "@/components/Info/TimerComponent.vue";
+import ConfigComponent from "@/components/Info/ConfigComponent.vue";
 import {mapGetters} from "vuex";
 
 export default {
   name: 'HomeView',
-  components: { PotsComponent, BidComponent },
+
+  components: {ConfigComponent, TimerComponent, PotsComponent, BidComponent},
+
   computed: {
-    ...mapGetters(['gameConfig', 'gameState', 'winningPots'])
+    ...mapGetters(['gameConfig', 'gameState'])
   }
 };
 </script>

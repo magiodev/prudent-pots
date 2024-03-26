@@ -1,5 +1,5 @@
 <template>
-  <div class="pot-item-component col-md-2 text-center">
+  <div class="pot-item-component col-md-2 text-center text-black">
     <!-- TODO: Highlight the pot red or green based on if its currently winning or not. -->
     <div class="pot-header">
       <h5>{{ getPotName(pot.pot_id) }}</h5>

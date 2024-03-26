@@ -31,9 +31,13 @@
 
 <script>
 import {mapGetters} from "vuex";
+import mxChain from "@/mixin/chain";
 
 export default {
   name: "BidComponent",
+
+  mixins: [mxChain],
+
   computed: {
     ...mapGetters(['minBid', 'maxBid', 'gameConfig'])
   },
@@ -45,7 +49,7 @@ export default {
   },
 
   created() {
-    this.bidAmount = this.minBid // TODO not working
+    this.bidAmount = 0 // TODO: Set it as minBid
   },
 
   methods: {
