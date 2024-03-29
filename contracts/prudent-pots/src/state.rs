@@ -9,6 +9,7 @@ pub struct GameConfig {
     pub fee_reallocation: u64,
     pub fee_allocation_address: Addr,
     pub game_duration: u64,
+    pub game_extend: u64,
     pub game_denom: String,
     pub min_bid: Uint128,
 }

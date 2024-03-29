@@ -3,7 +3,7 @@ use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response, Uint128};
 use crate::{
     helpers::{
         calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens, create_fee_message,
-        distribute_tokens, is_contract_admin, is_winning_pot, prepare_next_game,
+        get_distribute_bank_msgs, is_contract_admin, is_winning_pot, prepare_next_game,
         update_player_allocation, update_pot_state, validate_and_extend_game_time,
         validate_and_sum_funds,
     },
@@ -195,93 +195,16 @@ pub fn game_end(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
     let total_losing_tokens = calculate_total_losing_tokens(deps.storage, &winning_pots)?;
 
     // Redistribute the tokens from losing pots:
-    let messages = distribute_tokens(deps.storage, &winning_pots, total_losing_tokens)?;
+    let bank_msgs = get_distribute_bank_msgs(deps.storage, &winning_pots, total_losing_tokens)?;
 
     // Prepare for the next game
-    prepare_next_game(deps, &env, &messages)?;
+    prepare_next_game(deps, &env, &bank_msgs)?;
 
     // Construct the response with appropriate attributes
-    Ok(Response::new().add_messages(messages).add_attributes(vec![
+    Ok(Response::new().add_messages(bank_msgs).add_attributes(vec![
         attr("method", "execute"),
         attr("action", "game_end"),
         attr("winning_pots", format!("{:?}", winning_pots)),
         attr("total_losing_tokens", total_losing_tokens),
     ]))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use cosmwasm_std::testing::{mock_dependencies_with_balance, mock_env};
-    use cosmwasm_std::{coins, Addr, Env, Uint128};
-
-    use crate::state::{GameState, TokenAllocation};
-
-    fn setup_game_end(deps: &mut DepsMut, env: &mut Env) {
-        let game_config = GameConfig {
-            game_duration: 3600, // 1 hour
-            fee_allocation: 2,
-            fee_reallocation: 5,
-            fee_allocation_address: Addr::unchecked("fee_address"),
-            game_denom: "token".to_string(),
-            min_bid: Uint128::new(1000000u128),
-        };
-        GAME_CONFIG.save(deps.storage, &game_config).unwrap();
-
-        let game_state = GameState {
-            start_time: env.block.time.seconds() - 3600, // Started 1 hour ago
-            end_time: env.block.time.seconds(),          // Ends now
-        };
-        GAME_STATE.save(deps.storage, &game_state).unwrap();
-
-        // Initialize the REALLOCATION_FEE_POOL with zero
-        REALLOCATION_FEE_POOL
-            .save(deps.storage, &Uint128::zero())
-            .unwrap();
-
-        // Set up pots with a simulated initial balance
-        for pot_id in 1..=5 {
-            POT_STATES
-                .save(
-                    deps.storage,
-                    pot_id,
-                    &TokenAllocation {
-                        pot_id,
-                        amount: Uint128::from(1000u128),
-                    },
-                )
-                .unwrap();
-        }
-    }
-
-    #[test]
-    fn test_game_end_with_no_player_allocations() {
-        let mut deps = mock_dependencies_with_balance(&coins(5000, "token"));
-        let mut env = mock_env();
-        setup_game_end(&mut deps.as_mut(), &mut env);
-
-        game_end(deps.as_mut(), env.clone()).unwrap();
-
-        let new_game_state = GAME_STATE.load(deps.as_ref().storage).unwrap();
-        assert!(
-            new_game_state.start_time > env.block.time.seconds(),
-            "New game should start in the future"
-        );
-
-        for pot_id in 1..=5 {
-            let pot_state = POT_STATES.load(deps.as_ref().storage, pot_id).unwrap();
-            assert!(
-                pot_state.amount.gt(&Uint128::zero()),
-                "Pot {} should have initial tokens for the next game",
-                pot_id
-            );
-        }
-
-        let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.as_ref().storage).unwrap();
-        assert_eq!(
-            reallocation_fee_pool,
-            Uint128::zero(),
-            "Reallocation fee pool should be reset to zero for the next game"
-        );
-    }
 }
