@@ -133,7 +133,7 @@ mod tests {
                 (1, Addr::unchecked("player1"), Uint128::new(2)), // Median
                 (2, Addr::unchecked("player1"), Uint128::new(20)), // Highest
                 (3, Addr::unchecked("player1"), Uint128::new(51)), // Even
-                (4, Addr::unchecked("player1"), Uint128::new(11)), // Lowest
+                (4, Addr::unchecked("player1"), Uint128::new(1)), // Lowest
                 (5, Addr::unchecked("player1"), Uint128::new(10)), // Prime
             ]),
         );

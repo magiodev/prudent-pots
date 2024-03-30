@@ -39,7 +39,7 @@ mod tests {
     #[test]
     fn get_distribute_bank_msgs_single_winner() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(1000, "token")); // 1000 + 2940 + 981 = 4921 rounded low (loosing 0.5 twice in this specific case)
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
         setup_game(
