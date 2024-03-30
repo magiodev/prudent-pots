@@ -6,7 +6,7 @@ mod tests {
         Addr, Uint128,
     };
 
-    use crate::{helpers::is_winning_pot, tests::helpers::setup_game};
+    use crate::{helpers::is_winning_pot, tests::instantiate::tests::setup_game};
 
     #[test]
     fn identify_all_winning_pots_for_median() {

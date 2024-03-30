@@ -6,7 +6,7 @@ mod tests {
         Addr, Uint128,
     };
 
-    use crate::{helpers::calculate_total_losing_tokens, tests::helpers::setup_game};
+    use crate::{helpers::calculate_total_losing_tokens, tests::instantiate::tests::setup_game};
 
     #[test]
     fn total_losing_tokens_single_winner() {

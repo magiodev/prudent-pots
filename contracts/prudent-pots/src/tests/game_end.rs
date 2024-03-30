@@ -9,7 +9,7 @@ mod tests {
     use crate::{
         execute::game_end,
         state::{GAME_STATE, POT_STATES, REALLOCATION_FEE_POOL},
-        tests::helpers::setup_game,
+        tests::instantiate::tests::setup_game,
     };
 
     #[test]
@@ -31,7 +31,7 @@ mod tests {
 
         game_end(deps.as_mut(), env).unwrap();
 
-        let new_game_state = GAME_STATE.load(deps.as_ref().storage).unwrap();
+        let _new_game_state = GAME_STATE.load(deps.as_ref().storage).unwrap();
         // assert!(
         //     new_game_state.start_time > env.block.time.seconds(),
         //     "New game should start in the future"

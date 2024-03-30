@@ -277,7 +277,6 @@ pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) ->
         .query_balance(&env.contract.address, &config.game_denom)?
         .amount
         + reallocation_fee_pool;
-    println!("reallocation_fee_pool {}", reallocation_fee_pool);
 
     // Subtract the tokens that will be sent out from the total tokens for the next game
     let total_outgoing_tokens: Uint128 = messages
@@ -293,13 +292,11 @@ pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) ->
             }
         })
         .sum();
-    println!("total_outgoing_tokens {}", total_outgoing_tokens);
 
     total_tokens_for_next_game = total_tokens_for_next_game.checked_sub(total_outgoing_tokens)?;
 
     // Distribute the initial tokens and the reallocation fee pool to the pots for the next game
     let initial_tokens_per_pot = total_tokens_for_next_game.checked_div(Uint128::from(5u128))?;
-    println!("initial_tokens_per_pot {}", initial_tokens_per_pot);
 
     for pot_id in 1..=5 {
         POT_STATES.save(

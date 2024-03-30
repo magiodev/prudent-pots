@@ -9,7 +9,7 @@ mod tests {
     use crate::{
         helpers::prepare_next_game,
         state::{GAME_STATE, POT_STATES, REALLOCATION_FEE_POOL},
-        tests::helpers::setup_game,
+        tests::instantiate::tests::setup_game,
     };
 
     #[test]

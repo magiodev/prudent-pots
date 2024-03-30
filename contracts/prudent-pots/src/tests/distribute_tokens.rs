@@ -6,9 +6,7 @@ mod tests {
         Addr, BankMsg, CosmosMsg, Uint128,
     };
 
-    use crate::{
-        helpers::get_distribute_bank_msgs, tests::helpers::setup_game,
-    };
+    use crate::{helpers::get_distribute_bank_msgs, tests::instantiate::tests::setup_game};
 
     /// Test `get_distribute_bank_msgs_single_winner` to ensure proper distribution of tokens
     /// in a scenario where there's a single winner with player allocations.
