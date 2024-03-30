@@ -191,49 +191,50 @@ pub fn get_distribute_bank_msgs(
     total_losing_tokens: Uint128,
 ) -> StdResult<Vec<CosmosMsg>> {
     let config = GAME_CONFIG.load(storage)?;
-    println!("total_losing_tokens: {}", total_losing_tokens);
+    let total_distribution_amount = total_losing_tokens.multiply_ratio(1u128, 2u128);
 
-    // Half of the losing tokens to be distributed
-    let distribution_amount = total_losing_tokens.multiply_ratio(1u128, 2u128);
-    println!("distribution_amount: {}", distribution_amount);
-    // TODO: Consider that distribution_amount should still be split among all the winning_posts that also has_player_allocations.
-    // So if theare are 1000 total_losing_tokens, 500 should be consdiered as distribution_amount. And if there are 3 winning pots, but only 2 with player allocations, they should be distributed like 250 and 250.
+    // Count winning pots with player allocations
+    let winning_pots_with_allocations_count: usize = winning_pots
+        .iter()
+        .filter(|&&pot_id| has_player_allocations(storage, pot_id).unwrap_or(false))
+        .count();
+
+    // Split the total distribution amount equally among the winning pots with player allocations
+    let individual_pot_distribution_amount = if winning_pots_with_allocations_count > 0 {
+        total_distribution_amount / Uint128::from(winning_pots_with_allocations_count as u128)
+    } else {
+        Uint128::zero()
+    };
 
     let mut messages: Vec<CosmosMsg> = vec![];
 
-    // Iterate only through winning pots with player allocations
-    for pot_id in winning_pots {
-        println!("iterating winning pot: {}", pot_id);
-        if has_player_allocations(storage, *pot_id)? {
-            let pot_state = POT_STATES.load(storage, *pot_id)?;
-            println!("pot_state: {:?}", pot_state);
+    // Iterate through winning pots with player allocations
+    for &pot_id in winning_pots {
+        if has_player_allocations(storage, pot_id)? {
+            // The total amount to be distributed for this pot includes its share of the distribution amount plus the player contributions
+            let pot_state = POT_STATES.load(storage, pot_id)?;
+            let pot_total_distribution_amount =
+                individual_pot_distribution_amount + pot_state.amount;
 
-            // Compute total player contributions for the pot
             let player_allocations: Vec<_> = PLAYER_ALLOCATIONS
                 .range(storage, None, None, cosmwasm_std::Order::Ascending)
                 .filter_map(Result::ok)
                 .collect();
 
+            // Calculate the total player contributions for this pot
             let total_player_contributions: Uint128 = player_allocations
                 .iter()
                 .flat_map(|(_, allocations)| allocations.allocations.iter())
-                .filter(|allocation| allocation.pot_id == *pot_id)
+                .filter(|allocation| allocation.pot_id == pot_id)
                 .map(|allocation| allocation.amount)
                 .sum();
-            println!("total_player_contributions: {}", total_player_contributions);
 
-            // Iterate over player allocations and distribute their shares based on their contribution
+            // Distribute the pot's total amount among its players
             for (addr, allocations) in player_allocations {
                 for allocation in &allocations.allocations {
-                    if allocation.pot_id == *pot_id {
-                        // Player's share is proportional to their contribution within the pot
-                        // TODO: So here we want to sum ((distribution_amount / 2) + total_player_contributions).multiply_ratio()
-                        let player_share = distribution_amount
+                    if allocation.pot_id == pot_id {
+                        let player_share = pot_total_distribution_amount
                             .multiply_ratio(allocation.amount, total_player_contributions);
-                        println!(
-                            "Player {}'s share from pot {}: {}",
-                            addr, pot_id, player_share
-                        );
 
                         messages.push(CosmosMsg::Bank(BankMsg::Send {
                             to_address: addr.to_string(),
@@ -247,8 +248,6 @@ pub fn get_distribute_bank_msgs(
             }
         }
     }
-
-    println!("messages: {:?}", messages);
 
     Ok(messages)
 }

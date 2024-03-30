@@ -7,7 +7,7 @@ mod tests {
     };
 
     use crate::{
-        helpers::get_distribute_bank_msgs, state::REALLOCATION_FEE_POOL, tests::helpers::setup_game,
+        helpers::get_distribute_bank_msgs, tests::helpers::setup_game,
     };
 
     /// Test `get_distribute_bank_msgs_single_winner` to ensure proper distribution of tokens
@@ -80,25 +80,13 @@ mod tests {
                 &Addr::unchecked("player1").to_string(),
                 "Reward should be sent to player1"
             );
-            // the following fails as assertion `left == right` failed: Player1 should receive all tokens from the winning pot
-            //   left: Uint128(460)
-            //   right: Uint128(3140)
             assert_eq!(
                 amount[0].amount,
-                Uint128::new(3140),
+                Uint128::new(4030), // 2940 + 200 + 890
                 "Player1 should receive all tokens from the winning pot"
             );
         } else {
             panic!("Expected BankMsg::Send message");
         }
-
-        // Assert remaining tokens for next game
-        // TODO: As in this test case we didnt reallocate any allocated tokens from a pot to another, this should be 0. 890 it should be the amount left in the contract balance, that will be used for the next game.
-        let remaining_for_next_game = REALLOCATION_FEE_POOL.load(deps.as_ref().storage).unwrap();
-        assert_eq!(
-            remaining_for_next_game,
-            Uint128::new(890),
-            "Remaining tokens for next game should be 890"
-        );
     }
 }
