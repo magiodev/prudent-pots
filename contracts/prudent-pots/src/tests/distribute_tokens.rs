@@ -17,7 +17,7 @@ mod tests {
     /// - Five pots with initial allocations. Total tokens in the contract: 4921.
     ///   - Pot 1: 200 tokens (looser)
     ///   - Pot 2: 3140 tokens (winner with player1's allocation of 2940 tokens, 200 initial)
-    ///   - Pot 3: 1181 tokens (looser with player1's allocation of 982 tokens, 200 initial)
+    ///   - Pot 3: 1181 tokens (looser with player1's allocation of 981 tokens, 200 initial)
     ///   - Pot 4: 200 tokens (looser)
     ///   - Pot 5: 200 tokens (looser)
     ///
@@ -41,7 +41,7 @@ mod tests {
     #[test]
     fn get_distribute_bank_msgs_single_winner() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token")); // 1000 + 2940 + 981 = 4921 rounded low (loosing 0.5 twice in this specific case)
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
         setup_game(
@@ -50,7 +50,7 @@ mod tests {
             info,
             Some(vec![
                 (2, Addr::unchecked("player1"), Uint128::new(2940)), // Player 1 allocates to pot 2
-                (3, Addr::unchecked("player1"), Uint128::new(982)),  // Player 1 allocates to pot 3
+                (3, Addr::unchecked("player1"), Uint128::new(981)),  // Player 1 allocates to pot 3
             ]),
         );
 
