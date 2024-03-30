@@ -36,6 +36,8 @@ export default {
     if (this.userAddress) await this.fetchUserAllocations()
     this.isBusy = false;
 
+    await this.fetchAllContractState()
+
     // Game
     await this.fetchGameConfig()
     await this.fetchGameState()
@@ -48,7 +50,7 @@ export default {
   // TODO: We should be add intervals to fetch gameState, pots, winningPots and reallocationFeePool. Basically everything less gameConfig and initUser. This should be on a short interval to allow UI updates. lets set a different time foreach one so i can fine tune it later
 
   methods: {
-    ...mapActions(['initUser', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool', 'fetchUserAllocations'])
+    ...mapActions(['initUser', 'fetchAllContractState', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool', 'fetchUserAllocations'])
   }
 };
 </script>

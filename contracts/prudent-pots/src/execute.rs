@@ -42,7 +42,7 @@ pub fn allocate_tokens(
 
     let config = GAME_CONFIG.load(deps.storage)?;
 
-    let total_amount = validate_and_sum_funds(&info, &config.game_denom)?;
+    let total_amount = validate_and_sum_funds(&info.funds, &config.game_denom)?;
 
     // Implementing dynamic bid constraints
     let min_bid = calculate_min_bid(deps.storage)?;
@@ -81,21 +81,29 @@ pub fn reallocate_tokens(
     info: MessageInfo,
     from_pot_id: u8,
     to_pot_id: u8,
-    mut amount: Uint128,
 ) -> Result<Response, ContractError> {
     // Validate the game's end time and extend it if necessary
     validate_and_extend_game_time(deps.storage, &env)?;
 
     let config = GAME_CONFIG.load(deps.storage)?;
 
+    // Load the player's allocations
+    let mut player_allocations = PLAYER_ALLOCATIONS.load(deps.storage, info.sender.clone())?;
+
+    // Find the allocation for the from_pot and determine the amount to reallocate
+    let mut amount = player_allocations
+        .allocations
+        .iter()
+        .find(|a| a.pot_id == from_pot_id)
+        .map_or(Uint128::zero(), |allocation| allocation.amount);
+
+    // Ensure there is an amount to reallocate
+    if amount.is_zero() {
+        return Err(ContractError::InsufficientFunds {});
+    }
+
     let fee = amount.multiply_ratio(config.fee_reallocation, 100u128);
     amount = amount.checked_sub(fee).unwrap();
-
-    // Deduct the reallocation fee and update the reallocation fee pool
-    REALLOCATION_FEE_POOL.update(deps.storage, |mut current| -> Result<_, ContractError> {
-        current = current.checked_add(fee).unwrap();
-        Ok(current)
-    })?;
 
     // Ensure the reallocation amount is within the set minimum and maximum bid limits
     let min_bid = calculate_min_bid(deps.storage)?; // Convert DepsMut to Deps with as_ref()
@@ -108,8 +116,11 @@ pub fn reallocate_tokens(
         });
     }
 
-    // Load the player's allocations
-    let mut player_allocations = PLAYER_ALLOCATIONS.load(deps.storage, info.sender.clone())?;
+    // Deduct the reallocation fee and update the reallocation fee pool
+    REALLOCATION_FEE_POOL.update(deps.storage, |mut current| -> Result<_, ContractError> {
+        current = current.checked_add(fee).unwrap();
+        Ok(current)
+    })?;
 
     // Check if the player has enough tokens in the from_pot to reallocate
     let from_allocation = player_allocations

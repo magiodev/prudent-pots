@@ -1,84 +1,19 @@
-use crate::state::{
-    GameConfig, GameState, PlayerAllocations, TokenAllocation, GAME_CONFIG, GAME_STATE,
-    PLAYER_ALLOCATIONS, POT_STATES, REALLOCATION_FEE_POOL,
+use crate::{
+    contract::instantiate,
+    msg::InstantiateMsg,
+    state::{GameConfig, PlayerAllocations, TokenAllocation, PLAYER_ALLOCATIONS, POT_STATES},
 };
+use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, StdError, Storage, Uint128};
 
-use cosmwasm_std::{Addr, DepsMut, Env, StdError, Uint128};
-
-// Setup fixtures
-
-pub fn setup_pots(deps: &mut DepsMut, tokens: Vec<Uint128>) {
-    for (i, &amount) in tokens.iter().enumerate() {
-        let pot_id = i as u8 + 1; // Pot IDs are 1-indexed
-        POT_STATES
-            .save(deps.storage, pot_id, &TokenAllocation { pot_id, amount })
-            .unwrap();
-    }
-}
-
-pub fn setup_pots_and_allocations(
-    deps: &mut DepsMut,
-    pots: Vec<Uint128>,
-    allocations: Vec<(u8, Addr, Uint128)>,
+pub fn setup_game(
+    mut deps: DepsMut,
+    env: &Env,
+    info: MessageInfo,
+    pot_allocations: Option<Vec<(u8, Addr, Uint128)>>,
 ) {
-    GAME_CONFIG
-        .save(
-            deps.storage,
-            &GameConfig {
-                fee_allocation: 2,
-                fee_reallocation: 5,
-                fee_allocation_address: Addr::unchecked("addy"),
-                game_duration: 3600,
-                game_extend: 600,
-                game_denom: "token".to_string(),
-                min_bid: Uint128::new(1000000u128),
-            },
-        )
-        .unwrap();
-
-    REALLOCATION_FEE_POOL
-        .save(deps.storage, &Uint128::zero())
-        .unwrap();
-
-    for (i, &amount) in pots.iter().enumerate() {
-        let pot_id = i as u8 + 1; // Pot IDs are 1-indexed
-        POT_STATES
-            .save(deps.storage, pot_id, &TokenAllocation { pot_id, amount })
-            .unwrap();
-    }
-
-    for (pot_id, player, amount) in allocations {
-        // Load existing allocations or initialize if not found
-        let mut player_allocations = PLAYER_ALLOCATIONS
-            .load(deps.storage, player.clone())
-            .unwrap_or_else(|_| PlayerAllocations {
-                allocations: vec![],
-            });
-
-        // Add new allocation
-        player_allocations
-            .allocations
-            .push(TokenAllocation { pot_id, amount });
-
-        // Save the updated allocations
-        PLAYER_ALLOCATIONS
-            .save(deps.storage, player, &player_allocations)
-            .unwrap();
-
-        // Update the pot's total tokens to reflect the player's allocation
-        POT_STATES
-            .update(deps.storage, pot_id, |pot_state| -> Result<_, StdError> {
-                let mut state = pot_state.unwrap();
-                state.amount = state.amount.checked_add(amount).unwrap();
-                Ok(state)
-            })
-            .unwrap();
-    }
-}
-
-pub fn setup_game_end(deps: &mut DepsMut, env: &mut Env) {
-    let game_config = GameConfig {
-        game_duration: 3600, // 1 hour
+    // Define the game configuration
+    let config = GameConfig {
+        game_duration: 3600,
         game_extend: 600,
         fee_allocation: 2,
         fee_reallocation: 5,
@@ -86,30 +21,53 @@ pub fn setup_game_end(deps: &mut DepsMut, env: &mut Env) {
         game_denom: "token".to_string(),
         min_bid: Uint128::new(1000000u128),
     };
-    GAME_CONFIG.save(deps.storage, &game_config).unwrap();
 
-    let game_state = GameState {
-        start_time: env.block.time.seconds() - 3600, // Started 1 hour ago
-        end_time: env.block.time.seconds(),          // Ends now
-    };
-    GAME_STATE.save(deps.storage, &game_state).unwrap();
+    // Perform instantiation first
+    let _ = instantiate(
+        deps.branch(),
+        env.clone(),
+        info.clone(),
+        InstantiateMsg {
+            config: config.clone(),
+        },
+    )
+    .unwrap();
 
-    // Initialize the REALLOCATION_FEE_POOL with zero
-    REALLOCATION_FEE_POOL
-        .save(deps.storage, &Uint128::zero())
+    // Since instantiate consumes deps, we need to extract storage again from deps after instantiation
+    let storage = deps.storage;
+
+    // Set up pot allocations after instantiation, so they don't get cleared
+    if let Some(allocations) = pot_allocations {
+        for (pot_id, player, amount) in allocations {
+            setup_pot_allocation(storage, pot_id, &player, amount);
+        }
+    }
+}
+
+fn setup_pot_allocation(storage: &mut dyn Storage, pot_id: u8, player: &Addr, amount: Uint128) {
+    let mut player_allocations =
+        PLAYER_ALLOCATIONS
+            .load(storage, player.clone())
+            .unwrap_or(PlayerAllocations {
+                allocations: vec![],
+            });
+
+    player_allocations
+        .allocations
+        .push(TokenAllocation { pot_id, amount });
+    PLAYER_ALLOCATIONS
+        .save(storage, player.clone(), &player_allocations)
         .unwrap();
 
-    // Set up pots with a simulated initial balance
-    for pot_id in 1..=5 {
-        POT_STATES
-            .save(
-                deps.storage,
+    // Update the pot state to reflect the new allocation
+    POT_STATES
+        .update(storage, pot_id, |pot_state| -> Result<_, StdError> {
+            let mut state = pot_state.unwrap_or(TokenAllocation {
                 pot_id,
-                &TokenAllocation {
-                    pot_id,
-                    amount: Uint128::from(1000u128),
-                },
-            )
-            .unwrap();
-    }
+                amount: Uint128::zero(),
+            });
+            state.amount += amount;
+            Ok(state)
+        })
+        .unwrap();
 }

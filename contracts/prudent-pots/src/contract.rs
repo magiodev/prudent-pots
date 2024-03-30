@@ -40,7 +40,7 @@ pub fn instantiate(
     }
 
     // Validate and sum initial funds
-    validate_and_sum_funds(&info, &msg.config.game_denom)?;
+    validate_and_sum_funds(&info.funds, &msg.config.game_denom)?;
 
     GAME_CONFIG.save(deps.storage, &msg.config)?;
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
@@ -67,8 +67,7 @@ pub fn execute(
         ExecuteMsg::ReallocateTokens {
             from_pot_id,
             to_pot_id,
-            amount,
-        } => reallocate_tokens(deps, env, info, from_pot_id, to_pot_id, amount),
+        } => reallocate_tokens(deps, env, info, from_pot_id, to_pot_id),
         ExecuteMsg::GameEnd {} => game_end(deps, env),
     }
 }

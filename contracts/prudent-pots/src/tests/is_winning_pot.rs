@@ -1,22 +1,30 @@
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_dependencies, Uint128};
+    use cosmwasm_std::{
+        coins,
+        testing::{mock_dependencies_with_balance, mock_env, mock_info},
+        Addr, Uint128,
+    };
 
-    use crate::{helpers::is_winning_pot, tests::helpers::setup_pots};
+    use crate::{helpers::is_winning_pot, tests::helpers::setup_game};
 
     #[test]
     fn identify_all_winning_pots_for_median() {
-        let mut deps = mock_dependencies();
-
-        setup_pots(
-            &mut deps.as_mut(),
-            vec![
-                Uint128::new(27), // Median
-                Uint128::new(27), // Highest
-                Uint128::new(31), // Even
-                Uint128::new(25), // Lowest
-                Uint128::new(10), // Prime
-            ],
+        // Setup
+        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let env = mock_env();
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
+        setup_game(
+            deps.as_mut(),
+            &env,
+            info,
+            Some(vec![
+                (1, Addr::unchecked("player1"), Uint128::new(17)), // Median
+                (2, Addr::unchecked("player1"), Uint128::new(17)), // Highest
+                (3, Addr::unchecked("player1"), Uint128::new(21)), // Even
+                (4, Addr::unchecked("player1"), Uint128::new(15)), // Lowest
+                (5, Addr::unchecked("player1"), Uint128::new(0)),  // Prime
+            ]),
         );
 
         // Pot 1 has 27 tokens and should be the median in this setup
@@ -39,17 +47,21 @@ mod tests {
 
     #[test]
     fn is_winning_pot_highest() {
-        let mut deps = mock_dependencies();
-
-        setup_pots(
-            &mut deps.as_mut(),
-            vec![
-                Uint128::new(10), // Median
-                Uint128::new(60), // Highest
-                Uint128::new(31), // Even
-                Uint128::new(25), // Lowest
-                Uint128::new(10), // Prime
-            ],
+        // Setup
+        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let env = mock_env();
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
+        setup_game(
+            deps.as_mut(),
+            &env,
+            info,
+            Some(vec![
+                (1, Addr::unchecked("player1"), Uint128::new(0)), // Median
+                (2, Addr::unchecked("player1"), Uint128::new(50)), // Highest
+                (3, Addr::unchecked("player1"), Uint128::new(21)), // Even
+                (4, Addr::unchecked("player1"), Uint128::new(15)), // Lowest
+                (5, Addr::unchecked("player1"), Uint128::new(0)), // Prime
+            ]),
         );
 
         // Pot 2 has 60 tokens and should be the highest in this setup
@@ -72,17 +84,21 @@ mod tests {
 
     #[test]
     fn is_winning_pot_even() {
-        let mut deps = mock_dependencies();
-
-        setup_pots(
-            &mut deps.as_mut(),
-            vec![
-                Uint128::new(10), // Median
-                Uint128::new(30), // Highest
-                Uint128::new(60), // Even
-                Uint128::new(25), // Lowest
-                Uint128::new(10), // Prime
-            ],
+        // Setup
+        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let env = mock_env();
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
+        setup_game(
+            deps.as_mut(),
+            &env,
+            info,
+            Some(vec![
+                (1, Addr::unchecked("player1"), Uint128::new(0)), // Median
+                (2, Addr::unchecked("player1"), Uint128::new(20)), // Highest
+                (3, Addr::unchecked("player1"), Uint128::new(50)), // Even
+                (4, Addr::unchecked("player1"), Uint128::new(15)), // Lowest
+                (5, Addr::unchecked("player1"), Uint128::new(0)), // Prime
+            ]),
         );
 
         // Pot 3 has 60 tokens and should be the even in this setup
@@ -105,17 +121,21 @@ mod tests {
 
     #[test]
     fn is_winning_pot_lowest() {
-        let mut deps = mock_dependencies();
-
-        setup_pots(
-            &mut deps.as_mut(),
-            vec![
-                Uint128::new(32), // Median
-                Uint128::new(30), // Highest
-                Uint128::new(61), // Even
-                Uint128::new(1),  // Lowest
-                Uint128::new(10), // Prime
-            ],
+        // Setup
+        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let env = mock_env();
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
+        setup_game(
+            deps.as_mut(),
+            &env,
+            info,
+            Some(vec![
+                (1, Addr::unchecked("player1"), Uint128::new(2)), // Median
+                (2, Addr::unchecked("player1"), Uint128::new(20)), // Highest
+                (3, Addr::unchecked("player1"), Uint128::new(51)), // Even
+                (4, Addr::unchecked("player1"), Uint128::new(11)), // Lowest
+                (5, Addr::unchecked("player1"), Uint128::new(10)), // Prime
+            ]),
         );
 
         // Pot 4 has 1 tokens and should be the lowest in this setup
@@ -138,17 +158,21 @@ mod tests {
 
     #[test]
     fn is_winning_pot_prime() {
-        let mut deps = mock_dependencies();
-
-        setup_pots(
-            &mut deps.as_mut(),
-            vec![
-                Uint128::new(32), // Median
-                Uint128::new(30), // Highest
-                Uint128::new(61), // Even
-                Uint128::new(4),  // Lowest
-                Uint128::new(3),  // Prime
-            ],
+        // Setup
+        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let env = mock_env();
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
+        setup_game(
+            deps.as_mut(),
+            &env,
+            info,
+            Some(vec![
+                (1, Addr::unchecked("player1"), Uint128::new(22)), // Median
+                (2, Addr::unchecked("player1"), Uint128::new(20)), // Highest
+                (3, Addr::unchecked("player1"), Uint128::new(51)), // Even
+                (4, Addr::unchecked("player1"), Uint128::new(14)), // Lowest
+                (5, Addr::unchecked("player1"), Uint128::new(13)), // Prime
+            ]),
         );
 
         // Pot 5 has 3 tokens and should be the prime in this setup

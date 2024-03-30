@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    Addr, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, QuerierWrapper, StdError, StdResult,
-    Storage, Uint128,
+    Addr, BankMsg, Coin, CosmosMsg, DepsMut, Env, QuerierWrapper, StdError, StdResult, Storage,
+    Uint128,
 };
 
 use crate::{
@@ -267,6 +267,7 @@ pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) ->
         .query_balance(&env.contract.address, &config.game_denom)?
         .amount
         + reallocation_fee_pool;
+    println!("reallocation_fee_pool {}", reallocation_fee_pool);
 
     // Subtract the tokens that will be sent out from the total tokens for the next game
     let total_outgoing_tokens: Uint128 = messages
@@ -282,11 +283,13 @@ pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) ->
             }
         })
         .sum();
+    println!("total_outgoing_tokens {}", total_outgoing_tokens);
 
     total_tokens_for_next_game = total_tokens_for_next_game.checked_sub(total_outgoing_tokens)?;
 
     // Distribute the initial tokens and the reallocation fee pool to the pots for the next game
     let initial_tokens_per_pot = total_tokens_for_next_game.checked_div(Uint128::from(5u128))?;
+    println!("initial_tokens_per_pot {}", initial_tokens_per_pot);
 
     for pot_id in 1..=5 {
         POT_STATES.save(
@@ -332,10 +335,10 @@ pub fn validate_and_extend_game_time(
 
 // Helper to validate and sum the funds in the specified denomination
 pub fn validate_and_sum_funds(
-    info: &MessageInfo,
+    funds: &Vec<Coin>,
     expected_denom: &str,
 ) -> Result<Uint128, ContractError> {
-    let total_amount = info.funds.iter().fold(Uint128::zero(), |acc, coin| {
+    let total_amount = funds.iter().fold(Uint128::zero(), |acc, coin| {
         if coin.denom == expected_denom {
             acc.checked_add(coin.amount).unwrap()
         } else {

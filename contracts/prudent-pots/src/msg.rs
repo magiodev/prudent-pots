@@ -10,17 +10,9 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    UpdateConfig {
-        config: GameConfig,
-    },
-    AllocateTokens {
-        pot_id: u8,
-    },
-    ReallocateTokens {
-        from_pot_id: u8,
-        to_pot_id: u8,
-        amount: Uint128, // TODO: Think if this is dangerous and we should do all or nothing
-    },
+    UpdateConfig { config: GameConfig },
+    AllocateTokens { pot_id: u8 },
+    ReallocateTokens { from_pot_id: u8, to_pot_id: u8 },
     GameEnd {},
 }
 

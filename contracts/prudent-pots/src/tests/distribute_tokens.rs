@@ -1,12 +1,13 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{
-        coins, testing::mock_dependencies_with_balance, Addr, BankMsg, CosmosMsg, Uint128,
+        coins,
+        testing::{mock_dependencies_with_balance, mock_env, mock_info},
+        Addr, BankMsg, CosmosMsg, Uint128,
     };
 
     use crate::{
-        helpers::get_distribute_bank_msgs, state::REALLOCATION_FEE_POOL,
-        tests::helpers::setup_pots_and_allocations,
+        helpers::get_distribute_bank_msgs, state::REALLOCATION_FEE_POOL, tests::helpers::setup_game,
     };
 
     /// Test `get_distribute_bank_msgs_single_winner` to ensure proper distribution of tokens
@@ -39,24 +40,25 @@ mod tests {
     ///   - That the remaining tokens for the next game are correctly calculated and stored.
     #[test]
     fn get_distribute_bank_msgs_single_winner() {
-        let mut deps = mock_dependencies_with_balance(&coins(4921, "uosmo"));
-        let player1 = Addr::unchecked("player1");
-
-        // Setup pots with initial allocations and player allocations
-        setup_pots_and_allocations(
-            &mut deps.as_mut(),
-            vec![
-                Uint128::new(200), // Pot 1 - 200 tokens (looser, no alloc)
-                Uint128::new(200), // Pot 2 - 3140 tokens (winner with player1's allocation)
-                Uint128::new(200), // Pot 3 - 1181 tokens (looser, with alloc)
-                Uint128::new(200), // Pot 4 - 200 tokens (looser, no alloc)
-                Uint128::new(200), // Pot 5 - 200 tokens (looser, no alloc)
-            ],
-            vec![
-                (2, player1.clone(), Uint128::new(2940)), // Player 1 allocates to pot 2
-                (3, player1.clone(), Uint128::new(982)),  // Player 1 allocates to pot 3
-            ],
+        // Setup
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
+        let env = mock_env();
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
+        setup_game(
+            deps.as_mut(),
+            &env,
+            info,
+            Some(vec![
+                (2, Addr::unchecked("player1"), Uint128::new(2940)), // Player 1 allocates to pot 2
+                (3, Addr::unchecked("player1"), Uint128::new(982)),  // Player 1 allocates to pot 3
+            ]),
         );
+
+        // Pot 1 - 200 tokens (looser, no alloc)
+        // Pot 2 - 3140 tokens (winner with player1's allocation)
+        // Pot 3 - 1181 tokens (looser, with alloc)
+        // Pot 4 - 200 tokens (looser, no alloc)
+        // Pot 5 - 200 tokens (looser, no alloc)
 
         // Invoke get_distribute_bank_msgs assuming pot 2 is the winner
         let winning_pots = vec![2];
@@ -75,7 +77,7 @@ mod tests {
         if let CosmosMsg::Bank(BankMsg::Send { to_address, amount }) = &messages[0] {
             assert_eq!(
                 to_address,
-                &player1.to_string(),
+                &Addr::unchecked("player1").to_string(),
                 "Reward should be sent to player1"
             );
             // the following fails as assertion `left == right` failed: Player1 should receive all tokens from the winning pot
