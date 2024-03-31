@@ -1,7 +1,7 @@
 <template>
   <div class="pot-item-component col-4 col-md-2 text-center text-black">
     <div class="pot-header">
-      <h5 :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h5>
+      <h5 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h5>
       <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
     </div>
 
@@ -13,7 +13,6 @@
     </div>
 
     <div class="allocations card mt-3 p-1" :data-pot-id="pot.pot_id">
-      <!-- Define draggable with v-model bound to the list of allocations and a scoped slot for items -->
       <draggable v-model="allocationsList" group="allocations" @start="onDragStart" @end="onDragEnd" item-key="key">
         <template #item="{ element }">
           <span class="card" :class="element.amount ? 'bg-primary' : 'bg-secondary'">
