@@ -6,11 +6,11 @@ const mxGame = {
   },
 
   methods: {
-    ...mapActions(['initUser', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool', 'fetchUserAllocations']),
+    ...mapActions(['initUser', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool', 'fetchPlayerAllocations']),
 
     async fetchOnce() {
       await this.initUser();
-      if (this.userAddress) await this.fetchUserAllocations()
+      if (this.userAddress) await this.fetchPlayerAllocations()
       await this.fetchGameConfig()
     },
 

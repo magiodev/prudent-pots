@@ -47,7 +47,7 @@ export default createStore({
       return state.user.address;
     },
 
-    userAllocations(state) {
+    playerAllocations(state) {
       return state.user.allocations
     },
 
@@ -101,7 +101,7 @@ export default createStore({
       state.user.querier = querier;
     },
 
-    setUserAllocations(state, allocations) {
+    setPlayerAllocations(state, allocations) {
       state.user.allocations = allocations;
     },
 
@@ -201,7 +201,7 @@ export default createStore({
     //   commit("setAllContractState", data.models);
     // },
 
-    async fetchUserAllocations({state, commit}) {
+    async fetchPlayerAllocations({state, commit}) {
       if (!state.user.address || !state.user.querier) {
         console.error("Address or Querier is not initialized");
         return;
@@ -216,7 +216,11 @@ export default createStore({
           }
         }
       );
-      commit("setUserAllocations", data.allocations.allocations);
+
+      // Filter out allocations where the amount is "0"
+      const filteredAllocations = data.allocations.allocations.filter(allocation => allocation.amount !== "0");
+
+      commit("setPlayerAllocations", filteredAllocations);
     },
 
     async fetchGameConfig({state, commit}) {

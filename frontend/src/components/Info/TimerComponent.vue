@@ -83,7 +83,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchUserAllocations']),
+    ...mapActions(['fetchPlayerAllocations']),
 
     updateCurrentTime() {
       this.currentTime = new Date().getTime();
@@ -92,11 +92,11 @@ export default {
     async onEndGame() {
       this.isBusy = true
       try {
-        await this.endGame()
-        this.toast.success("Tx successful")
+        const tx = await this.endGame()
+        this.toast.success(`Tx successful. ${tx.transactionHash}`)
         await this.fetchInterval()
         // TODO: check if the following can be wrapped or generalized
-        await this.fetchUserAllocations()
+        await this.fetchPlayerAllocations()
       } catch (e) {
         this.toast.error(`${e.message}`)
       }

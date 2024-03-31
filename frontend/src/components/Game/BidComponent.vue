@@ -70,7 +70,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchUserAllocations']),
+    ...mapActions(['fetchPlayerAllocations']),
 
     setMinBid() {
       this.bidAmount = this.minBid;
@@ -87,12 +87,12 @@ export default {
     async onAllocateTokens() {
       this.isBusy = true
       try {
-        await this.allocateTokens(this.utils.selectedPot, this.bidAmount)
-        this.toast.success("Tx successful")
+        const tx = await this.allocateTokens(this.utils.selectedPot, this.bidAmount)
+        this.toast.success(`Tx successful. ${tx.transactionHash}`)
         // Fetch new game information after ending the previous match
         await this.fetchInterval()
         this.setMinBid()
-        await this.fetchUserAllocations()
+        await this.fetchPlayerAllocations()
       } catch (e) {
         this.toast.error(`${e.message}`)
       }

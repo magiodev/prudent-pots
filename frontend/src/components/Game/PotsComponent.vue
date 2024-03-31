@@ -29,20 +29,19 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchUserAllocations']),
+    ...mapActions(['fetchPlayerAllocations']),
 
     async onReallocateTokens(newAllocation) {
-      // Handle the reallocation logic here
-      // This might involve calling a Vuex action or directly an API method
-      console.log('Reallocation happened', newAllocation);
+      // prevent from to same pot id
+      if (newAllocation.fromPotId === newAllocation.toPotId) return
 
       this.isBusy = true
       try {
-        await this.reallocateTokens(newAllocation.fromPotId, newAllocation.toPotId) // TODO
-        this.toast.success("Tx successful")
+        const tx = await this.reallocateTokens(newAllocation.fromPotId, newAllocation.toPotId)
+        this.toast.success(`Tx successful. ${tx.transactionHash}`)
         // Fetch new game information after ending the previous match
         await this.fetchInterval()
-        await this.fetchUserAllocations()
+        await this.fetchPlayerAllocations()
       } catch (e) {
         this.toast.error(`${e.message}`)
       }

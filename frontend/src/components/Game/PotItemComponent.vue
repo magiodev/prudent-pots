@@ -15,11 +15,12 @@
     <div class="allocations card mt-3 p-1" :data-pot-id="pot.pot_id">
       <draggable v-model="allocationsList" group="allocations" @start="onDragStart" @end="onDragEnd" item-key="key">
         <template #item="{ element }">
-          <span class="card" :class="element.amount ? 'bg-primary' : 'bg-secondary'">
+          <span class="card bg-primary" v-if="Number(element.amount)">
             {{ element.amount / 1000000 }} $OSMO
           </span>
         </template>
       </draggable>
+      <p v-if="!allocationsList.length">Drag here</p>
     </div>
   </div>
 </template>
@@ -45,19 +46,19 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['winningPots', 'userAllocations']),
+    ...mapGetters(['winningPots', 'playerAllocations']),
 
     isPotWinning() {
       return this.winningPots.includes(this.pot.pot_id);
     },
 
     allocations() {
-      return this.userAllocations.find(a => a.pot_id === this.pot.pot_id)?.amount || 0;
+      return this.playerAllocations.find(a => a.pot_id === this.pot.pot_id)?.amount || 0;
     },
 
     allocationsList() {
       // Including only the allocation for this specific pot
-      const allocationForThisPot = this.userAllocations.find(a => a.pot_id === this.pot.pot_id);
+      const allocationForThisPot = this.playerAllocations.find(a => a.pot_id === this.pot.pot_id);
       return allocationForThisPot
         ? [{
           key: `allocation-${this.pot.pot_id}`,
