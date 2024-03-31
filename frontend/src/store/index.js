@@ -135,7 +135,6 @@ export default createStore({
     // Utils
     setSelectedPot(state, potId) {
       state.utils.selectedPot = Number(potId);
-
     }
   },
 

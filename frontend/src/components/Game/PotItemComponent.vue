@@ -1,14 +1,14 @@
 <template>
   <div class="pot-item-component col-sm-2 text-center text-black">
     <!-- TODO: Highlight the pot red or green based on if its currently winning or not. -->
-    <div class="pot-header" :class="isPotWinning ? 'bg-success' : 'bg-danger'">
-      <h5 class="d-inline me-1">{{ getPotName(pot.pot_id) }}</h5>
+    <div class="pot-header">
+      <h5 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h5>
 
       <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
     </div>
 
-    <div class="pot-item position-relative mb-3" @click="onPotClick(pot.pot_id)">
-      <img class="pot-image w-100 position-relative" :Src="imagePot" />
+    <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)">
+      <img class="pot-image w-100 position-relative" :Src="imagePot"/>
 
       <div class="pot-content">
         <!-- TODO cut decimals to 6 only if more-->
@@ -17,7 +17,7 @@
     </div>
 
     <div class="allocations card" v-if="allocations">
-      <h6>Your allocation:</h6>
+      <h6>Your bet:</h6>
       <span class="card bg-primary">{{ allocations / 1000000 }} $OSMO</span>
     </div>
   </div>
@@ -26,9 +26,9 @@
 <script>
 import {mapGetters, mapMutations} from "vuex";
 import mxPot from "@/mixin/pot";
+import PopoverComponent from "@/components/Common/PopoverComponent.vue";
 import imagePot from "@/assets/pot.png"
 import imagePotInfo from "@/assets/pot-info.png"
-import PopoverComponent from "@/components/Common/PopoverComponent.vue";
 
 export default {
   name: "PotItemComponent",
@@ -79,6 +79,20 @@ export default {
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
+
+  position: relative;
+  background: url('@/assets/wallet-bg.png') no-repeat center center;
+  background-size: contain;
+  border: 0;
+  outline: none;
+
+  div {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+  }
 }
 
 .pot-content {

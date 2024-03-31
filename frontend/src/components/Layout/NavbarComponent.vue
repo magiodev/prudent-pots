@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-light">
+  <nav class="navbar navbar-light bg-accent">
     <div class="container-fluid py-1">
       <a class="navbar-brand">
         <img class="logo" :src="imageLogo" alt="Prudent Pots"/>

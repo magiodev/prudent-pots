@@ -117,17 +117,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.bid-component {
-  margin-top: 2rem;
-}
-
-.input-group {
-  margin-bottom: 1rem;
-}
-
-.fee-calculation {
-  font-size: 0.9rem;
-}
-</style>
