@@ -19,9 +19,9 @@ pub mod tests {
         let config = GameConfig {
             game_duration: 3600,
             game_extend: 600,
-            fee_allocation: 2,
+            fee: 2,
             fee_reallocation: 5,
-            fee_allocation_address: Addr::unchecked("fee_address"),
+            fee_address: Addr::unchecked("fee_address"),
             game_denom: "token".to_string(),
             min_bid: Uint128::new(1000000u128),
         };

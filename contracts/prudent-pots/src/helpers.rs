@@ -206,9 +206,8 @@ pub fn get_distribute_bank_msgs(
         Uint128::zero()
     };
 
-    // TODO: Append fee and remove from allocate
-
     let mut messages: Vec<CosmosMsg> = vec![];
+    let mut total_fee = Uint128::zero();
 
     // Iterate through winning pots with player allocations
     for &pot_id in winning_pots {
@@ -231,11 +230,16 @@ pub fn get_distribute_bank_msgs(
                 .map(|allocation| allocation.amount)
                 .sum();
 
-            // Distribute the pot's total amount among its players
+            // Calculate fee and net distribution amount for this pot
+            let fee = pot_total_distribution_amount.multiply_ratio(config.fee, 100u128);
+            total_fee += fee;
+            let net_distribution_amount = pot_total_distribution_amount.checked_sub(fee).unwrap();
+
+            // Distribute the net distribution amount among its players
             for (addr, allocations) in player_allocations {
                 for allocation in &allocations.allocations {
                     if allocation.pot_id == pot_id {
-                        let player_share = pot_total_distribution_amount
+                        let player_share = net_distribution_amount
                             .multiply_ratio(allocation.amount, total_player_contributions);
 
                         messages.push(CosmosMsg::Bank(BankMsg::Send {
@@ -250,6 +254,15 @@ pub fn get_distribute_bank_msgs(
             }
         }
     }
+
+    // Add a message to send the total fee to the fee allocation address
+    messages.push(CosmosMsg::Bank(BankMsg::Send {
+        to_address: config.fee_address.to_string(),
+        amount: vec![Coin {
+            denom: config.game_denom.clone(),
+            amount: total_fee,
+        }],
+    }));
 
     Ok(messages)
 }
@@ -409,7 +422,7 @@ pub fn create_fee_message(config: &GameConfig, fee: Uint128) -> StdResult<Vec<Co
         Ok(vec![])
     } else {
         Ok(vec![CosmosMsg::Bank(BankMsg::Send {
-            to_address: config.fee_allocation_address.to_string(),
+            to_address: config.fee_address.to_string(),
             amount: vec![Coin {
                 denom: config.game_denom.clone(),
                 amount: fee,
