@@ -140,10 +140,11 @@ export default createStore({
 
   actions: {
     async initUser({commit}) {
+      const chainId = process.env.VUE_APP_CHAIN_ID;
+
       if (!window.keplr) {
         alert("Please install keplr extension");
       } else {
-        const chainId = process.env.VUE_APP_CHAIN_ID;
         await window.keplr.enable(chainId);
 
         const offlineSigner = window.getOfflineSigner(chainId);
@@ -171,11 +172,11 @@ export default createStore({
           }
         );
         commit("setUserSigner", signingClient);
-
-        // Initialize CosmWasmClient for querying
-        const queryClient = await CosmWasmClient.connect(process.env.VUE_APP_RPC);
-        commit("setUserQuerier", queryClient);
       }
+
+      // Initialize CosmWasmClient for querying
+      const queryClient = await CosmWasmClient.connect(process.env.VUE_APP_RPC);
+      commit("setUserQuerier", queryClient);
     },
 
     // async fetchAllContractState({state, commit}) {
