@@ -12,9 +12,9 @@
           <div id="gameConfig" class="accordion-collapse collapse" aria-labelledby="gameConfigHeading" data-bs-parent="#gameInfoAccordion">
             <div class="accordion-body">
               <ul>
-                <li>Fee Allocation: {{ gameConfig.fee_allocation }}%</li>
+                <li>Fee Allocation: {{ gameConfig.fee }}%</li>
                 <li>Fee Reallocation: {{ gameConfig.fee_reallocation }}%</li>
-                <li>Allocation Address: {{ gameConfig.fee_allocation_address }}</li>
+                <li>Allocation Address: {{ gameConfig.fee_address }}</li>
                 <li>Game Duration: {{ gameDuration }}</li>
                 <li>Game Denomination: {{ gameConfig.game_denom }}</li>
                 <li>Minimum Bid: {{ gameConfig.min_bid }}</li>
