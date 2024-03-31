@@ -304,7 +304,7 @@ export default createStore({
         process.env.VUE_APP_CONTRACT,
         {query_reallocation_fee_pool: {}}
       );
-      commit("setReallocationFeePool", data);
+      commit("setReallocationFeePool", data.reallocation_fee_pool);
     },
   },
 
