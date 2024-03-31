@@ -1,5 +1,5 @@
 <template>
-  <div class="pot-item-component col-sm-2 text-center text-black">
+  <div class="pot-item-component col-4 col-md-2 text-center text-black">
     <!-- TODO: Highlight the pot red or green based on if its currently winning or not. -->
     <div class="pot-header">
       <h5 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h5>
@@ -16,9 +16,9 @@
       </div>
     </div>
 
-    <div class="allocations card" v-if="allocations">
+    <div class="allocations card mt-3 p-1">
       <h6>Your bet:</h6>
-      <span class="card bg-primary">{{ allocations / 1000000 }} $OSMO</span>
+      <span class="card" :class="allocations ? 'bg-primary' : 'bg-secondary'">{{ allocations / 1000000 }} $OSMO</span>
     </div>
   </div>
 </template>

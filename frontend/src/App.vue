@@ -10,45 +10,28 @@
 </template>
 
 <script>
-import {mapActions, mapGetters} from "vuex";
 import NavbarComponent from "@/components/Layout/NavbarComponent.vue";
 import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 import FooterComponent from "@/components/Layout/FooterComponent.vue";
+import mxGame from "@/mixin/game";
 
 export default {
   name: "App",
 
-  components: {FooterComponent, LoadingComponent, NavbarComponent},
+  mixins: [mxGame],
 
-  computed: {
-    ...mapGetters(['userAddress'])
-  },
+  components: {FooterComponent, LoadingComponent, NavbarComponent},
 
   data() {
     return {
       isBusy: true,
-    };
+    }
   },
 
   async created() {
-    // User
-    await this.initUser();
-    if (this.userAddress) await this.fetchUserAllocations()
-    this.isBusy = false;
-
-    // Game
-    await this.fetchGameConfig()
-    await this.fetchGameState()
-    await this.fetchPots()
-    await this.fetchWinningPots()
-    await this.fetchBidRange()
-    await this.fetchReallocationFeePool()
-  },
-
-  // TODO: We should be add intervals to fetch gameState, pots, winningPots and reallocationFeePool. Basically everything less gameConfig and initUser. This should be on a short interval to allow UI updates. lets set a different time foreach one so i can fine tune it later
-
-  methods: {
-    ...mapActions(['initUser', 'fetchGameConfig', 'fetchGameState', 'fetchPots', 'fetchWinningPots', 'fetchBidRange', 'fetchReallocationFeePool', 'fetchUserAllocations'])
+    await this.fetchOnce()
+    this.isBusy = false
+    await this.fetchInterval()
   }
 };
 </script>

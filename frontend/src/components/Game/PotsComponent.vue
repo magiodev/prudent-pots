@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import {mapGetters} from "vuex";
 import PotItemComponent from "@/components/Game/PotItemComponent.vue";
 import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 
