@@ -78,6 +78,11 @@ pub fn reallocate_tokens(
     // Validate the game's end time and extend it if necessary
     validate_and_extend_game_time(deps.storage, &env)?;
 
+    // Ensure pots are different
+    if from_pot_id == to_pot_id {
+        return Err(ContractError::InvalidInput {});
+    }
+
     let config = GAME_CONFIG.load(deps.storage)?;
 
     // Load the player's allocations
@@ -121,8 +126,8 @@ pub fn reallocate_tokens(
         .iter_mut()
         .find(|a| a.pot_id == from_pot_id);
     match from_allocation {
-        Some(allocation) if allocation.amount >= net_amount => {
-            allocation.amount = allocation.amount.checked_sub(net_amount).unwrap();
+        Some(allocation) if allocation.amount >= amount => {
+            allocation.amount = allocation.amount.checked_sub(amount).unwrap();
         }
         _ => return Err(ContractError::InsufficientFunds {}),
     }
