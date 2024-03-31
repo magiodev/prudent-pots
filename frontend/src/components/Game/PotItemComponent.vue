@@ -1,41 +1,41 @@
 <template>
   <div class="pot-item-component col-4 col-md-2 text-center text-black">
     <div class="pot-header">
-      <h5 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h5>
+      <h5 :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h5>
       <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
     </div>
 
     <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)">
-      <img class="pot-image w-100 position-relative" :src="imagePot" alt="Pot Item" />
+      <img class="pot-image w-100 position-relative" :src="imagePot" alt="Pot Item"/>
       <div class="pot-content">
         <span class="pot-tokens p-1">{{ Number(pot.amount / 1000000) }} $OSMO</span>
       </div>
     </div>
 
-    <div class="allocations card mt-3 p-1">
-      <draggable v-model="allocationsList" group="allocations" @start="onDragStart" @end="onDragEnd">
-        <div v-for="allocation in allocationsList" :key="allocation.key">
-          <h6>Your bet:</h6>
-          <span class="card" :class="allocation.amount ? 'bg-primary' : 'bg-secondary'">
-            {{ allocation.amount / 1000000 }} $OSMO
+    <div class="allocations card mt-3 p-1" :data-pot-id="pot.pot_id">
+      <!-- Define draggable with v-model bound to the list of allocations and a scoped slot for items -->
+      <draggable v-model="allocationsList" group="allocations" @start="onDragStart" @end="onDragEnd" item-key="key">
+        <template #item="{ element }">
+          <span class="card" :class="element.amount ? 'bg-primary' : 'bg-secondary'">
+            {{ element.amount / 1000000 }} $OSMO
           </span>
-        </div>
+        </template>
       </draggable>
     </div>
   </div>
 </template>
 
+
 <script>
-import { mapGetters, mapMutations } from "vuex";
+import {mapGetters, mapMutations} from "vuex";
 import mxPot from "@/mixin/pot";
 import PopoverComponent from "@/components/Common/PopoverComponent.vue";
 import draggable from "vuedraggable";
 import imagePot from "@/assets/pot.png"
-import imagePotInfo from "@/assets/pot-info.png"
 
 export default {
   name: "PotItemComponent",
-  components: { PopoverComponent, draggable },
+  components: {PopoverComponent, draggable},
   mixins: [mxPot],
 
   props: {
@@ -52,19 +52,27 @@ export default {
       return this.winningPots.includes(this.pot.pot_id);
     },
 
+    allocations() {
+      return this.userAllocations.find(a => a.pot_id === this.pot.pot_id)?.amount || 0;
+    },
+
     allocationsList() {
-      // You should transform your allocations to an array that draggable can work with
-      return [{
-        key: `allocation-${this.pot.pot_id}`,
-        amount: this.allocations
-      }];
+      // Including only the allocation for this specific pot
+      const allocationForThisPot = this.userAllocations.find(a => a.pot_id === this.pot.pot_id);
+      return allocationForThisPot
+        ? [{
+          key: `allocation-${this.pot.pot_id}`,
+          amount: allocationForThisPot.amount,
+        }]
+        : [];
     }
+
   },
 
   data() {
     return {
+      drag: false,
       imagePot,
-      imagePotInfo
     }
   },
 
@@ -76,15 +84,21 @@ export default {
     },
 
     onDragStart() {
-      // Emit an event when dragging starts
-      this.$emit('startReallocation', { potId: this.pot.pot_id, amount: this.allocations });
+      this.drag = true
     },
 
-    onDragEnd() {
-      // Emit an event when dragging ends
-      this.$emit('endReallocation', { potId: this.pot.pot_id, allocations: this.allocationsList });
-    }
-  }
+    onDragEnd(event) {
+      const fromPotId = this.pot.pot_id;
+
+      // Retrieve the pot_id from the new container after dragging ends
+      const toPotElement = event.to.closest('.allocations');
+      const toPotId = toPotElement ? Number(toPotElement.dataset.potId) : null;
+      if (!toPotId) throw new Error("Something went wrong.")
+      this.drag = false
+
+      this.$emit('endReallocation', {fromPotId, toPotId});
+    },
+  },
 };
 </script>
 
