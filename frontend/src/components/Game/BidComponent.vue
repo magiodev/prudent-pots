@@ -32,10 +32,6 @@
               <ButtonComponent :isDisabled="!utils.selectedPot || isBusy" text="Place Bid"/>
               <LoadingComponent v-if="isBusy"/>
             </form>
-
-            <div class="fee-calculation mt-3">
-              <p class="mb-0">Allocation Fee: {{ calculateAllocationFee(bidAmount) / 1000000 }} $OSMO</p>
-            </div>
           </div>
         </div>
       </div>
@@ -87,14 +83,6 @@ export default {
       this.bidAmount = this.maxBid;
     },
 
-    calculateAllocationFee(amount) {
-      // Ensure gameConfig is available and fee is a number
-      if (this.gameConfig && !isNaN(this.gameConfig.fee)) {
-        return (amount * this.gameConfig.fee) / 100; // TODO div by 1000000 and Math.ceil
-      }
-      return 0;
-    },
-
     async onAllocateTokens() {
       this.isBusy = true
       try {
@@ -117,17 +105,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.bid-component {
-  margin-top: 2rem;
-}
-
-.input-group {
-  margin-bottom: 1rem;
-}
-
-.fee-calculation {
-  font-size: 0.9rem;
-}
-</style>

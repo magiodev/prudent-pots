@@ -256,13 +256,15 @@ pub fn get_distribute_bank_msgs(
     }
 
     // Add a message to send the total fee to the fee allocation address
-    messages.push(CosmosMsg::Bank(BankMsg::Send {
-        to_address: config.fee_address.to_string(),
-        amount: vec![Coin {
-            denom: config.game_denom.clone(),
-            amount: total_fee,
-        }],
-    }));
+    if !total_fee.is_zero() {
+        messages.push(CosmosMsg::Bank(BankMsg::Send {
+            to_address: config.fee_address.to_string(),
+            amount: vec![Coin {
+                denom: config.game_denom.clone(),
+                amount: total_fee,
+            }],
+        }));
+    }
 
     Ok(messages)
 }

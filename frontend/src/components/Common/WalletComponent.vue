@@ -12,6 +12,7 @@
 <script>
 import {mapActions, mapGetters} from "vuex";
 import imageWalletIcon from "@/assets/wallet-icon.png"
+
 export default {
   name: "WalletComponent",
 

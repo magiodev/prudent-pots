@@ -1,13 +1,16 @@
 <template>
   <div class="container-fluid">
-    <div class="row">
-      <div class="col">
+    <div class="row bg-accent">
+      <div class="col pb-5">
         <TimerComponent class="mb-3" v-if="gameState"/>
 
         <PotsComponent/>
-        <BidComponent/>
+      </div>
+    </div>
 
-        <hr/>
+    <div class="row">
+      <div class="col py-5">
+        <BidComponent class="mb-5"/>
 
         <ConfigComponent v-if="gameConfig"/>
       </div>

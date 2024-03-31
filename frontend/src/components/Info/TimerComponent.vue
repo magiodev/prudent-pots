@@ -18,6 +18,8 @@
 
           <p>Game started @ {{ new Date(gameState.start_time * 1000).toLocaleString() }}, and will end @
             {{ new Date(gameState.end_time * 1000).toLocaleString() }}.</p>
+
+          <p>Reallocation fee pool: {{reallocationFeePool/1000000}} $OSMO</p>
         </div>
       </div>
     </div>
@@ -38,7 +40,7 @@ export default {
   mixins: [mxChain, mxToast],
 
   computed: {
-    ...mapGetters(['gameState']),
+    ...mapGetters(['gameState', 'reallocationFeePool']),
 
     timeLeft() {
       if (!this.gameState) return null

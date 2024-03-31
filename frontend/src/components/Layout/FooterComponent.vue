@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 border-top text-white">
       <p class="col-md-4 mb-0">© {{ new Date().getFullYear() }} Prudent Pots</p>
 
       <div
@@ -10,10 +10,13 @@
 
       <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
         <li class="ms-3"><a href="#">
-          <b-icon-twitter></b-icon-twitter>
+          <b-icon-github class="text-white"></b-icon-github>
         </a></li>
         <li class="ms-3"><a href="#">
-          <b-icon-discord></b-icon-discord>
+          <b-icon-twitter class="text-white"></b-icon-twitter>
+        </a></li>
+        <li class="ms-3"><a href="#">
+          <b-icon-telegram class="text-white"></b-icon-telegram>
         </a></li>
       </ul>
     </footer>
