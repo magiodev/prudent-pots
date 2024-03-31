@@ -176,7 +176,8 @@ fn has_player_allocations(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> 
         if player_allocations
             .allocations
             .iter()
-            .any(|a| a.pot_id == pot_id)
+            .any(|a| a.pot_id == pot_id && !a.amount.is_zero())
+        // Check for non-zero amounts
         {
             return Ok(true);
         }
@@ -193,13 +194,11 @@ pub fn get_distribute_bank_msgs(
     let config = GAME_CONFIG.load(storage)?;
     let total_distribution_amount = total_losing_tokens.multiply_ratio(1u128, 2u128);
 
-    // Count winning pots with player allocations
     let winning_pots_with_allocations_count: usize = winning_pots
         .iter()
         .filter(|&&pot_id| has_player_allocations(storage, pot_id).unwrap_or(false))
         .count();
 
-    // Split the total distribution amount equally among the winning pots with player allocations
     let individual_pot_distribution_amount = if winning_pots_with_allocations_count > 0 {
         total_distribution_amount / Uint128::from(winning_pots_with_allocations_count as u128)
     } else {
@@ -209,10 +208,8 @@ pub fn get_distribute_bank_msgs(
     let mut messages: Vec<CosmosMsg> = vec![];
     let mut total_fee = Uint128::zero();
 
-    // Iterate through winning pots with player allocations
     for &pot_id in winning_pots {
         if has_player_allocations(storage, pot_id)? {
-            // The total amount to be distributed for this pot includes its share of the distribution amount plus the player contributions
             let pot_state = POT_STATES.load(storage, pot_id)?;
             let pot_total_distribution_amount =
                 individual_pot_distribution_amount + pot_state.amount;
@@ -222,40 +219,41 @@ pub fn get_distribute_bank_msgs(
                 .filter_map(Result::ok)
                 .collect();
 
-            // Calculate the total player contributions for this pot
             let total_player_contributions: Uint128 = player_allocations
                 .iter()
                 .flat_map(|(_, allocations)| allocations.allocations.iter())
-                .filter(|allocation| allocation.pot_id == pot_id)
+                .filter(|allocation| allocation.pot_id == pot_id && !allocation.amount.is_zero()) // Exclude 0 amount allocations
                 .map(|allocation| allocation.amount)
                 .sum();
 
-            // Calculate fee and net distribution amount for this pot
-            let fee = pot_total_distribution_amount.multiply_ratio(config.fee, 100u128);
-            total_fee += fee;
-            let net_distribution_amount = pot_total_distribution_amount.checked_sub(fee).unwrap();
+            if !total_player_contributions.is_zero() {
+                // Check to avoid division by zero
+                let fee = pot_total_distribution_amount.multiply_ratio(config.fee, 100u128);
+                total_fee += fee;
+                let net_distribution_amount =
+                    pot_total_distribution_amount.checked_sub(fee).unwrap();
 
-            // Distribute the net distribution amount among its players
-            for (addr, allocations) in player_allocations {
-                for allocation in &allocations.allocations {
-                    if allocation.pot_id == pot_id {
-                        let player_share = net_distribution_amount
-                            .multiply_ratio(allocation.amount, total_player_contributions);
+                for (addr, allocations) in player_allocations {
+                    for allocation in &allocations.allocations {
+                        if allocation.pot_id == pot_id && !allocation.amount.is_zero() {
+                            // Again, exclude 0 amount allocations
+                            let player_share = net_distribution_amount
+                                .multiply_ratio(allocation.amount, total_player_contributions);
 
-                        messages.push(CosmosMsg::Bank(BankMsg::Send {
-                            to_address: addr.to_string(),
-                            amount: vec![Coin {
-                                denom: config.game_denom.clone(),
-                                amount: player_share,
-                            }],
-                        }));
+                            messages.push(CosmosMsg::Bank(BankMsg::Send {
+                                to_address: addr.to_string(),
+                                amount: vec![Coin {
+                                    denom: config.game_denom.clone(),
+                                    amount: player_share,
+                                }],
+                            }));
+                        }
                     }
                 }
             }
         }
     }
 
-    // Add a message to send the total fee to the fee allocation address
     if !total_fee.is_zero() {
         messages.push(CosmosMsg::Bank(BankMsg::Send {
             to_address: config.fee_address.to_string(),

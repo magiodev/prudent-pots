@@ -127,7 +127,7 @@ pub fn reallocate_tokens(
         .find(|a| a.pot_id == from_pot_id);
     match from_allocation {
         Some(allocation) if allocation.amount >= amount => {
-            allocation.amount = allocation.amount.checked_sub(amount).unwrap();
+            allocation.amount = Uint128::zero();
         }
         _ => return Err(ContractError::InsufficientFunds {}),
     }
