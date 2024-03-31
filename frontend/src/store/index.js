@@ -3,7 +3,7 @@ import {AminoTypes, SigningStargateClient} from "@cosmjs/stargate";
 import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {Registry} from "@cosmjs/proto-signing";
 import {cosmosAminoConverters, cosmosProtoRegistry, cosmwasmAminoConverters, cosmwasmProtoRegistry} from "osmojs";
-import {fromUtf8} from "@cosmjs/encoding";
+// import {fromUtf8} from "@cosmjs/encoding";
 
 export default createStore({
   /**
@@ -17,7 +17,7 @@ export default createStore({
       allocations: []
     },
 
-    data: null,
+    // data: null,
 
     gameConfig: null,
     gameState: null,
@@ -89,9 +89,9 @@ export default createStore({
       state.user.address = address;
     },
 
-    setAllContractState(state, data) {
-      state.data = data
-    },
+    // setAllContractState(state, data) {
+    //   state.data = data
+    // },
 
     setUserSigner(state, signer) {
       state.user.signer = signer;
@@ -179,27 +179,27 @@ export default createStore({
       }
     },
 
-    async fetchAllContractState({state, commit}) {
-      if (!state.user.address || !state.user.querier) {
-        console.error("Address or Querier is not initialized");
-        return;
-      }
-      console.log(state.user.querier)
-
-      // Use CosmWasmClient for the query
-      let data = await state.user.querier.queryClient.wasm.getAllContractState(
-        process.env.VUE_APP_CONTRACT
-      );
-      data.models.map(item => {
-        item.key = fromUtf8(item.key)
-        item.value = JSON.parse(fromUtf8(item.value))
-      })
-      console.log(data)
-      // TODO: Use this for gameState, reallocationFeePool, PotStates that are coming separately
-      // GameConfig should be queried once
-      // PlayerAllocations only after a player did something
-      commit("setAllContractState", data);
-    },
+    // async fetchAllContractState({state, commit}) {
+    //   if (!state.user.address || !state.user.querier) {
+    //     console.error("Address or Querier is not initialized");
+    //     return;
+    //   }
+    //   console.log(state.user.querier)
+    //
+    //   // Use CosmWasmClient for the query
+    //   let data = await state.user.querier.queryClient.wasm.getAllContractState(
+    //     process.env.VUE_APP_CONTRACT
+    //   );
+    //   data.models.map(item => {
+    //     item.key = fromUtf8(item.key)
+    //     item.value = JSON.parse(fromUtf8(item.value))
+    //   })
+    //   console.log(data.models)
+    //   // TODO: Use this for gameState, reallocationFeePool, PotStates that are coming separately
+    //   // GameConfig should be queried once
+    //   // PlayerAllocations only after a player did something
+    //   commit("setAllContractState", data.models);
+    // },
 
     async fetchUserAllocations({state, commit}) {
       if (!state.user.address || !state.user.querier) {

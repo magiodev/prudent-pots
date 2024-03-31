@@ -1,6 +1,6 @@
 <template>
   <div class="row">
-    <div class="offset-md-4 col-md-4">
+    <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4">
       <div class="accordion" id="gameInfoAccordion" v-if="gameConfig">
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingTwo">

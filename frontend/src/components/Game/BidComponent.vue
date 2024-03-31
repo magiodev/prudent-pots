@@ -1,7 +1,7 @@
 <template>
   <div class="bid-component">
     <div class="row">
-      <div class="offset-md-4 col-md-4 text-center">
+      <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4 text-center">
         <div class="card">
           <div class="card-body">
             <h3>Place Your Bid</h3>
