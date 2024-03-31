@@ -206,6 +206,8 @@ pub fn get_distribute_bank_msgs(
         Uint128::zero()
     };
 
+    // TODO: Append fee and remove from allocate
+
     let mut messages: Vec<CosmosMsg> = vec![];
 
     // Iterate through winning pots with player allocations

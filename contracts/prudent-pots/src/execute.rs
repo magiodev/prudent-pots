@@ -205,7 +205,7 @@ pub fn game_end(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
     // Calculate the total amount in losing pots to be redistributed
     let total_losing_tokens = calculate_total_losing_tokens(deps.storage, &winning_pots)?;
 
-    // Redistribute the tokens from losing pots:
+    // Redistribute the tokens from losing to winning pots, and also winning pots amount with users' allocations based on contributors shares:
     let bank_msgs = get_distribute_bank_msgs(deps.storage, &winning_pots, total_losing_tokens)?;
 
     // Prepare for the next game

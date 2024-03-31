@@ -1,7 +1,7 @@
 <template>
   <div class="bid-component">
     <div class="row">
-      <div class="offset-md-3 col-md-6 text-center">
+      <div class="offset-md-4 col-md-4 text-center">
         <div class="card">
           <div class="card-body">
             <h3>Place Your Bid</h3>
@@ -29,11 +29,12 @@
                 <button class="btn btn-outline-secondary" type="button" @click="setMaxBid">Max</button>
               </div>
 
-              <button type="submit" class="btn btn-primary mb-2" :disabled="!utils.selectedPot || isBusy">Submit Bid</button>
+              <ButtonComponent :isDisabled="!utils.selectedPot || isBusy" text="Place Bid"/>
+              <LoadingComponent v-if="isBusy"/>
             </form>
 
-            <div class="fee-calculation">
-              <p>Allocation Fee: {{ calculateAllocationFee(bidAmount) }} $OSMO</p>
+            <div class="fee-calculation mt-3">
+              <p class="mb-0">Allocation Fee: {{ calculateAllocationFee(bidAmount) / 1000000 }} $OSMO</p>
             </div>
           </div>
         </div>
@@ -47,9 +48,12 @@ import {mapActions, mapGetters} from "vuex";
 import mxChain from "@/mixin/chain";
 import mxToast from "@/mixin/toast";
 import mxPot from "@/mixin/pot";
+import ButtonComponent from "@/components/Common/ButtonComponent.vue";
+import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 
 export default {
   name: "BidComponent",
+  components: {LoadingComponent, ButtonComponent},
 
   mixins: [mxChain, mxToast, mxPot],
 
@@ -106,7 +110,7 @@ export default {
         await this.fetchWinningPots()
         await this.fetchReallocationFeePool()
       } catch (e) {
-        this.toast.success("Tx error")
+        this.toast.error(`${e.message}`)
       }
       this.isBusy = false
     }

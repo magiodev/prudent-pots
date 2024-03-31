@@ -5,10 +5,16 @@
         <div class="card-body">
           <h5 class="card-title">Timer</h5>
           <p v-if="timeLeft" class="card-text text-success">Time Remaining: {{ timeLeft }}</p>
+          <div v-if="timeLeft" class="progress">
+            <div class="progress-bar" role="progressbar" :style="{ width: progressPercentage + '%' }" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">{{ progressPercentage }}%</div>
+          </div>
           <p v-else class="card-text text-danger">The game has ended. Please trigger the end game process.</p>
 
-          <!-- Button is only shown when timeLeft is falsy, meaning the game has ended -->
-          <button v-if="!timeLeft" class="btn btn-primary mb-3" @click="onEndGame">End Game</button>
+          <div class="mb-3">
+            <!-- Button is only shown when timeLeft is falsy, meaning the game has ended -->
+            <ButtonComponent v-if="!timeLeft" :isDisabled="isBusy" text="End Game" @click="onEndGame"/>
+            <LoadingComponent v-if="isBusy"/>
+          </div>
 
           <p>Game started @ {{ new Date(gameState.start_time * 1000).toLocaleString() }}, and will end @
             {{ new Date(gameState.end_time * 1000).toLocaleString() }}.</p>
@@ -22,9 +28,12 @@
 import {mapActions, mapGetters} from "vuex";
 import mxChain from "@/mixin/chain";
 import mxToast from "@/mixin/toast";
+import ButtonComponent from "@/components/Common/ButtonComponent.vue";
+import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 
 export default {
   name: "TimerComponent",
+  components: {LoadingComponent, ButtonComponent},
 
   mixins: [mxChain, mxToast],
 
@@ -42,6 +51,13 @@ export default {
       const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
       const seconds = Math.floor((timeDiff / 1000) % 60);
       return `${hours}h ${minutes}m ${seconds}s`;
+    },
+
+    progressPercentage() {
+      if (!this.gameState) return 0;
+      const totalTime = this.gameState.end_time * 1000 - this.gameState.start_time * 1000;
+      const timeElapsed = this.currentTime - this.gameState.start_time * 1000;
+      return Math.min(100, (timeElapsed / totalTime) * 100).toFixed(2);
     }
   },
 
@@ -49,10 +65,9 @@ export default {
     return {
       intervalId: null,
       currentTime: new Date().getTime(),
+      isBusy: false,
     };
   },
-
-  // TODO: Implement fetchGameState inside this interval so we update it each second only when 15 seconds are left.
 
   mounted() {
     this.intervalId = setInterval(this.updateCurrentTime, 1000);
@@ -70,20 +85,21 @@ export default {
     },
 
     async onEndGame() {
+      this.isBusy = true
       try {
         await this.endGame()
         this.toast.success("Tx successful")
-        // Fetch new game information after ending the previous match
-        // TODO: Create wrapper as fetchGameInit()
         await this.fetchGameState()
         await this.fetchPots()
+        await this.fetchReallocationFeePool()
+
         await this.fetchUserAllocations()
         await this.fetchBidRange()
         await this.fetchWinningPots()
-        await this.fetchReallocationFeePool()
       } catch (e) {
-        this.toast.success("Tx error")
+        this.toast.error(`${e.message}`)
       }
+      this.isBusy = false
     }
   }
 }

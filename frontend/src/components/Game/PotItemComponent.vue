@@ -1,25 +1,24 @@
 <template>
-  <div class="pot-item-component col-md-2 text-center text-black" :class="isPotWinning ? 'bg-success' : 'bg-danger'">
+  <div class="pot-item-component col-md-2 text-center text-black">
     <!-- TODO: Highlight the pot red or green based on if its currently winning or not. -->
-    <div class="pot-header">
-      <h5>{{ getPotName(pot.pot_id) }}</h5>
+    <div class="pot-header" :class="isPotWinning ? 'bg-success' : 'bg-danger'">
+      <h5 class="d-inline me-1">{{ getPotName(pot.pot_id) }}</h5>
+
+      <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
     </div>
 
-    <div class="pot-content">
-      <p>{{ getPotDescription(pot.pot_id) }}</p>
-      <!-- TODO cut decimals to 6 only if more-->
-      <span class="pot-tokens p-1">{{ Number(pot.amount / 1000000) }} $OSMO</span>
+    <div class="pot-item position-relative mb-3" @click="onPotClick(pot.pot_id)">
+      <img class="pot-image w-100 position-relative" :Src="imagePot" />
+
+      <div class="pot-content">
+        <!-- TODO cut decimals to 6 only if more-->
+        <span class="pot-tokens p-1">{{ Number(pot.amount / 1000000) }} $OSMO</span>
+      </div>
     </div>
 
-    <div class="pot-footer mt-3">
-      <button @click="onPotClick(pot.pot_id)">Select</button>
-    </div>
-
-    <hr/>
-
-    <div class="allocations card">
+    <div class="allocations card" v-if="allocations">
       <h6>Your allocation:</h6>
-      <span>{{ allocations }} $OSMO</span>
+      <span class="card bg-primary">{{ allocations / 1000000 }} $OSMO</span>
     </div>
   </div>
 </template>
@@ -27,9 +26,13 @@
 <script>
 import {mapGetters, mapMutations} from "vuex";
 import mxPot from "@/mixin/pot";
+import imagePot from "@/assets/pot.png"
+import imagePotInfo from "@/assets/pot-info.png"
+import PopoverComponent from "@/components/Common/PopoverComponent.vue";
 
 export default {
   name: "PotItemComponent",
+  components: {PopoverComponent},
 
   mixins: [mxPot],
 
@@ -52,6 +55,13 @@ export default {
     }
   },
 
+  data() {
+    return {
+      imagePot,
+      imagePotInfo
+    }
+  },
+
   methods: {
     ...mapMutations(['setSelectedPot']),
 
@@ -65,12 +75,17 @@ export default {
 </script>
 
 <style scoped>
-.pot-item-component {
-  border: 1px solid #ddd;
+.pot-header {
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
-  background-color: #f9f9f9;
+}
+
+.pot-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .pot-tokens {
@@ -79,6 +94,8 @@ export default {
   margin-bottom: 1rem;
   border-radius: 0.5rem;
   background-color: #2743b2;
+  white-space: nowrap;
+  color: white;
 }
 
 .pot-footer > button {

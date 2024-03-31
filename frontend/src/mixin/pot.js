@@ -2,11 +2,11 @@ const mxPot = {
   methods: {
     getPotName(potId) {
       const potNames = {
-        1: 'Median Pot',
-        2: 'Highest Pot',
-        3: 'Even Pot',
-        4: 'Lowest Pot',
-        5: 'Prime Pot'
+        1: 'Median',
+        2: 'Highest',
+        3: 'Even',
+        4: 'Lowest',
+        5: 'Prime'
       };
       return potNames[potId] || 'Unknown Pot';
     },

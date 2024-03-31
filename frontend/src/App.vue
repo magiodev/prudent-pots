@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="d-flex flex-column">
+  <div id="app-body" class="d-flex flex-column">
     <NavbarComponent/>
     <div class="main-section flex-grow-1">
       <LoadingComponent v-if="isBusy"/>
@@ -12,7 +12,7 @@
 <script>
 import {mapActions, mapGetters} from "vuex";
 import NavbarComponent from "@/components/Layout/NavbarComponent.vue";
-import LoadingComponent from "@/components/Layout/LoadingComponent.vue";
+import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 import FooterComponent from "@/components/Layout/FooterComponent.vue";
 
 export default {
@@ -64,8 +64,19 @@ export default {
 @import "vue-toastification/src/scss/_icon";
 @import "vue-toastification/src/scss/animations/_bounce";
 
-#app {
-  background-color: #001B79;
+@import "@/assets/style.scss";
+
+@font-face {
+  font-family: 'TrashHand';
+  src: url('assets/fonts/TrashHand.ttf') format('truetype'); /* Adjust the path based on where you placed the font */
+}
+
+body {
+  background: $color-background !important;
   color: white;
+
+  * {
+    font-family: 'TrashHand', sans-serif;
+  }
 }
 </style>

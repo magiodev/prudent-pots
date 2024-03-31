@@ -70,18 +70,14 @@ const mxChain = {
     // PRIVATE
 
     async _submitTx(message) {
-      try {
-        const gasWanted = await this.userSigner.simulate(this.userAddress, [message])
-        const fee = this._calculateFee(gasWanted);
-        const response = await this.userSigner.signAndBroadcast(this.userAddress, [message], fee);
+      const gasWanted = await this.userSigner.simulate(this.userAddress, [message])
+      const fee = this._calculateFee(gasWanted);
+      const response = await this.userSigner.signAndBroadcast(this.userAddress, [message], fee);
 
-        // Log and return success immediately if transaction succeeds
-        console.log(`Transaction successful: ${response.transactionHash}`)
+      // Log and return success immediately if transaction succeeds
+      console.log(`Transaction successful: ${response.transactionHash}`)
 
-        return response; // Return successful response
-      } catch (e) {
-        console.log(e)
-      }
+      return response; // Return successful response
     },
 
     // This has implemented as: https://hackmd.io/@3DOBr1TJQ3mQAFDEO0BXgg/S1N09wpQp

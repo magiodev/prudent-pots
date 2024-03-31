@@ -15,7 +15,7 @@
 <script>
 import { mapGetters } from "vuex";
 import PotItemComponent from "@/components/Game/PotItemComponent.vue";
-import LoadingComponent from "@/components/Layout/LoadingComponent.vue";
+import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 
 export default {
   name: "PotsComponent",
