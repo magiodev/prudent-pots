@@ -329,13 +329,15 @@ pub fn validate_and_extend_game_time(
         return Err(ContractError::GameAlreadyEnded {});
     }
 
-    // Extend the game time by game_extend amount of seconds if the remaining time is LTE game_config.game_extend.
+    // Get the current configuration
     let game_config = GAME_CONFIG.load(storage)?;
-    if game_state.end_time - game_state.start_time <= game_config.game_extend {
-        game_state.end_time = std::cmp::max(
-            env.block.time.seconds() + game_config.game_extend,
-            game_state.end_time,
-        );
+
+    // Calculate the remaining time
+    let remaining_time = game_state.end_time - env.block.time.seconds();
+
+    // Extend the game time if the remaining time is less than or equal to game_config.game_extend
+    if remaining_time <= game_config.game_extend {
+        game_state.end_time = env.block.time.seconds() + game_config.game_extend;
         GAME_STATE.save(storage, &game_state)?;
     }
 
