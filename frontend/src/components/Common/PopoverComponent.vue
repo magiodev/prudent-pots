@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import { Popover } from 'bootstrap';
+import {Popover} from 'bootstrap';
 
 export default {
   name: "PopoverComponent",

@@ -30,7 +30,7 @@ const mxChain = {
       return this._submitTx(msg)
     },
 
-    async reallocateTokens(fromPotId, toPotId, amount) {
+    async reallocateTokens(fromPotId, toPotId) {
       /** @type {import("@cosmjs/proto-signing").EncodeObject} */
       const msg = {
         typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
@@ -43,9 +43,7 @@ const mxChain = {
               to_pot_id: Number(toPotId),
             }
           })),
-          funds: [
-            {denom: this.gameConfig.game_denom, amount: amount.toString()}
-          ],
+          funds: [],
         }
       }
       return this._submitTx(msg)

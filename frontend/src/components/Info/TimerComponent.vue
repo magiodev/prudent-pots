@@ -6,7 +6,9 @@
           <h5 class="card-title">Timer</h5>
           <p v-if="timeLeft" class="card-text text-success">Time Remaining: {{ timeLeft }}</p>
           <div v-if="timeLeft" class="progress">
-            <div class="progress-bar" role="progressbar" :style="{ width: progressPercentage + '%' }" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">{{ progressPercentage }}%</div>
+            <div class="progress-bar" role="progressbar" :style="{ width: progressPercentage + '%' }" aria-valuenow="25"
+                 aria-valuemin="0" aria-valuemax="100">{{ progressPercentage }}%
+            </div>
           </div>
           <p v-else class="card-text text-danger">The game has ended. Please trigger the end game process.</p>
 
@@ -19,7 +21,7 @@
           <p>Game started @ {{ new Date(gameState.start_time * 1000).toLocaleString() }}, and will end @
             {{ new Date(gameState.end_time * 1000).toLocaleString() }}.</p>
 
-          <p>Reallocation fee pool: {{reallocationFeePool/1000000}} $OSMO</p>
+          <p>Reallocation fee pool: {{ reallocationFeePool / 1000000 }} $OSMO</p>
         </div>
       </div>
     </div>
@@ -32,12 +34,13 @@ import mxChain from "@/mixin/chain";
 import mxToast from "@/mixin/toast";
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
 import LoadingComponent from "@/components/Common/LoadingComponent.vue";
+import mxGame from "@/mixin/game";
 
 export default {
   name: "TimerComponent",
   components: {LoadingComponent, ButtonComponent},
 
-  mixins: [mxChain, mxToast],
+  mixins: [mxChain, mxToast, mxGame],
 
   computed: {
     ...mapGetters(['gameState', 'reallocationFeePool']),
@@ -80,7 +83,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchGameState', 'fetchPots', 'fetchBidRange', 'fetchWinningPots', 'fetchReallocationFeePool', 'fetchUserAllocations']),
+    ...mapActions(['fetchUserAllocations']),
 
     updateCurrentTime() {
       this.currentTime = new Date().getTime();
@@ -91,13 +94,9 @@ export default {
       try {
         await this.endGame()
         this.toast.success("Tx successful")
-        await this.fetchGameState()
-        await this.fetchPots()
-        await this.fetchReallocationFeePool()
-
+        await this.fetchInterval()
+        // TODO: check if the following can be wrapped or generalized
         await this.fetchUserAllocations()
-        await this.fetchBidRange()
-        await this.fetchWinningPots()
       } catch (e) {
         this.toast.error(`${e.message}`)
       }

@@ -1,5 +1,5 @@
 <template>
-  <button class="button-component" :disabled="isDisabled">{{text}}</button>
+  <button class="button-component" :disabled="isDisabled">{{ text }}</button>
 </template>
 
 <script>

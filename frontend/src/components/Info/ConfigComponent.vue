@@ -13,7 +13,7 @@
           {{ gameConfig.game_denom }}. A {{ gameConfig.fee_reallocation }}% fee is charged for bets reallocation,
           with a minimum bid set at {{ gameConfig.min_bid }} {{ gameConfig.game_denom }}.</p>
 
-        <p>Contract address: {{contractAddress}}</p>
+        <p>Contract address: {{ contractAddress }}</p>
       </div>
     </div>
   </div>

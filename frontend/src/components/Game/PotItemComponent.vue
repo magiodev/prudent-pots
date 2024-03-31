@@ -1,39 +1,40 @@
 <template>
-  <div class="pot-item-component col-sm-2 text-center text-black">
-    <!-- TODO: Highlight the pot red or green based on if its currently winning or not. -->
+  <div class="pot-item-component col-4 col-md-2 text-center text-black">
     <div class="pot-header">
       <h5 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h5>
-
       <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
     </div>
 
     <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)">
-      <img class="pot-image w-100 position-relative" :Src="imagePot"/>
-
+      <img class="pot-image w-100 position-relative" :src="imagePot" alt="Pot Item"/>
       <div class="pot-content">
-        <!-- TODO cut decimals to 6 only if more-->
         <span class="pot-tokens p-1">{{ Number(pot.amount / 1000000) }} $OSMO</span>
       </div>
     </div>
 
-    <div class="allocations card" v-if="allocations">
-      <h6>Your bet:</h6>
-      <span class="card bg-primary">{{ allocations / 1000000 }} $OSMO</span>
+    <div class="allocations card mt-3 p-1" :data-pot-id="pot.pot_id">
+      <draggable v-model="allocationsList" group="allocations" @start="onDragStart" @end="onDragEnd" item-key="key">
+        <template #item="{ element }">
+          <span class="card" :class="element.amount ? 'bg-primary' : 'bg-secondary'">
+            {{ element.amount / 1000000 }} $OSMO
+          </span>
+        </template>
+      </draggable>
     </div>
   </div>
 </template>
+
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
 import mxPot from "@/mixin/pot";
 import PopoverComponent from "@/components/Common/PopoverComponent.vue";
+import draggable from "vuedraggable";
 import imagePot from "@/assets/pot.png"
-import imagePotInfo from "@/assets/pot-info.png"
 
 export default {
   name: "PotItemComponent",
-  components: {PopoverComponent},
-
+  components: {PopoverComponent, draggable},
   mixins: [mxPot],
 
   props: {
@@ -47,34 +48,60 @@ export default {
     ...mapGetters(['winningPots', 'userAllocations']),
 
     isPotWinning() {
-      return !!this.winningPots.find(pot => pot === Number(this.pot.pot_id))
+      return this.winningPots.includes(this.pot.pot_id);
     },
 
     allocations() {
-      return this.userAllocations.find(a => a.pot_id === Number(this.pot.pot_id))?.amount || 0
+      return this.userAllocations.find(a => a.pot_id === this.pot.pot_id)?.amount || 0;
+    },
+
+    allocationsList() {
+      // Including only the allocation for this specific pot
+      const allocationForThisPot = this.userAllocations.find(a => a.pot_id === this.pot.pot_id);
+      return allocationForThisPot
+        ? [{
+          key: `allocation-${this.pot.pot_id}`,
+          amount: allocationForThisPot.amount,
+        }]
+        : [];
     }
+
   },
 
   data() {
     return {
+      drag: false,
       imagePot,
-      imagePotInfo
     }
   },
 
   methods: {
     ...mapMutations(['setSelectedPot']),
 
-    // TODO: Implement this.electedPot Vuex store item
     onPotClick(potId) {
-      // Do something with userSigner
-      this.setSelectedPot(potId)
-    }
-  }
+      this.setSelectedPot(potId);
+    },
+
+    onDragStart() {
+      this.drag = true
+    },
+
+    onDragEnd(event) {
+      const fromPotId = this.pot.pot_id;
+
+      // Retrieve the pot_id from the new container after dragging ends
+      const toPotElement = event.to.closest('.allocations');
+      const toPotId = toPotElement ? Number(toPotElement.dataset.potId) : null;
+      if (!toPotId) throw new Error("Something went wrong.")
+      this.drag = false
+
+      this.$emit('endReallocation', {fromPotId, toPotId});
+    },
+  },
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .pot-header {
   padding: 1rem;
   margin-bottom: 1rem;
