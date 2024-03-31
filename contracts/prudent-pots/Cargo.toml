@@ -1,5 +1,5 @@
 [package]
-name = "prudent-pot"
+name = "prudent-pots"
 version = "0.1.0"
 authors = ["Supanat Potiwarakorn <supanat.ptk@gmail.com>"]
 edition = "2021"

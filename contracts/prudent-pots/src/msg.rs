@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 
-use crate::state::{GameConfig, GameState, PlayerAllocations};
+use crate::state::{GameConfig, GameState, PlayerAllocations, TokenAllocation};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -10,19 +10,14 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    UpdateConfig {
-        config: GameConfig,
-    },
-    AllocateTokens {
-        pot_id: u8,
-    },
-    ReallocateTokens {
-        from_pot_id: u8,
-        to_pot_id: u8,
-        amount: Uint128,
-    },
+    UpdateConfig { config: GameConfig },
+    AllocateTokens { pot_id: u8 },
+    ReallocateTokens { from_pot_id: u8, to_pot_id: u8 },
     GameEnd {},
 }
+
+#[cw_serde]
+pub struct MigrateMsg {}
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -35,6 +30,10 @@ pub enum QueryMsg {
     QueryBidRange {},
     #[returns(QueryPotStateResponse)]
     QueryPotState { pot_id: u8 },
+    #[returns(QueryPotsStateResponse)]
+    QueryPotsState {},
+    #[returns(QueryWinningPotsReponse)]
+    QueryWinningPots {},
     #[returns(QueryPlayerAllocationsResponse)]
     QueryPlayerAllocations { address: Addr },
     #[returns(QueryReallocationFeePoolResponse)]
@@ -59,8 +58,17 @@ pub struct QueryBidRangeResponse {
 
 #[cw_serde]
 pub struct QueryPotStateResponse {
-    pub pot_id: u8,
-    pub pot_state: Uint128,
+    pub pot: TokenAllocation,
+}
+
+#[cw_serde]
+pub struct QueryPotsStateResponse {
+    pub pots: Vec<TokenAllocation>,
+}
+
+#[cw_serde]
+pub struct QueryWinningPotsReponse {
+    pub pots: Vec<u8>,
 }
 
 #[cw_serde]

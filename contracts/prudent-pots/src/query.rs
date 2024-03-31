@@ -1,12 +1,16 @@
 use cosmwasm_std::{Addr, Deps, StdResult};
 
 use crate::{
-    helpers::{calculate_max_bid, calculate_min_bid},
+    helpers::{calculate_max_bid, calculate_min_bid, is_winning_pot},
     msg::{
         QueryBidRangeResponse, QueryGameConfigResponse, QueryGameStateResponse,
-        QueryPlayerAllocationsResponse, QueryPotStateResponse, QueryReallocationFeePoolResponse,
+        QueryPlayerAllocationsResponse, QueryPotStateResponse, QueryPotsStateResponse,
+        QueryReallocationFeePoolResponse, QueryWinningPotsReponse,
     },
-    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES, REALLOCATION_FEE_POOL},
+    state::{
+        PlayerAllocations, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
+        REALLOCATION_FEE_POOL,
+    },
 };
 
 pub fn query_game_config(deps: Deps) -> StdResult<QueryGameConfigResponse> {
@@ -20,21 +24,51 @@ pub fn query_game_state(deps: Deps) -> StdResult<QueryGameStateResponse> {
 }
 
 pub fn query_bid_range(deps: Deps) -> StdResult<QueryBidRangeResponse> {
-    let min_bid = calculate_min_bid(&deps)?;
-    let max_bid = calculate_max_bid(&deps)?;
+    let min_bid = calculate_min_bid(deps.storage)?;
+    let max_bid = calculate_max_bid(deps.storage)?;
     Ok(QueryBidRangeResponse { min_bid, max_bid })
 }
 
 pub fn query_pot_state(deps: Deps, pot_id: u8) -> StdResult<QueryPotStateResponse> {
-    let pot_state = POT_STATES.load(deps.storage, pot_id)?;
-    Ok(QueryPotStateResponse { pot_id, pot_state })
+    let pot = POT_STATES.load(deps.storage, pot_id)?;
+    Ok(QueryPotStateResponse { pot })
+}
+
+pub fn query_pots_state(deps: Deps) -> StdResult<QueryPotsStateResponse> {
+    let mut pots = Vec::new();
+
+    for pot_id in 1..=5 {
+        if let Ok(pot_state) = POT_STATES.load(deps.storage, pot_id) {
+            pots.push(pot_state);
+        }
+    }
+
+    Ok(QueryPotsStateResponse { pots })
+}
+
+pub fn query_winning_pots(deps: Deps) -> StdResult<QueryWinningPotsReponse> {
+    let mut pots = Vec::new();
+
+    for pot_id in 1..=5 {
+        if is_winning_pot(deps.storage, pot_id)? {
+            pots.push(pot_id);
+        }
+    }
+
+    Ok(QueryWinningPotsReponse { pots })
 }
 
 pub fn query_player_allocations(
     deps: Deps,
     address: Addr,
 ) -> StdResult<QueryPlayerAllocationsResponse> {
-    let allocations = PLAYER_ALLOCATIONS.load(deps.storage, address)?;
+    // Attempt to load player allocations. If not found, return an empty PlayerAllocations struct.
+    let allocations = PLAYER_ALLOCATIONS
+        .may_load(deps.storage, address)?
+        .unwrap_or_else(|| PlayerAllocations {
+            allocations: Vec::new(),
+        });
+
     Ok(QueryPlayerAllocationsResponse { allocations })
 }
 

@@ -7,37 +7,50 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::helpers::{prepare_next_game, validate_and_sum_funds};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::query::{
     query_bid_range, query_game_config, query_game_state, query_player_allocations,
-    query_pot_state, query_reallocation_fee_pool,
+    query_pot_state, query_pots_state, query_reallocation_fee_pool, query_winning_pots,
 };
 use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:prudent-pot";
+const CONTRACT_NAME: &str = "crates.io:prudent-pots";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    env: Env,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // TODO: Validate game_config fields
+    // Validate game_config fields and initial funds
+    if msg.config.fee_allocation > 100 || msg.config.fee_reallocation > 100 {
+        return Err(ContractError::InvalidInput {});
+    }
+    if msg.config.game_duration == 0 {
+        return Err(ContractError::InvalidInput {});
+    }
+    if msg.config.min_bid.is_zero() {
+        return Err(ContractError::InvalidInput {});
+    }
+
+    // Validate and sum initial funds
+    validate_and_sum_funds(&info.funds, &msg.config.game_denom)?;
 
     GAME_CONFIG.save(deps.storage, &msg.config)?;
-    // pub const PLAYER_ALLOCATIONS: Map<Addr, PlayerAllocations> = Map::new("player_allocations");
-    // pub const POT_STATES: Map<u8, PotState> = Map::new("pot_states");
-    // pub const GAME_STATE: Item<GameState> = Item::new("game_state");
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
+
+    // Initialize game state and pots for the next game
+    prepare_next_game(deps, &env, &vec![])?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
-        .add_attribute("action", "instantiate")
+        .add_attribute("action", "initialize_game")
         .add_attribute("config", format!("{:?}", msg.config)))
 }
 
@@ -50,12 +63,11 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, config),
-        ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, info, pot_id),
+        ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, env, info, pot_id),
         ExecuteMsg::ReallocateTokens {
             from_pot_id,
             to_pot_id,
-            amount,
-        } => reallocate_tokens(deps, info, from_pot_id, to_pot_id, amount),
+        } => reallocate_tokens(deps, env, info, from_pot_id, to_pot_id),
         ExecuteMsg::GameEnd {} => game_end(deps, env),
     }
 }
@@ -67,6 +79,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::QueryGameState {} => to_json_binary(&query_game_state(deps)?),
         QueryMsg::QueryBidRange {} => to_json_binary(&query_bid_range(deps)?),
         QueryMsg::QueryPotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
+        QueryMsg::QueryPotsState {} => to_json_binary(&query_pots_state(deps)?),
+        QueryMsg::QueryWinningPots {} => to_json_binary(&query_winning_pots(deps)?),
         QueryMsg::QueryPlayerAllocations { address } => {
             to_json_binary(&query_player_allocations(deps, address)?)
         }
@@ -74,4 +88,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_json_binary(&query_reallocation_fee_pool(deps)?)
         }
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    Ok(Response::new().add_attribute("migrate", "successful"))
 }

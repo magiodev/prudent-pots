@@ -1,0 +1,22 @@
+// Base color definitions
+$color-background: #001d8f; // Primary background color
+$color-primary: #391358; // Primary background color
+$color-main: #7D34B7; // Main color for text and important elements
+$color-accent: #D284E9; // Accent color for highlights and secondary elements
+$color-button: #28EC8E; // Base color for buttons
+
+// Button color variants for different states
+$button-color: $color-button; // Default button color
+$button-text-color: $color-primary; // Text color for buttons
+$button-hover-color: lighten($color-button, 10%); // Button color on hover
+$button-active-color: darken($color-button, 10%); // Button color when active/pressed
+$button-disabled-bg: #e0e0e0; // Button background when disabled
+//$button-disabled-bg: darken($color-background, 10%); // Button background when disabled
+$button-disabled-text: #a0a0a0; // Text color for disabled buttons
+//$button-disabled-text: lighten($color-main, 20%); // Text color for disabled buttons
+
+// Usage:
+// - Use $color-background for the background of the app or component.
+// - Apply $color-main for primary texts and elements requiring emphasis.
+// - Utilize $color-accent for highlighting secondary information or as an accent color.
+// - Employ $button-* variables for styling button components in different states.
