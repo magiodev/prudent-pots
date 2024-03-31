@@ -6,7 +6,10 @@ mod tests {
         Addr, BankMsg, CosmosMsg, Uint128,
     };
 
-    use crate::{helpers::get_distribute_bank_msgs, tests::instantiate::tests::setup_game};
+    use crate::{
+        helpers::get_distribute_bank_msgs, state::GAME_CONFIG,
+        tests::instantiate::tests::setup_game,
+    };
 
     /// Test `get_distribute_bank_msgs_single_winner` to ensure proper distribution of tokens
     /// in a scenario where there's a single winner with player allocations.
@@ -66,12 +69,15 @@ mod tests {
                 .unwrap();
 
         // Assertions
+        let config = GAME_CONFIG.load(deps.as_ref().storage).unwrap();
+
         assert_eq!(
             messages.len(),
-            1,
-            "There should be one message for player1's reward"
+            2,
+            "There should be two messages: one for player1's reward and one for the fee"
         );
 
+        // Checking the player's reward
         if let CosmosMsg::Bank(BankMsg::Send { to_address, amount }) = &messages[0] {
             assert_eq!(
                 to_address,
@@ -80,11 +86,27 @@ mod tests {
             );
             assert_eq!(
                 amount[0].amount,
-                Uint128::new(4030), // 2940 + 200 + 890
-                "Player1 should receive all tokens from the winning pot"
+                Uint128::new(3950u128), // 4030 - 2% fee
+                "Player1 should receive the correct amount after fee deduction"
             );
         } else {
-            panic!("Expected BankMsg::Send message");
+            panic!("Expected BankMsg::Send message for player reward");
+        }
+
+        // Checking the fee
+        if let CosmosMsg::Bank(BankMsg::Send { to_address, amount }) = &messages[1] {
+            assert_eq!(
+                to_address,
+                &config.fee_address.to_string(),
+                "Fee should be sent to the fee allocation address"
+            );
+            assert_eq!(
+                amount[0].amount,
+                Uint128::new(80u128), // 4030 * 0.002 rounded down due to Uint oflow
+                "The correct fee amount should be sent"
+            );
+        } else {
+            panic!("Expected BankMsg::Send message for fee");
         }
     }
 }

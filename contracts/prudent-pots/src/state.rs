@@ -5,12 +5,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct GameConfig {
-    pub fee_allocation: u64,
+    pub fee: u64,
+    pub fee_address: Addr,
     pub fee_reallocation: u64,
-    pub fee_allocation_address: Addr,
+    pub game_denom: String,
     pub game_duration: u64,
     pub game_extend: u64,
-    pub game_denom: String,
     pub min_bid: Uint128,
 }
 

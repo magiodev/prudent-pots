@@ -2,7 +2,7 @@ use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response, Uint128};
 
 use crate::{
     helpers::{
-        calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens, create_fee_message,
+        calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens,
         get_distribute_bank_msgs, is_contract_admin, is_winning_pot, prepare_next_game,
         update_player_allocation, update_pot_state, validate_and_extend_game_time,
         validate_and_sum_funds,
@@ -42,36 +42,29 @@ pub fn allocate_tokens(
 
     let config = GAME_CONFIG.load(deps.storage)?;
 
-    let total_amount = validate_and_sum_funds(&info.funds, &config.game_denom)?;
+    let amount = validate_and_sum_funds(&info.funds, &config.game_denom)?;
 
     // Implementing dynamic bid constraints
     let min_bid = calculate_min_bid(deps.storage)?;
     let max_bid = calculate_max_bid(deps.storage)?;
 
-    if total_amount < min_bid || total_amount > max_bid {
+    if amount < min_bid || amount > max_bid {
         return Err(ContractError::BidOutOfRange {
             min: min_bid,
             max: max_bid,
         });
     }
 
-    let fee = total_amount.multiply_ratio(config.fee_allocation, 100u128);
-    let net_amount = total_amount.checked_sub(fee).unwrap();
-
     // Update the player's allocation and pot state
-    update_player_allocation(deps.storage, &info.sender, pot_id, net_amount)?;
-    update_pot_state(deps.storage, pot_id, net_amount)?;
+    update_player_allocation(deps.storage, &info.sender, pot_id, amount)?;
+    update_pot_state(deps.storage, pot_id, amount)?;
 
-    // Deducting fee and sending it to the fee allocation address
-    let messages = create_fee_message(&config, fee)?;
-
-    Ok(Response::new().add_messages(messages).add_attributes(vec![
+    Ok(Response::new().add_attributes(vec![
         attr("method", "execute"),
         attr("action", "allocate_tokens"),
         attr("player", info.sender),
         attr("pot_id", pot_id.to_string()),
-        attr("amount", net_amount.to_string()),
-        attr("fee", fee.to_string()),
+        attr("amount", amount.to_string()),
     ]))
 }
 
@@ -91,7 +84,7 @@ pub fn reallocate_tokens(
     let mut player_allocations = PLAYER_ALLOCATIONS.load(deps.storage, info.sender.clone())?;
 
     // Find the allocation for the from_pot and determine the amount to reallocate
-    let mut amount = player_allocations
+    let amount = player_allocations
         .allocations
         .iter()
         .find(|a| a.pot_id == from_pot_id)
@@ -103,13 +96,13 @@ pub fn reallocate_tokens(
     }
 
     let fee = amount.multiply_ratio(config.fee_reallocation, 100u128);
-    amount = amount.checked_sub(fee).unwrap();
+    let net_amount = amount.checked_sub(fee).unwrap();
 
     // Ensure the reallocation amount is within the set minimum and maximum bid limits
     let min_bid = calculate_min_bid(deps.storage)?; // Convert DepsMut to Deps with as_ref()
     let max_bid = calculate_max_bid(deps.storage)?;
 
-    if amount < min_bid || amount > max_bid {
+    if net_amount < min_bid || net_amount > max_bid {
         return Err(ContractError::BidOutOfRange {
             min: min_bid,
             max: max_bid,
@@ -128,8 +121,8 @@ pub fn reallocate_tokens(
         .iter_mut()
         .find(|a| a.pot_id == from_pot_id);
     match from_allocation {
-        Some(allocation) if allocation.amount >= amount => {
-            allocation.amount = allocation.amount.checked_sub(amount).unwrap();
+        Some(allocation) if allocation.amount >= net_amount => {
+            allocation.amount = allocation.amount.checked_sub(net_amount).unwrap();
         }
         _ => return Err(ContractError::InsufficientFunds {}),
     }
@@ -141,12 +134,12 @@ pub fn reallocate_tokens(
         .find(|a| a.pot_id == to_pot_id);
     match to_allocation {
         Some(allocation) => {
-            allocation.amount = allocation.amount.checked_add(amount).unwrap();
+            allocation.amount = allocation.amount.checked_add(net_amount).unwrap();
         }
         None => {
             player_allocations.allocations.push(TokenAllocation {
                 pot_id: to_pot_id,
-                amount,
+                amount: net_amount,
             });
         }
     }
@@ -160,7 +153,7 @@ pub fn reallocate_tokens(
         from_pot_id,
         |pot_state| -> Result<_, ContractError> {
             let mut state = pot_state.unwrap();
-            state.amount = state.amount.checked_sub(amount + fee).unwrap(); // remove it adding the fee to avoid inflating
+            state.amount = state.amount.checked_sub(amount).unwrap(); // remove it adding the fee to avoid inflating
             Ok(state)
         },
     )?;
@@ -171,7 +164,7 @@ pub fn reallocate_tokens(
         to_pot_id,
         |pot_state| -> Result<_, ContractError> {
             let mut state = pot_state.unwrap();
-            state.amount = state.amount.checked_add(amount).unwrap();
+            state.amount = state.amount.checked_add(net_amount).unwrap();
             Ok(state)
         },
     )?;

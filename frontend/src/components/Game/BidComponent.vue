@@ -88,9 +88,9 @@ export default {
     },
 
     calculateAllocationFee(amount) {
-      // Ensure gameConfig is available and fee_allocation is a number
-      if (this.gameConfig && !isNaN(this.gameConfig.fee_allocation)) {
-        return (amount * this.gameConfig.fee_allocation) / 100; // TODO div by 1000000 and Math.ceil
+      // Ensure gameConfig is available and fee is a number
+      if (this.gameConfig && !isNaN(this.gameConfig.fee)) {
+        return (amount * this.gameConfig.fee) / 100; // TODO div by 1000000 and Math.ceil
       }
       return 0;
     },
