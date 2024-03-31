@@ -29,7 +29,7 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     // Validate game_config fields and initial funds
-    if msg.config.fee_allocation > 100 || msg.config.fee_reallocation > 100 {
+    if msg.config.fee > 100 || msg.config.fee_reallocation > 100 {
         return Err(ContractError::InvalidInput {});
     }
     if msg.config.game_duration == 0 {
