@@ -23,3 +23,7 @@ $button-disabled-text: #a0a0a0; // Text color for disabled buttons
 .bg-accent {
   background: $color-accent;
 }
+
+p:last-child {
+  margin-bottom: 0;
+}

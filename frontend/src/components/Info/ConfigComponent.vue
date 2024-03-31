@@ -1,27 +1,19 @@
 <template>
   <div class="row">
-    <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4">
-      <div class="accordion" id="gameInfoAccordion" v-if="gameConfig">
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingTwo">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#gameConfig"
-                    aria-expanded="false" aria-controls="gameConfig">
-              Game Configuration
-            </button>
-          </h2>
-          <div id="gameConfig" class="accordion-collapse collapse" aria-labelledby="gameConfigHeading" data-bs-parent="#gameInfoAccordion">
-            <div class="accordion-body">
-              <ul>
-                <li>Fee Allocation: {{ gameConfig.fee }}%</li>
-                <li>Fee Reallocation: {{ gameConfig.fee_reallocation }}%</li>
-                <li>Allocation Address: {{ gameConfig.fee_address }}</li>
-                <li>Game Duration: {{ gameDuration }}</li>
-                <li>Game Denomination: {{ gameConfig.game_denom }}</li>
-                <li>Minimum Bid: {{ gameConfig.min_bid }}</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+    <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4 text-center">
+      <p>
+        <a class="btn btn-link" data-bs-toggle="collapse" href="#collapseConfig" role="button" aria-expanded="false"
+           aria-controls="collapseConfig">
+          Game configuration
+        </a>
+      </p>
+      <div class="collapse text-white" id="collapseConfig">
+        <p v-if="gameConfig">In this game, a winning fee of {{ gameConfig.fee }}% is applied to the prize pot,
+          collected at {{ gameConfig.fee_address }}. Each round lasts {{ gameDuration }}, with stakes in
+          {{ gameConfig.game_denom }}. A {{ gameConfig.fee_reallocation }}% fee is charged for bets reallocation,
+          with a minimum bid set at {{ gameConfig.min_bid }} {{ gameConfig.game_denom }}.</p>
+
+        <p>Contract address: {{contractAddress}}</p>
       </div>
     </div>
   </div>
@@ -40,6 +32,12 @@ export default {
       const minutes = Math.floor(this.gameConfig.game_duration / 60);
       const seconds = this.gameConfig.game_duration % 60;
       return `${minutes} minutes and ${seconds} seconds`;
+    }
+  },
+
+  data() {
+    return {
+      contractAddress: process.env.VUE_APP_CONTRACT
     }
   }
 }
