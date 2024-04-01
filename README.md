@@ -1,11 +1,11 @@
 # Prudent Pots
 
-## High-Level Description
-
 Prudent Pot is a strategic, interactive game where players allocate tokens to various pots on a virtual game board. Each
 pot has unique rules determining the winning conditions. Players must strategically decide where to place their tokens,
 considering the actions of other players and the specific rules of each pot. The game emphasizes strategic thinking,
 forecasting, and adaptability.
+
+<img src="./frontend/src/assets/logo.png">
 
 ## Game Rules and Concept
 
@@ -15,9 +15,7 @@ The game board consists of a row of 5 pots. Each pot has a set of unique rules f
 balance is split equally among the five pots. This could be funds provided by the developer for game instantiation or
 remaining funds from losing pots in the previous game.
 
-### Gameplay
-
-## Game Duration
+### Game Duration
 
 Each game of Prudent Pot lasts for a duration specified by `GameConfig.game_duration`. The game's duration can extend if
 an allocation or reallocation happens within the last `GameConfig.game_extend` seconds, resetting the timer. After the
