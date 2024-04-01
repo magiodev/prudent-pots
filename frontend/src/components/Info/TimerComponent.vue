@@ -4,8 +4,8 @@
       <div class="card text-center">
         <div class="card-body">
           <h5 class="card-title">Timer</h5>
-          <p v-if="timeLeft" class="card-text text-success">Time Remaining: {{ timeLeft }}</p>
-          <div v-if="timeLeft" class="progress">
+          <p v-if="timeLeftHuman" class="card-text text-success">Time Remaining: {{ timeLeftHuman }}</p>
+          <div v-if="timeLeftHuman" class="progress">
             <div class="progress-bar" role="progressbar" :style="{ width: progressPercentage + '%' }" aria-valuenow="25"
                  aria-valuemin="0" aria-valuemax="100">{{ progressPercentage }}%
             </div>
@@ -13,8 +13,9 @@
           <p v-else class="card-text text-danger">The game has ended. Please trigger the end game process.</p>
 
           <div class="mb-3">
-            <!-- Button is only shown when timeLeft is falsy, meaning the game has ended -->
-            <ButtonComponent v-if="!timeLeft" :isDisabled="isBusy" text="End Game" @click="onEndGame"/>
+            <!-- Button is only shown when timeLeftHuman is falsy, meaning the game has ended -->
+            <ButtonComponent v-if="!timeLeftHuman" :isDisabled="isBusy || !userAddress" text="End Game"
+                             @click="onEndGame"/>
             <LoadingComponent v-if="isBusy"/>
           </div>
 
@@ -43,20 +44,7 @@ export default {
   mixins: [mxChain, mxToast, mxGame],
 
   computed: {
-    ...mapGetters(['gameState', 'reallocationFeePool']),
-
-    timeLeft() {
-      if (!this.gameState) return null
-      const endTime = this.gameState.end_time * 1000;
-      const timeDiff = endTime - this.currentTime;
-      if (timeDiff <= 0) {
-        return null;
-      }
-      const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
-      const seconds = Math.floor((timeDiff / 1000) % 60);
-      return `${hours}h ${minutes}m ${seconds}s`;
-    },
+    ...mapGetters(['gameState', 'reallocationFeePool', 'userAddress']),
 
     progressPercentage() {
       if (!this.gameState) return 0;
@@ -68,26 +56,12 @@ export default {
 
   data() {
     return {
-      intervalId: null,
-      currentTime: new Date().getTime(),
       isBusy: false,
     };
   },
 
-  mounted() {
-    this.intervalId = setInterval(this.updateCurrentTime, 1000);
-  },
-
-  unmounted() {
-    clearInterval(this.intervalId);
-  },
-
   methods: {
     ...mapActions(['fetchPlayerAllocations']),
-
-    updateCurrentTime() {
-      this.currentTime = new Date().getTime();
-    },
 
     async onEndGame() {
       this.isBusy = true

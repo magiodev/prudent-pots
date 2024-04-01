@@ -14,6 +14,7 @@ import NavbarComponent from "@/components/Layout/NavbarComponent.vue";
 import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 import FooterComponent from "@/components/Layout/FooterComponent.vue";
 import mxGame from "@/mixin/game";
+import {mapGetters} from "vuex";
 
 export default {
   name: "App",
@@ -22,6 +23,10 @@ export default {
 
   components: {FooterComponent, LoadingComponent, NavbarComponent},
 
+  computed: {
+    ...mapGetters(['gameConfig'])
+  },
+
   data() {
     return {
       isBusy: true,
@@ -29,10 +34,21 @@ export default {
   },
 
   async created() {
-    await this.fetchOnce()
-    this.isBusy = false
+    await this.fetchOnce();
     await this.fetchInterval()
-  }
+    this.isBusy = false;
+
+    // Set auto-fetch interval
+    this.intervalId = setInterval(() => {
+      const isGameEnd = this.timeLeftSeconds < Number(this.gameConfig.game_extend)
+      this.fetchInterval(isGameEnd);
+      console.log(`Auto-fetch!`)
+    }, 5000);
+  },
+
+  unmounted() {
+    if (this.intervalId) clearInterval(this.intervalId)
+  },
 };
 </script>
 

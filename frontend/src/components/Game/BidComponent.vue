@@ -8,7 +8,7 @@
           </div>
         </div>
 
-        <div class="selected-pot">
+        <div class="selected-pot text-white mt-5">
           <p v-if="utils.selectedPot">Selected pot: {{ getPotName(utils.selectedPot) }}</p>
           <p v-else>Select a pot to place a bid.</p>
         </div>
@@ -31,7 +31,7 @@
             <button class="btn btn-outline-secondary" type="button" @click="setMaxBid">Max</button>
           </div>
 
-          <ButtonComponent :isDisabled="!utils.selectedPot || isBusy" text="Place Bid"/>
+          <ButtonComponent :isDisabled="!utils.selectedPot || isBusy || !userAddress" text="Place Bid"/>
           <LoadingComponent v-if="isBusy"/>
         </form>
       </div>
@@ -55,7 +55,7 @@ export default {
   mixins: [mxChain, mxToast, mxPot, mxGame],
 
   computed: {
-    ...mapGetters(['minBid', 'maxBid', 'gameConfig', 'utils'])
+    ...mapGetters(['minBid', 'maxBid', 'gameConfig', 'utils', 'userAddress'])
   },
 
   data() {
