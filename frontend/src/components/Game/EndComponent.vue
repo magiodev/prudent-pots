@@ -15,6 +15,7 @@
             <h5>Winning Stats</h5>
 
             <ul class="winning-stats list-unstyled">
+              <li>Reallocation fee pool: {{ reallocationFeePool / 1000000 }} <CoinComponent/></li>
               <li>Winning pots: {{winningPots.length ? winningPots : 'N/D'}}</li>
               <li>Total loosing tokens: TODO</li>
             </ul>
@@ -32,15 +33,16 @@ import {mapActions, mapGetters} from "vuex";
 import mxChain from "@/mixin/chain";
 import mxToast from "@/mixin/toast";
 import mxGame from "@/mixin/game";
+import CoinComponent from "@/components/Common/CoinComponent.vue";
 
 export default {
   name: "EndComponent",
-  components: {LoadingComponent, ButtonComponent},
+  components: {CoinComponent, LoadingComponent, ButtonComponent},
 
   mixins: [mxChain, mxToast, mxGame],
 
   computed: {
-    ...mapGetters(['userAddress', 'winningPots'])
+    ...mapGetters(['userAddress', 'winningPots', 'reallocationFeePool'])
   },
 
   data() {
