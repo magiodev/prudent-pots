@@ -2,7 +2,8 @@
   <div class="container-fluid">
     <div class="row bg-accent">
       <div class="col pb-5">
-        <TimerComponent class="mb-3" v-if="gameState"/>
+        <TimerComponent class="mb-3"/>
+        <ConfigComponent/>
 
         <PotsComponent/>
       </div>
@@ -10,9 +11,8 @@
 
     <div class="row">
       <div class="col py-5">
-        <BidComponent class="mb-5"/>
-
-        <ConfigComponent v-if="gameConfig"/>
+        <BidComponent v-if="timeLeftSeconds"/>
+        <EndComponent v-else/>
       </div>
     </div>
   </div>
@@ -24,11 +24,15 @@ import BidComponent from "@/components/Game/BidComponent.vue";
 import TimerComponent from "@/components/Info/TimerComponent.vue";
 import ConfigComponent from "@/components/Info/ConfigComponent.vue";
 import {mapGetters} from "vuex";
+import EndComponent from "@/components/Game/EndComponent.vue";
+import mxGame from "@/mixin/game";
 
 export default {
   name: 'HomeView',
 
-  components: {ConfigComponent, TimerComponent, PotsComponent, BidComponent},
+  components: {EndComponent, ConfigComponent, TimerComponent, PotsComponent, BidComponent},
+
+  mixins: [mxGame],
 
   computed: {
     ...mapGetters(['gameConfig', 'gameState'])
