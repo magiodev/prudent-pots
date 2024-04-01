@@ -195,7 +195,6 @@ export default createStore({
     //     item.value = JSON.parse(fromUtf8(item.value))
     //   })
     //   console.log(data.models)
-    //   // TODO: Use this for gameState, reallocationFeePool, PotStates that are coming separately
     //   // GameConfig should be queried once
     //   // PlayerAllocations only after a player did something
     //   commit("setAllContractState", data.models);

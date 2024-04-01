@@ -36,6 +36,7 @@ export default {
   async created() {
     await this.fetchOnce();
     await this.fetchInterval()
+    // we ensure that till this moment rest of UI is kept idle
     this.isBusy = false;
 
     // Set auto-fetch interval
@@ -48,7 +49,7 @@ export default {
 
   unmounted() {
     if (this.intervalId) clearInterval(this.intervalId)
-  },
+  }
 };
 </script>
 
