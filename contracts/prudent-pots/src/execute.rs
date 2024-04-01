@@ -181,6 +181,7 @@ pub fn reallocate_tokens(
         attr("from_pot_id", from_pot_id.to_string()),
         attr("to_pot_id", to_pot_id.to_string()),
         attr("amount", amount.to_string()),
+        attr("net_amount", net_amount.to_string()),
         attr("fee", fee.to_string()),
     ]))
 }
@@ -214,6 +215,11 @@ pub fn game_end(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
         attr("method", "execute"),
         attr("action", "game_end"),
         attr("winning_pots", format!("{:?}", winning_pots)),
-        attr("total_losing_tokens", total_losing_tokens),
+        attr("total_winning_tokens", ""), // TODO
+        attr("total_losing_tokens", total_losing_tokens), // tokens from loosing pots
+        attr("total_distributed_tokens", ""), // TODO
+        attr("total_winning_fee", ""), // TODO
+        attr("total_reallocation_fee_pool", ""), // TODO
+        attr("total_reallocated_next_game", ""), // TODO
     ]))
 }
