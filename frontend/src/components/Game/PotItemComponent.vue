@@ -1,5 +1,5 @@
 <template>
-  <div class="pot-item-component col-4 col-md-2 text-center text-black">
+  <div class="pot-item-component col-4 col-md-2 text-center text-black mb-md-0 mb-3">
     <div class="pot-header">
       <h2 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h2>
       <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
@@ -117,26 +117,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.pot-header {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-
-  //position: relative;
-  //background: url('@/assets/wallet-bg.png') no-repeat center center;
-  //background-size: contain;
-  //border: 0;
-  //outline: none;
-
-  div {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-  }
-}
-
 .pot-item:hover {
   .pot-highlight-image {
     display: block;

@@ -1,19 +1,25 @@
 <template>
-  <button class="button-component" :disabled="isDisabled">{{ text }}</button>
+  <button class="button-component" :class="isSmall ? 'small' : ''" :disabled="isDisabled">
+    {{ text }}
+  </button>
 </template>
 
 <script>
 export default {
   name: "ButtonComponent",
   props: {
-    isDisabled: {
-      type: Boolean,
-      required: true,
-    },
     text: {
       type: String,
       required: true,
     },
+    isDisabled: {
+      type: Boolean,
+      default: false,
+    },
+    isSmall: {
+      type: Boolean,
+      default: false,
+    }
   },
 }
 </script>
@@ -31,6 +37,10 @@ export default {
   background: $pp-purple-2; // Now the button is green
   border: 0;
   font-size: 2em;
+
+  &.small {
+    font-size: 1.25em;
+  }
 
   &:hover {
     color: $pp-green-1;

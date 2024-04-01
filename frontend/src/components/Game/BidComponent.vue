@@ -1,24 +1,24 @@
 <template>
   <div class="bid-component">
     <div class="row">
-      <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4 text-center">
+      <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4 text-center text-white">
         <div class="bid-header">
-          <div>
-            <h3>Place Your Bid</h3>
-          </div>
+          <h2>Place Your Bid</h2>
         </div>
 
-        <div class="selected-pot text-white mt-5">
-          <p v-if="utils.selectedPot">Selected pot: {{ getPotName(utils.selectedPot) }}</p>
+        <div class="selected-pot my-3">
+          <p v-if="utils.selectedPot">
+            Selected pot: {{ getPotName(utils.selectedPot) }}
+          </p>
           <p v-else>Select a pot to place a bid.</p>
         </div>
 
-        <form @submit.prevent="onAllocateTokens">
-          <div class="input-group mb-3">
+        <form @submit.prevent="onAllocateTokens" class="bid-form">
+          <div class="mb-3">
             <!-- TODO show this divided by 1000000 but leave value as original -->
             <input
               type="number"
-              class="form-control"
+              class="form-control mb-3"
               v-model.number="bidAmount"
               :min="minBid"
               :max="maxBid"
@@ -26,9 +26,10 @@
               :disabled="!utils.selectedPot || isBusy"
               required
             />
-            <button class="btn btn-outline-secondary" type="button" @click="setMinBid">Min</button>
-            <button class="btn btn-outline-secondary" type="button" @click="setAverageBid">Avg</button>
-            <button class="btn btn-outline-secondary" type="button" @click="setMaxBid">Max</button>
+
+            <ButtonComponent text="Min" @click.prevent="setMinBid" :isSmall="true"/>
+            <ButtonComponent text="Avg" @click.prevent="setAverageBid" :isSmall="true"/>
+            <ButtonComponent text="Max" @click.prevent="setMaxBid" :isSmall="true"/>
           </div>
 
           <ButtonComponent :isDisabled="!utils.selectedPot || isBusy || !userAddress" text="Place Bid"/>
@@ -109,6 +110,7 @@ export default {
   background-size: contain;
   border: 0;
   outline: none;
+  padding: 20px 0 10px;
 
   div {
     position: absolute;
@@ -116,6 +118,12 @@ export default {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
+  }
+}
+.bid-form {
+  input.form-control {
+    border-radius: 0;
+    text-align: center;
   }
 }
 </style>
