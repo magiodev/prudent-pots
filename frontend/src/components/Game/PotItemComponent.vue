@@ -40,7 +40,7 @@ import {mapGetters, mapMutations} from "vuex";
 import mxPot from "@/mixin/pot";
 import PopoverComponent from "@/components/Common/PopoverComponent.vue";
 import draggable from "vuedraggable";
-import imagePot from "@/assets/pot.png"
+import imagePot from "@/assets/pot.gif"
 
 export default {
   name: "PotItemComponent",
