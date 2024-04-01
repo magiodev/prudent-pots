@@ -1,7 +1,5 @@
 <template>
-  <div class="pots-component">
-    <h3 class="text-center">Pots</h3>
-
+  <div class="pots-component position-relative z-1">
     <div class="row justify-content-center" v-if="pots.length">
       <PotItemComponent :pot="pot" v-for="pot in pots" :key="pot.id" @endReallocation="onReallocateTokens"/>
     </div>

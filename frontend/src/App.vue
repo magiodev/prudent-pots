@@ -54,27 +54,5 @@ export default {
 </script>
 
 <style lang="scss">
-@import "vue-toastification/src/scss/_variables";
-@import "vue-toastification/src/scss/_toastContainer";
-@import "vue-toastification/src/scss/_toast";
-@import "vue-toastification/src/scss/_closeButton";
-@import "vue-toastification/src/scss/_progressBar";
-@import "vue-toastification/src/scss/_icon";
-@import "vue-toastification/src/scss/animations/_bounce";
-
 @import "@/assets/style.scss";
-
-@font-face {
-  font-family: 'TrashHand';
-  src: url('assets/fonts/TrashHand.ttf') format('truetype'); /* Adjust the path based on where you placed the font */
-}
-
-body {
-  background: $color-background !important;
-  color: white;
-
-  * {
-    font-family: 'TrashHand', sans-serif;
-  }
-}
 </style>

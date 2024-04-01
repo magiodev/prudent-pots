@@ -1,18 +1,23 @@
 <template>
   <div class="container-fluid">
-    <div class="row bg-accent">
-      <div class="col pb-5">
-        <TimerComponent class="mb-3"/>
-        <ConfigComponent/>
+    <div class="row bg-pp-purple-3">
+      <div class="col">
+        <TimerComponent class="mb-5"/>
 
-        <PotsComponent/>
+        <PotsComponent class="mb-5"/>
+      </div>
+    </div>
+
+    <div class="row graphic-items position-relative">
+      <div class="col py-5">
+        <BidComponent v-if="timeLeftSeconds"/>
+        <EndComponent v-else/>
       </div>
     </div>
 
     <div class="row">
-      <div class="col py-5">
-        <BidComponent v-if="timeLeftSeconds"/>
-        <EndComponent v-else/>
+      <div class="col pb-5">
+        <ConfigComponent/>
       </div>
     </div>
   </div>
@@ -39,3 +44,24 @@ export default {
   }
 };
 </script>
+
+<style lang="scss" scoped>
+.graphic-items {
+  &:before {
+    content: url("@/assets/tree.png");
+    position: absolute;
+    top: -400px;
+    left: -210px;
+    transform: scale(.3);
+    display: inline-block;
+  }
+  &:after {
+    content: url("@/assets/tombs.png");
+    position: absolute;
+    top: -210px;
+    right: -200px;
+    transform: scale(.3);
+    display: inline-block;
+  }
+}
+</style>

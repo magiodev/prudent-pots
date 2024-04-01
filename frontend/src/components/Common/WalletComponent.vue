@@ -3,7 +3,7 @@
     <img :src="imageWalletIcon" alt="Wallet Icon" class="wallet-icon"/>
     <span>Connect Wallet</span>
   </button>
-  <button class="btn btn-wallet" v-else disabled>
+  <button class="btn btn-wallet" v-else>
     <img :src="imageWalletIcon" alt="Wallet Icon" class="wallet-icon"/>
     <span>{{ userAddress ? userAddress.substring(0, 10) : 'Error' }}...</span>
   </button>
@@ -43,6 +43,14 @@ export default {
   background-size: contain;
   border: 0;
   outline: none;
+  padding-left: 4em;
+
+  .wallet-icon {
+    position: relative;
+    height: 65px;
+    left: -5.5em;
+    transform: rotate(-25deg);
+  }
 
   span {
     position: absolute;
@@ -51,12 +59,5 @@ export default {
     transform: translate(-50%, -50%);
     color: white;
   }
-}
-
-.wallet-icon {
-  position: relative;
-  height: 100px;
-  left: -45px;
-  transform: rotate(-15deg);
 }
 </style>
