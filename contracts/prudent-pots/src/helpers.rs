@@ -296,12 +296,10 @@ pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) ->
     PLAYER_ALLOCATIONS.clear(deps.storage);
 
     // Calculate the initial tokens for each pot, considering the reallocation fee pool
-    let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.storage)?;
     let mut total_tokens_for_next_game = deps
         .querier
         .query_balance(&env.contract.address, &config.game_denom)?
-        .amount
-        + reallocation_fee_pool;
+        .amount;
 
     // Subtract the tokens that will be sent out from the total tokens for the next game
     let total_outgoing_tokens: Uint128 = messages
