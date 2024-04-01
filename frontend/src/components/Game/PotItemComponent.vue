@@ -13,14 +13,23 @@
     </div>
 
     <div class="allocations card mt-3 p-1" :data-pot-id="pot.pot_id">
-      <draggable v-model="allocationsList" group="allocations" @start="onDragStart" @end="onDragEnd" item-key="key">
+      <draggable
+        v-model="allocationsList"
+        group="allocations"
+        @start="onDragStart"
+        @end="onDragEnd"
+        item-key="key"
+        class="draggable-container"
+      >
         <template #item="{ element }">
           <span class="card bg-primary" v-if="Number(element.amount)">
             {{ element.amount / 1000000 }} $OSMO
           </span>
         </template>
+        <template #footer v-if="!allocationsList.length" >
+          <span class="text-secondary">{{!playerAllocations.length ? 'No bets' : 'Drag here'}}</span>
+        </template>
       </draggable>
-      <p v-if="!allocationsList.length">Drag here</p>
     </div>
   </div>
 </template>
