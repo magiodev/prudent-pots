@@ -20,7 +20,7 @@ mod tests {
             info,
             Some(vec![
                 (1, Addr::unchecked("player1"), Uint128::new(17)), // Median
-                (2, Addr::unchecked("player1"), Uint128::new(17)), // Highest
+                (2, Addr::unchecked("player1"), Uint128::new(18)), // Highest
                 (3, Addr::unchecked("player1"), Uint128::new(21)), // Even
                 (4, Addr::unchecked("player1"), Uint128::new(15)), // Lowest
                 (5, Addr::unchecked("player1"), Uint128::new(0)),  // Prime
@@ -31,7 +31,7 @@ mod tests {
         let result = is_winning_pot(&mut deps.storage, 1).unwrap();
         assert_eq!(
             result, true,
-            "Pot 1 should be winning as it has the median token count when tie-breaking by pot ID"
+            "Pot 1 should be winning as it has the median token count."
         );
 
         // Ensure that other pots are not falsely reported as winners

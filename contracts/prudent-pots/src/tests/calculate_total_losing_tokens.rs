@@ -8,6 +8,9 @@ mod tests {
 
     use crate::{helpers::calculate_total_losing_tokens, tests::instantiate::tests::setup_game};
 
+    // TODO: This whole tst file logic should now take in account that winning pots without player allocations are considered loosers.
+    // We are instantiating and starting with 50 tokens split in 5 pots, 10 tokens each pot. Then users are allocating in order to craft predicatable results.
+
     #[test]
     fn total_losing_tokens_single_winner() {
         // Setup
@@ -19,7 +22,7 @@ mod tests {
             &env,
             info,
             Some(vec![
-                (1, Addr::unchecked("player1"), Uint128::new(0)),
+                (1, Addr::unchecked("player1"), Uint128::new(0)), // TODO: avoid depositing 0, 0 allocations will be ignored. but take in account initial balances and needed deposits to craft predictable results.
                 (2, Addr::unchecked("player1"), Uint128::new(10)),
                 (3, Addr::unchecked("player1"), Uint128::new(20)),
                 (4, Addr::unchecked("player1"), Uint128::new(30)),
@@ -104,11 +107,11 @@ mod tests {
             &env,
             info,
             Some(vec![
-                (1, Addr::unchecked("player1"), Uint128::new(0)),
-                (2, Addr::unchecked("player1"), Uint128::new(10)),
-                (3, Addr::unchecked("player1"), Uint128::new(20)),
-                (4, Addr::unchecked("player1"), Uint128::new(30)),
-                (5, Addr::unchecked("player1"), Uint128::new(40)),
+                (1, Addr::unchecked("player1"), Uint128::new(10)),
+                (2, Addr::unchecked("player1"), Uint128::new(20)),
+                (3, Addr::unchecked("player1"), Uint128::new(30)),
+                (4, Addr::unchecked("player1"), Uint128::new(40)),
+                (5, Addr::unchecked("player1"), Uint128::new(50)),
             ]),
         );
 

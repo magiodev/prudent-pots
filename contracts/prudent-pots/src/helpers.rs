@@ -76,34 +76,44 @@ fn get_all_token_counts(storage: &dyn Storage) -> StdResult<Vec<Uint128>> {
 pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
     let pot_state = POT_STATES.load(storage, pot_id)?;
 
-    // TODO: Implement in this scope the logic about making a winning pot looser if it has not player allocations in it.
-    // Consider that this will make the FE always show red loosing pots even if they are winning.
-    // What do we want to do?
+    // Check for player allocations
+    if !has_player_allocations(storage, pot_id)? {
+        return Ok(false);
+    }
 
     match pot_id {
         1 => {
-            // For Median Pot: Compare with other pots to determine if it's the median
             let token_counts = get_all_token_counts(storage)?;
-            Ok(is_median(&token_counts, pot_state.amount))
+            let is_median = is_median(&token_counts, pot_state.amount);
+            let is_unique = token_counts
+                .iter()
+                .filter(|&count| *count == pot_state.amount)
+                .count()
+                == 1;
+            Ok(is_median && is_unique)
         }
         2 => {
-            // For Highest Pot: Compare with other pots to determine if it's the highest
             let max_tokens = get_max_tokens(storage)?;
-            Ok(pot_state.amount == max_tokens)
+            let is_highest = pot_state.amount == max_tokens;
+            let is_unique = get_all_token_counts(storage)?
+                .iter()
+                .filter(|&count| *count == max_tokens)
+                .count()
+                == 1;
+            Ok(is_highest && is_unique)
         }
-        3 => {
-            // For Even Pot: Check if the token count is even
-            Ok((pot_state.amount % Uint128::from(2u128)).is_zero())
-        }
+        3 => Ok((pot_state.amount % Uint128::from(2u128)).is_zero()),
         4 => {
-            // For Lowest Pot: Compare with other pots to determine if it's the lowest
             let min_tokens = get_min_tokens(storage)?;
-            Ok(pot_state.amount == min_tokens)
+            let is_lowest = pot_state.amount == min_tokens;
+            let is_unique = get_all_token_counts(storage)?
+                .iter()
+                .filter(|&count| *count == min_tokens)
+                .count()
+                == 1;
+            Ok(is_lowest && is_unique)
         }
-        5 => {
-            // For Prime Pot: Check if the token count is a prime number
-            Ok(is_prime(pot_state.amount.u128()))
-        }
+        5 => Ok(is_prime(pot_state.amount.u128())),
         _ => Err(StdError::generic_err("Invalid pot ID")),
     }
 }
