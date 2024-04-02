@@ -34,8 +34,7 @@
             </div>
           </div>
 
-          <ButtonComponent :isDisabled="!utils.selectedPot || isBusy || !userAddress" text="Place Bid"/>
-          <LoadingComponent v-if="isBusy"/>
+          <ButtonComponent :isDisabled="!utils.selectedPot || isBusy || !userAddress" :isBusy="isBusy" text="Place Bid"/>
         </form>
       </div>
     </div>
@@ -48,12 +47,11 @@ import mxChain from "@/mixin/chain";
 import mxToast from "@/mixin/toast";
 import mxPot from "@/mixin/pot";
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
-import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 import mxGame from "@/mixin/game";
 
 export default {
   name: "BidComponent",
-  components: {LoadingComponent, ButtonComponent},
+  components: {ButtonComponent},
 
   mixins: [mxChain, mxToast, mxPot, mxGame],
 

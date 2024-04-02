@@ -6,10 +6,10 @@
 
         <ButtonComponent
           :isDisabled="isBusy || !userAddress"
+          :isBusy="isBusy"
           text="End Game"
           class="mb-3 mb-md-5"
           @click="onEndGame"/>
-        <LoadingComponent v-if="isBusy"/>
 
         <div class="card">
           <div class="card-body">
@@ -29,7 +29,6 @@
 
 <script>
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
-import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 import {mapActions, mapGetters} from "vuex";
 import mxChain from "@/mixin/chain";
 import mxToast from "@/mixin/toast";
@@ -38,7 +37,7 @@ import CoinComponent from "@/components/Common/CoinComponent.vue";
 
 export default {
   name: "EndComponent",
-  components: {CoinComponent, LoadingComponent, ButtonComponent},
+  components: {CoinComponent, ButtonComponent},
 
   mixins: [mxChain, mxToast, mxGame],
 

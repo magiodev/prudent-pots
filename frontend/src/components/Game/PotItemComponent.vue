@@ -6,7 +6,8 @@
     </div>
 
     <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)">
-      <img class="pot-highlight-image w-100 position-absolute" :class="utils.selectedPot === pot.pot_id ? 'd-block' : ''" :src="imagePotHighlight" alt="Pot Item"/>
+      <img class="pot-highlight-image w-100 position-absolute"
+           :class="utils.selectedPot === pot.pot_id ? 'd-block' : ''" :src="imagePotHighlight" alt="Pot Item"/>
       <img class="pot-image w-100 position-relative" :src="imagePot" alt="Pot Item"/>
       <div class="pot-content">
         <span class="pot-tokens py-1 px-2">{{ Number(pot.amount / 1000000) }} <CoinComponent/></span>
@@ -23,13 +24,15 @@
         class="draggable-container"
       >
         <template #item="{ element }">
-          <span class="card bg-primary" v-if="Number(element.amount)">
-            {{ element.amount / 1000000 }}
-            <CoinComponent/>
-          </span>
+          <div class="draggable-item bg-primary" v-if="Number(element.amount)">
+            <div class="draggable-item-text">
+              {{ element.amount / 1000000 }}
+            <CoinComponent class="d-inline"/>
+            </div>
+          </div>
         </template>
-        <template #footer v-if="!allocationsList.length" >
-          <span class="text-secondary">{{!playerAllocations.length ? 'No bets' : 'Drag here'}}</span>
+        <template #footer v-if="!allocationsList.length">
+          <span class="text-secondary drag-here">{{ !playerAllocations.length ? 'No bets' : 'Drag here' }}</span>
         </template>
       </draggable>
     </div>
@@ -122,6 +125,7 @@ export default {
     display: block;
   }
 }
+
 .pot-highlight-image {
   //position: absolute;
   left: 0;
@@ -147,5 +151,28 @@ export default {
 
 .pot-footer > button:hover {
   background-color: #45a049;
+}
+
+.draggable-container {
+  min-height: 2em;
+
+  .draggable-item {
+    min-height: 2em;
+    .draggable-item-text {
+      white-space: nowrap;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  .drag-here {
+    white-space: nowrap;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 }
 </style>
