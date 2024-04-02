@@ -27,9 +27,11 @@
               required
             />
 
-            <ButtonComponent text="Min" @click.prevent="setMinBid" :isSmall="true"/>
-            <ButtonComponent text="Avg" @click.prevent="setAverageBid" :isSmall="true"/>
-            <ButtonComponent text="Max" @click.prevent="setMaxBid" :isSmall="true"/>
+            <div class="d-flex gap-3 justify-content-center">
+              <ButtonComponent text="Min" @click.prevent="setMinBid" :isSmall="true"/>
+              <ButtonComponent text="Avg" @click.prevent="setAverageBid" :isSmall="true"/>
+              <ButtonComponent text="Max" @click.prevent="setMaxBid" :isSmall="true"/>
+            </div>
           </div>
 
           <ButtonComponent :isDisabled="!utils.selectedPot || isBusy || !userAddress" text="Place Bid"/>
@@ -124,6 +126,7 @@ export default {
   input.form-control {
     border-radius: 0;
     text-align: center;
+    height: 48px;
   }
 }
 </style>

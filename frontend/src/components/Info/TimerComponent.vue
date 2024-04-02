@@ -1,6 +1,6 @@
 <template>
   <div class="row">
-    <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4">
+    <div class="offset-sm-3 col-sm-6 offset-lg-4 col-lg-4">
       <div class="timer-card text-center py-5">
         <template v-if="timeLeftSeconds">
           <h4 class="text-pp-purple-2">Game Ends: {{ new Date(gameState.end_time * 1000).toLocaleString() }}</h4>
@@ -47,9 +47,17 @@ export default {
   background-repeat: no-repeat;
   background-position: center;
 
+  h2 {
+    font-size: 2.5em;
+    vertical-align: bottom;
+  }
+  h4 {
+    font-size: 1.5em;
+  }
+
   .skull {
     width: auto;
-    height: 32px;
+    height: 48px;
   }
 }
 </style>

@@ -7,10 +7,11 @@
         <ButtonComponent
           :isDisabled="isBusy || !userAddress"
           text="End Game"
+          class="mb-3 mb-md-5"
           @click="onEndGame"/>
         <LoadingComponent v-if="isBusy"/>
 
-        <div class="card mt-5">
+        <div class="card">
           <div class="card-body">
             <h5>Winning Stats</h5>
 

@@ -2,21 +2,21 @@
   <div class="container-fluid">
     <div class="row bg-pp-purple-3">
       <div class="col">
-        <TimerComponent class="mb-5"/>
+        <TimerComponent class="mb-3 mb-md--5"/>
 
-        <PotsComponent class="mb-5"/>
+        <PotsComponent class="mb-md-5"/>
       </div>
     </div>
 
     <div class="row graphic-items position-relative">
-      <div class="col py-5">
+      <div class="col py-3 py-md-5">
         <BidComponent v-if="timeLeftSeconds"/>
         <EndComponent v-else/>
       </div>
     </div>
 
     <div class="row">
-      <div class="col pb-5">
+      <div class="col">
         <ConfigComponent/>
       </div>
     </div>
