@@ -17,7 +17,7 @@ const mxPot = {
         2: 'This pot wins if it has the median number of tokens.',
         3: 'This pot wins if it has the fewest tokens.',
         4: 'This pot wins if it has an even number of tokens.',
-        5: 'This pot wins if it has an even number of tokens.',
+        5: 'This pot wins if it has an odd number of tokens.',
       };
       return potDescriptions[potId] || 'No description available.';
     },

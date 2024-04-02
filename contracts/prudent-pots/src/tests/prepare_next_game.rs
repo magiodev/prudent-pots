@@ -15,7 +15,7 @@ mod tests {
     #[test]
     fn prepare_next_game_works() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(200, "token")); // 100 initial + 100 player alloc on pot 1
+        let mut deps = mock_dependencies_with_balance(&coins(300, "token")); // 100 initial + 100 player alloc on pot 5 + 100 reallocation fee pool
         let env = mock_env();
         // Instantiating with 100 tokens, 20 each pot
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(100, "token"));
@@ -24,7 +24,7 @@ mod tests {
             &env,
             info,
             Some(vec![
-                (1, Addr::unchecked("player1"), Uint128::new(100u128)), // allocating 100 tokens on pot 1
+                (5, Addr::unchecked("player1"), Uint128::new(100u128)), // allocating 100 tokens on pot 5, which will be a looser cause is not Odd
             ]),
         );
 

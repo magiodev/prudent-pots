@@ -83,16 +83,6 @@ pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
 
     match pot_id {
         1 => {
-            let token_counts = get_all_token_counts(storage)?;
-            let is_median = is_median(&token_counts, pot_state.amount);
-            let is_unique = token_counts
-                .iter()
-                .filter(|&count| *count == pot_state.amount)
-                .count()
-                == 1;
-            Ok(is_median && is_unique)
-        }
-        2 => {
             let max_tokens = get_max_tokens(storage)?;
             let is_highest = pot_state.amount == max_tokens;
             let is_unique = get_all_token_counts(storage)?
@@ -102,8 +92,17 @@ pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
                 == 1;
             Ok(is_highest && is_unique)
         }
-        3 => Ok((pot_state.amount % Uint128::from(2u128)).is_zero()),
-        4 => {
+        2 => {
+            let token_counts = get_all_token_counts(storage)?;
+            let is_median = is_median(&token_counts, pot_state.amount);
+            let is_unique = token_counts
+                .iter()
+                .filter(|&count| *count == pot_state.amount)
+                .count()
+                == 1;
+            Ok(is_median && is_unique)
+        }
+        3 => {
             let min_tokens = get_min_tokens(storage)?;
             let is_lowest = pot_state.amount == min_tokens;
             let is_unique = get_all_token_counts(storage)?
@@ -113,7 +112,8 @@ pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
                 == 1;
             Ok(is_lowest && is_unique)
         }
-        5 => Ok(is_prime(pot_state.amount.u128())),
+        4 => Ok((pot_state.amount % Uint128::from(2u128)).is_zero()),
+        5 => Ok(!(pot_state.amount % Uint128::from(2u128)).is_zero()),
         _ => Err(StdError::generic_err("Invalid pot ID")),
     }
 }
@@ -141,19 +141,6 @@ fn get_max_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
 fn get_min_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
     let token_counts = get_all_token_counts(storage)?;
     Ok(*token_counts.iter().min().unwrap_or(&Uint128::zero()))
-}
-
-// Check if a number is prime
-fn is_prime(number: u128) -> bool {
-    if number <= 1 {
-        return false;
-    }
-    for i in 2..=(number as f64).sqrt() as u128 {
-        if number % i == 0 {
-            return false;
-        }
-    }
-    true
 }
 
 // Helper to calculate the total tokens in losing pots and winning pots without allocations
