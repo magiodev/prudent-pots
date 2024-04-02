@@ -13,25 +13,24 @@
           <p v-else>Select a pot to place a bid.</p>
         </div>
 
-        <form @submit.prevent="onAllocateTokens" class="bid-form">
-          <div class="mb-3">
-            <!-- TODO show this divided by 1000000 but leave value as original -->
+        <form @submit.prevent="onAllocateTokens" class="bid-form mb-3">
+          <div class="d-flex justify-content-center">
             <input
               type="number"
-              class="form-control mb-3"
-              v-model.number="bidAmount"
-              :min="minBid"
-              :max="maxBid"
-              placeholder="Token Amount"
+              class="form-control mb-3 w-50"
+              v-model.number="bidAmountOSMO"
+              :min="minBid / 1000000"
+              :max="maxBid / 1000000"
+              step="0.000001"
               :disabled="!utils.selectedPot || isBusy"
               required
             />
+          </div>
 
-            <div class="d-flex gap-3 justify-content-center">
-              <ButtonComponent text="Min" @click.prevent="setMinBid" :isSmall="true"/>
-              <ButtonComponent text="Avg" @click.prevent="setAverageBid" :isSmall="true"/>
-              <ButtonComponent text="Max" @click.prevent="setMaxBid" :isSmall="true"/>
-            </div>
+          <div class="d-flex justify-content-center gap-3 mb-3">
+            <ButtonComponent text="Min" @click.prevent="setMinBid" :isSmall="true"/>
+            <ButtonComponent text="Avg" @click.prevent="setAverageBid" :isSmall="true"/>
+            <ButtonComponent text="Max" @click.prevent="setMaxBid" :isSmall="true"/>
           </div>
 
           <ButtonComponent :isDisabled="!utils.selectedPot || isBusy || !userAddress" :isBusy="isBusy" text="Place Bid"/>
@@ -56,7 +55,16 @@ export default {
   mixins: [mxChain, mxToast, mxPot, mxGame],
 
   computed: {
-    ...mapGetters(['minBid', 'maxBid', 'gameConfig', 'utils', 'userAddress'])
+    ...mapGetters(['minBid', 'maxBid', 'gameConfig', 'utils', 'userAddress']),
+
+    bidAmountOSMO: {
+      get() {
+        return this.bidAmount / 1000000; // Convert from uOSMO to OSMO for display
+      },
+      set(value) {
+        this.bidAmount = value * 1000000; // Convert back to uOSMO for internal usage
+      }
+    },
   },
 
   data() {
@@ -67,7 +75,7 @@ export default {
   },
 
   created() {
-    this.bidAmount = Number(this.minBid)
+    this.bidAmountOSMO = this.minBid / 1000000; // Set the initial bid amount in OSMO
   },
 
   methods: {

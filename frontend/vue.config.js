@@ -13,17 +13,16 @@ module.exports = defineConfig({
   configureWebpack: {
     resolve: {
       alias: {
-        'stream': 'stream-browserify'
+        stream: 'stream-browserify',
       },
       fallback: {
-        "crypto": require.resolve("crypto-browserify")
+        crypto: require.resolve("crypto-browserify")
       }
     },
     plugins: [
       new webpack.ProvidePlugin({
-        //process: 'process/browser', TODO check why this is bugging, maybe it has been deprecated
-        Buffer: ['buffer', 'Buffer']
-      })
-    ]
-  }
-})
+        Buffer: ['buffer', 'Buffer'],
+      }),
+    ],
+  },
+});

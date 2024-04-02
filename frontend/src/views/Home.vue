@@ -1,21 +1,21 @@
 <template>
   <div class="container-fluid">
-    <div class="row bg-pp-purple-3">
+    <div class="row first-section">
       <div class="col">
-        <TimerComponent class="mb-3 mb-md--5"/>
+        <TimerComponent class="mb-3"/>
 
         <PotsComponent class="mb-md-5"/>
       </div>
     </div>
 
-    <div class="row graphic-items position-relative">
+    <div class="row graphic-items position-relative bg-pp-purple-1">
       <div class="col py-3 py-md-5">
         <BidComponent v-if="timeLeftSeconds"/>
         <EndComponent v-else/>
       </div>
     </div>
 
-    <div class="row">
+    <div class="row bg-pp-purple-1">
       <div class="col">
         <ConfigComponent/>
       </div>
@@ -46,6 +46,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.first-section {
+  @media(min-width: 768px) {
+    margin-top: -100px;
+  }
+}
 .graphic-items {
   &:before {
     content: url("@/assets/tree.png");

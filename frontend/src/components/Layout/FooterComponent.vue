@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container-fluid bg-pp-purple-1">
     <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 border-top text-white">
       <p class="col-md-4 mb-0">© {{ new Date().getFullYear() }} Prudent Pots</p>
 

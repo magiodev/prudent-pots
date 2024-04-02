@@ -28,7 +28,7 @@ $button-disabled-text: #a0a0a0; // Text color for disabled buttons
 }
 
 body {
-  background: $pp-purple-1 !important;
+  background: $pp-purple-3 !important;
   color: white;
 
   * {
@@ -44,10 +44,27 @@ p:last-child, ul:last-child {
   margin-bottom: 0;
 }
 
+
+.bg-pp-purple-1 {
+  background: $pp-purple-1;
+}
+.bg-pp-purple-2 {
+  background: $pp-purple-2;
+}
 .bg-pp-purple-3 {
   background: $pp-purple-3;
 }
 
 .text-pp-purple-2 {
   color: $pp-purple-2;
+}
+
+.text-pp-winner {
+  color: green;
+  fill: green;
+}
+
+.text-pp-looser {
+  color: red;
+  fill: red;
 }
