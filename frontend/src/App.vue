@@ -44,7 +44,7 @@ export default {
       const isGameEnd = this.timeLeftSeconds < Number(this.gameConfig.game_extend)
       this.fetchInterval(isGameEnd);
       console.log(`Auto-fetch!`)
-    }, 5000);
+    }, 3000);
   },
 
   unmounted() {

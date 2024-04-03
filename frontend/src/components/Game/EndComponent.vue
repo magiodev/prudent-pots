@@ -1,29 +1,13 @@
 <template>
-  <div class="bid-component">
-    <div class="row">
-      <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4 text-center text-white">
-        <p>Something here that explains what will happen</p>
+  <div class="end-component py-3">
+    <h2 class="text-pp-purple-2">Time's up!</h2>
+    <h4 class="text-pp-purple-2">Please trigger the end game process.</h4>
 
-        <ButtonComponent
-          :isDisabled="isBusy || !userAddress"
-          :isBusy="isBusy"
-          text="End Game"
-          class="mb-3 mb-md-5"
-          @click="onEndGame"/>
-
-        <div class="card">
-          <div class="card-body">
-            <h5>Winning Stats</h5>
-
-            <ul class="winning-stats list-unstyled">
-              <li>Reallocation fee pool: {{ reallocationFeePool / 1000000 }} <CoinComponent/></li>
-              <li>Winning pots: {{winningPots.length ? winningPots : 'N/D'}}</li>
-              <li>Total loosing tokens: TODO</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ButtonComponent
+      :isDisabled="isBusy || !userAddress"
+      :isBusy="isBusy"
+      text="End Game"
+      @click="onEndGame"/>
   </div>
 </template>
 
@@ -33,11 +17,10 @@ import {mapActions, mapGetters} from "vuex";
 import mxChain from "@/mixin/chain";
 import mxToast from "@/mixin/toast";
 import mxGame from "@/mixin/game";
-import CoinComponent from "@/components/Common/CoinComponent.vue";
 
 export default {
   name: "EndComponent",
-  components: {CoinComponent, ButtonComponent},
+  components: {ButtonComponent},
 
   mixins: [mxChain, mxToast, mxGame],
 

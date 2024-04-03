@@ -9,11 +9,9 @@
             <h2 class="text-pp-purple-2 d-inline">{{ timeLeftHuman }}</h2>
           </div>
         </template>
-        <template v-else>
-          <h2 class="text-pp-purple-2">Time's up!</h2>
-          <h4 class="text-pp-purple-2">Please trigger the end game process.</h4>
-        </template>
+        <EndComponent v-else />
       </div>
+      <p class="text-center text-pp-purple-2">Reallocation fee pool: {{ reallocationFeePool / 1000000 }} <CoinComponent/></p>
     </div>
   </div>
 </template>
@@ -22,9 +20,12 @@
 import {mapGetters} from "vuex";
 import mxGame from "@/mixin/game";
 import imageSkull from "@/assets/skull.png"
+import EndComponent from "@/components/Game/EndComponent.vue";
+import CoinComponent from "@/components/Common/CoinComponent.vue";
 
 export default {
   name: "TimerComponent",
+  components: {CoinComponent, EndComponent},
 
   mixins: [mxGame],
 
