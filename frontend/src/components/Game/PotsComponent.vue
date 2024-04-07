@@ -48,3 +48,13 @@ export default {
   }
 };
 </script>
+
+<style lang="scss" scoped>
+@media (max-width: 767px) {
+  #pot-id-1 { order: 1; }
+  #pot-id-2 { order: 4; }
+  #pot-id-3 { order: 2; }
+  #pot-id-4 { order: 5; }
+  #pot-id-5 { order: 3; }
+}
+</style>

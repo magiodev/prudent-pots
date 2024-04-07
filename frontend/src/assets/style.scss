@@ -28,6 +28,7 @@ $button-disabled-text: #a0a0a0; // Text color for disabled buttons
 }
 
 body {
+  overflow-x: hidden;
   background: $pp-purple-3 !important;
   color: white;
 

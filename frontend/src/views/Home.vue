@@ -59,7 +59,7 @@ export default {
     transform: scale(.3);
     display: inline-block;
     @media (max-width: 767px) {
-      left: -310px;
+      left: -325px;
     }
   }
   &:after {
@@ -70,7 +70,7 @@ export default {
     transform: scale(.3);
     display: inline-block;
     @media (max-width: 767px) {
-      right: -310px;
+      right: -325px;
     }
   }
 }

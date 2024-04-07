@@ -1,5 +1,5 @@
 <template>
-  <div class="pot-item-component col-4 col-md-2 text-center text-black mb-md-0 mb-3">
+  <div class="pot-item-component col-4 col-md-2 text-center text-black mb-md-0 mb-3" :id="'pot-id-'+pot.pot_id">
     <div class="pot-header">
       <h2 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h2>
       <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
