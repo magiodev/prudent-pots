@@ -5,7 +5,7 @@
       <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
     </div>
 
-    <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)" :ref="`potItem-${pot.pot_id}`">
+    <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)">
       <img class="pot-highlight-image w-100 position-absolute"
            :class="utils.selectedPot === pot.pot_id ? 'd-block' : ''" :src="imagePotHighlight" alt="Pot Item"/>
       <img class="pot-image w-100 position-relative" :src="imagePot" alt="Pot Item"/>
@@ -41,7 +41,7 @@
 
 
 <script>
-import {mapGetters} from "vuex";
+import {mapGetters, mapMutations} from "vuex";
 import mxPot from "@/mixin/pot";
 import PopoverComponent from "@/components/Common/PopoverComponent.vue";
 import draggable from "vuedraggable";
@@ -82,7 +82,6 @@ export default {
         }]
         : [];
     }
-
   },
 
   data() {
@@ -94,8 +93,10 @@ export default {
   },
 
   methods: {
+    ...mapMutations(['setSelectedPot']),
+
     onPotClick(potId) {
-      this.$emit('pot-clicked', potId);
+      this.setSelectedPot(potId);
     },
 
     onDragStart() {
