@@ -8,12 +8,9 @@
         </a>
       </p>
       <div class="collapse text-white" id="collapseConfig">
-        <p v-if="gameConfig">In this game, a winning fee of {{ gameConfig.fee }}% is applied to the prize pot,
-          collected at {{ gameConfig.fee_address }}. Each round lasts {{ gameDuration }}, with stakes in
-          {{ gameConfig.game_denom }}. A {{ gameConfig.fee_reallocation }}% fee is charged for bets reallocation,
-          with a minimum bid set at {{ gameConfig.min_bid }} {{ gameConfig.game_denom }}.</p>
-
-        <p>Contract address: {{ contractAddress }}</p>
+        <p v-if="gameConfig" class="mb-3">
+          Each round lasts {{ gameDuration }}, with stakes in {{ gameConfig.game_denom }}. The minimum bid is set at {{ gameConfig.min_bid }} {{ gameConfig.game_denom }}.
+          A {{ gameConfig.fee_reallocation }}% fee is charged for bet reallocation, which is reserved for the next game, and a winning fee of {{ gameConfig.fee }}% is applied to the prize pot as protorev.</p>
       </div>
     </div>
   </div>
@@ -32,12 +29,6 @@ export default {
       const minutes = Math.floor(this.gameConfig.game_duration / 60);
       const seconds = this.gameConfig.game_duration % 60;
       return `${minutes} minutes and ${seconds} seconds`;
-    }
-  },
-
-  data() {
-    return {
-      contractAddress: process.env.VUE_APP_CONTRACT
     }
   }
 }

@@ -2,16 +2,16 @@
   <div class="report-component">
     <div class="row">
       <div class="offset-sm-3 col-sm-6 offset-md-4 col-md-4 text-center text-white">
-        <div class="card">
-          <div class="card-body">
-            <h5>Winning Stats</h5>
+        <div class="report-card pt-4 pb-5">
+          <h5>Winning Stats</h5>
 
-            <ul class="winning-stats list-unstyled">
-              <li>Reallocation fee pool: {{ reallocationFeePool / 1000000 }} <CoinComponent/></li>
-              <li>Winning pots: {{winningPots.length ? winningPots : 'N/D'}}</li>
-              <li>Total loosing tokens: TODO</li>
-            </ul>
-          </div>
+          <ul class="winning-stats list-unstyled">
+            <li>Reallocation fee pool: {{ reallocationFeePool / 1000000 }}
+              <CoinComponent/>
+            </li>
+            <li>Winning pots: {{ winningPots.length ? winningPots : 'N/D' }}</li>
+            <!-- <li>Total loosing tokens: N</li>-->
+          </ul>
         </div>
       </div>
     </div>
@@ -38,5 +38,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
+.report-card {
+  background: url("@/assets/tomb-bg.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
 </style>
