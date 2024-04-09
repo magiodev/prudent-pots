@@ -23,11 +23,11 @@ distribution of winnings at the end of a game, the next game starts immediately.
 
 ### Pot Rules
 
-- **Pot 1 (Highest Pot):** Wins if it has the highest token count.
-- **Pot 2 (Median Pot):** Wins if it holds the median number of tokens.
-- **Pot 3 (Lowest Pot):** Wins if it has the lowest token count.
-- **Pot 4 (Even Pot):** Wins if it holds an even number of tokens.
-- **Pot 5 (Odd Pot):** Wins if its token count is a odd number.
+- **Pot 1 (Lowest Pot):** Wins if it has the lowest token count.
+- **Pot 2 (Even Pot):** Wins if it holds an even number of tokens.
+- **Pot 3 (Median Pot):** Wins if it holds the median number of tokens.
+- **Pot 4 (Odd Pot):** Wins if its token count is a odd number.
+- **Pot 5 (Highest Pot):** Wins if it has the highest token count.
 
 ### Token Allocation and Reallocation
 

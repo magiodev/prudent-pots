@@ -82,27 +82,8 @@ pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
     }
 
     match pot_id {
+        // Lowest
         1 => {
-            let max_tokens = get_max_tokens(storage)?;
-            let is_highest = pot_state.amount == max_tokens;
-            let is_unique = get_all_token_counts(storage)?
-                .iter()
-                .filter(|&count| *count == max_tokens)
-                .count()
-                == 1;
-            Ok(is_highest && is_unique)
-        }
-        2 => {
-            let token_counts = get_all_token_counts(storage)?;
-            let is_median = is_median(&token_counts, pot_state.amount);
-            let is_unique = token_counts
-                .iter()
-                .filter(|&count| *count == pot_state.amount)
-                .count()
-                == 1;
-            Ok(is_median && is_unique)
-        }
-        3 => {
             let min_tokens = get_min_tokens(storage)?;
             let is_lowest = pot_state.amount == min_tokens;
             let is_unique = get_all_token_counts(storage)?
@@ -112,8 +93,36 @@ pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
                 == 1;
             Ok(is_lowest && is_unique)
         }
-        4 => Ok((pot_state.amount % Uint128::from(2u128)).is_zero()),
-        5 => Ok(!(pot_state.amount % Uint128::from(2u128)).is_zero()),
+
+        // Even
+        2 => Ok((pot_state.amount % Uint128::from(2u128)).is_zero()),
+
+        // Median
+        3 => {
+            let token_counts = get_all_token_counts(storage)?;
+            let is_median = is_median(&token_counts, pot_state.amount);
+            let is_unique = token_counts
+                .iter()
+                .filter(|&count| *count == pot_state.amount)
+                .count()
+                == 1;
+            Ok(is_median && is_unique)
+        }
+        // Odd
+        4 => Ok(!(pot_state.amount % Uint128::from(2u128)).is_zero()),
+
+        // Highest
+        5 => {
+            let max_tokens = get_max_tokens(storage)?;
+            let is_highest = pot_state.amount == max_tokens;
+            let is_unique = get_all_token_counts(storage)?
+                .iter()
+                .filter(|&count| *count == max_tokens)
+                .count()
+                == 1;
+            Ok(is_highest && is_unique)
+        }
+
         _ => Err(StdError::generic_err("Invalid pot ID")),
     }
 }

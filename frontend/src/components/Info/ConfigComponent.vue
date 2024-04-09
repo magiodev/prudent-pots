@@ -10,7 +10,7 @@
       <div class="collapse text-white" id="collapseConfig">
         <p v-if="gameConfig" class="mb-3">
           Each round lasts {{ gameDuration }}, with stakes in {{ gameConfig.game_denom }}. The minimum bid is set at {{ gameConfig.min_bid }} {{ gameConfig.game_denom }}.
-          A {{ gameConfig.fee_reallocation }}% fee is charged for bet reallocation, which is reserved for the next game, and a winning fee of {{ gameConfig.fee }}% is applied to the prize pot as protorev.</p>
+          A {{ gameConfig.fee_reallocation }}% fee is charged for bet reallocation, which is reserved for the next game, and a winning fee of {{ gameConfig.fee }}% is applied to the prize pot.</p>
       </div>
     </div>
   </div>
