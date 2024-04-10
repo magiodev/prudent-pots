@@ -27,17 +27,20 @@ $button-disabled-text: #a0a0a0; // Text color for disabled buttons
   src: url('@/assets/fonts/TrashHand.ttf') format('truetype'); /* Adjust the path based on where you placed the font */
 }
 
-body {
+html {
   overflow-x: hidden;
-  background: $pp-purple-3 !important;
-  color: white;
+  body {
+    overflow-x: hidden;
+    background: $pp-purple-3 !important;
+    color: white;
 
-  * {
-    font-family: 'Trebuchet MS', sans-serif;
-  }
+    * {
+      font-family: 'Trebuchet MS', sans-serif;
+    }
 
-  h1, h2, h3, h4, h5, h6, button {
-    font-family: 'TrashHand', sans-serif;
+    h1, h2, h3, h4, h5, h6, button {
+      font-family: 'TrashHand', sans-serif;
+    }
   }
 }
 
