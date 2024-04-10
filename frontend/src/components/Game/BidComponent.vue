@@ -13,7 +13,7 @@
           <p v-else>Select a pot to place a bid.</p>
         </div>
 
-        <form @submit.prevent="onAllocateTokens" class="bid-form mb-3">
+        <form @submit.prevent="onAllocateTokens" class="bid-form">
           <div class="d-flex justify-content-center">
             <input
               type="number"

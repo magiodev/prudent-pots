@@ -13,11 +13,6 @@
         <ReportComponent v-else/>
       </div>
     </div>
-
-    <div class="row bg-pp-purple-1">
-      <div class="col">
-      </div>
-    </div>
   </div>
 </template>
 
