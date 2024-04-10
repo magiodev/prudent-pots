@@ -1,8 +1,14 @@
 <template>
   <div class="pot-item-component col-4 col-md-2 text-center text-black mb-md-0 mb-3" :id="'pot-id-'+pot.pot_id">
-    <div class="pot-header">
-      <h2 class="d-inline" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h2>
-      <PopoverComponent :text="getPotDescription(pot.pot_id)"/>
+    <div class="pot-header"
+         ref="popover"
+         data-bs-toggle="popover"
+         data-bs-placement="top"
+         :data-bs-content="getPotDescription(pot.pot_id)"
+         data-bs-trigger="hover"
+    >
+      <h2 class="d-inline me-2" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h2>
+      <PotItemIconComponent :isWinning="isPotWinning" :potId="pot.pot_id"/>
     </div>
 
     <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)">
@@ -27,7 +33,7 @@
           <div class="draggable-item bg-primary" v-if="Number(element.amount)">
             <div class="draggable-item-text">
               {{ element.amount / 1000000 }}
-            <CoinComponent class="d-inline"/>
+              <CoinComponent class="d-inline"/>
             </div>
           </div>
         </template>
@@ -43,15 +49,18 @@
 <script>
 import {mapGetters, mapMutations} from "vuex";
 import mxPot from "@/mixin/pot";
-import PopoverComponent from "@/components/Common/PopoverComponent.vue";
 import draggable from "vuedraggable";
 import imagePot from "@/assets/pot.gif"
 import imagePotHighlight from "@/assets/pot-highlight.png"
 import CoinComponent from "@/components/Common/CoinComponent.vue";
+import PotItemIconComponent from "@/components/Game/PotItemIconComponent.vue";
+import {Popover} from "bootstrap";
 
 export default {
   name: "PotItemComponent",
-  components: {CoinComponent, PopoverComponent, draggable},
+
+  components: {PotItemIconComponent, CoinComponent, draggable},
+
   mixins: [mxPot],
 
   props: {
@@ -89,6 +98,14 @@ export default {
       drag: false,
       imagePot,
       imagePotHighlight
+    }
+  },
+
+  mounted() {
+    // Use this.$refs to access the DOM element
+    const popoverElement = this.$refs.popover;
+    if (popoverElement) {
+      new Popover(popoverElement);
     }
   },
 
@@ -157,6 +174,7 @@ export default {
 
   .draggable-item {
     min-height: 2em;
+
     .draggable-item-text {
       white-space: nowrap;
       position: absolute;
