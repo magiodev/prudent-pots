@@ -77,6 +77,9 @@ export default {
   img {
     height: 36px;
     width: auto;
+    @media (max-width: 767px) {
+      height: 28px;
+    }
   }
 }
 </style>

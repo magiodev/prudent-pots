@@ -7,6 +7,7 @@
 
       <div class="controls">
         <WalletComponent/>
+        <ReadmeComponent/>
       </div>
     </div>
   </nav>
@@ -15,10 +16,11 @@
 <script>
 import imageLogo from "@/assets/logo.png"
 import WalletComponent from "@/components/Common/WalletComponent.vue";
+import ReadmeComponent from "@/components/Common/ReadmeComponent.vue";
 
 export default {
   name: "NavbarComponent",
-  components: {WalletComponent},
+  components: {ReadmeComponent, WalletComponent},
 
   data() {
     return {

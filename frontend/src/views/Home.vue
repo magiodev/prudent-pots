@@ -3,7 +3,7 @@
     <div class="row first-section">
       <div class="col">
         <TimerComponent class="mb-3 mb-md-5"/>
-        <PotsComponent class="mb-md-5"/>
+        <PotsComponent class="mb-md-5 mt-5"/>
       </div>
     </div>
 
@@ -16,7 +16,6 @@
 
     <div class="row bg-pp-purple-1">
       <div class="col">
-        <ConfigComponent/>
       </div>
     </div>
   </div>
@@ -25,16 +24,15 @@
 <script>
 import PotsComponent from "@/components/Game/PotsComponent.vue";
 import BidComponent from "@/components/Game/BidComponent.vue";
-import TimerComponent from "@/components/Info/TimerComponent.vue";
-import ConfigComponent from "@/components/Info/ConfigComponent.vue";
+import TimerComponent from "@/components/Common/TimerComponent.vue";
 import {mapGetters} from "vuex";
 import mxGame from "@/mixin/game";
-import ReportComponent from "@/components/Game/ReportComponent.vue";
+import ReportComponent from "@/components/Common/ReportComponent.vue";
 
 export default {
   name: 'HomeView',
 
-  components: {ReportComponent, ConfigComponent, TimerComponent, PotsComponent, BidComponent},
+  components: {ReportComponent, TimerComponent, PotsComponent, BidComponent},
 
   mixins: [mxGame],
 

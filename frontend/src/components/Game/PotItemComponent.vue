@@ -7,7 +7,8 @@
          :data-bs-content="getPotDescription(pot.pot_id)"
          data-bs-trigger="hover"
     >
-      <h2 class="d-inline me-2" :class="isPotWinning ? 'text-success' : 'text-danger'">{{ getPotName(pot.pot_id) }}</h2>
+      <h2 class="d-inline me-2" :class="isPotWinning ? 'text-pp-winner' : 'text-pp-loser'">{{ getPotName(pot.pot_id)
+        }}</h2>
       <PotItemIconComponent :isWinning="isPotWinning" :potId="pot.pot_id"/>
     </div>
 
@@ -163,6 +164,12 @@ export default {
   border-radius: .75em;
   background-color: white;
   white-space: nowrap;
+}
+
+.pot-header {
+  h2 {
+    //text-shadow: 1px 2px 10px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .pot-footer > button:hover {
