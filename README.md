@@ -31,11 +31,9 @@ distribution of winnings at the end of a game, the next game starts immediately.
 
 ### Token Allocation and Reallocation
 
-- **Allocation**: Players can allocate tokens to any pot without an allocation fee. However, a winning fee is deducted
-  from the total winnings before distribution.
+- **Allocation**: Players can allocate tokens to any pot without an allocation fee.
 - **Reallocation**: Players can reallocate tokens to a different pot, incurring a `GameConfig.fee_reallocation`%
-  reallocation fee that contributes
-  to the next game's pool. This fee encourages players to make thoughtful decisions when reallocating.
+  reallocation fee that contributes to the next game's pool. This fee encourages players to make thoughtful decisions when reallocating.
 
 ### Dynamic Bid Constraints and Reallocation Limits
 
@@ -52,10 +50,9 @@ experience for all players.
 
 ### Winning Pot Determination
 
-- The game ends at a predetermined time or upon meeting a specific condition.
-- The winning pot is determined by its unique rule set.
-- Players in winning pots receive a proportional share of the total tokens, after deducting the winning fee, including
-  redistributed tokens from losing pots.
+The winning pot is determined by its specific rules, and players in this pot receive their proportional share
+of the total tokens, post the deduction of a winning fee, along with redistributed
+tokens from the less successful pots.
 
 For detailed gameplay examples and strategic insights, see [Example Scenarios](./ExampleScenarios.md).
 
@@ -72,15 +69,3 @@ For detailed gameplay examples and strategic insights, see [Example Scenarios](.
 - 50% of tokens in losing pots are rolled over to the next game's pool.
 - The remaining 50% are distributed to the winning pots, where players receive a share based on their contribution,
   after the winning fee is deducted.
-
-### Strategic Considerations
-
-The game involves elements of game theory and statistical analysis, as players must anticipate others' actions and adapt
-their strategies accordingly.
-
-- **Predictive Analysis**: Players might try to predict others' actions, especially near the game's end, to place their
-  tokens in the winning pot.
-- **Game Theory**: The game involves elements of game theory, where players must consider the best strategies not just
-  based on the game's rules but also on other players' potential actions.
-- **Statistical Analysis**: Over multiple games, patterns might emerge in player behaviors or winning pots, which can be
-  analyzed statistically to inform future strategies.
