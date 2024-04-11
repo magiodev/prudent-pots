@@ -106,7 +106,6 @@ export default {
         this.toast.success(`Tx successful. ${tx.transactionHash}`)
         // Fetch new game information after ending the previous match
         await this.fetchInterval()
-        this.setMinBid()
         await this.fetchPlayerData()
       } catch (e) {
         this.toast.error(`${e.message}`)
