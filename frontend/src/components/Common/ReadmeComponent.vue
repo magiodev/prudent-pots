@@ -10,6 +10,10 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-body p-5" v-if="gameConfig">
+          <div class="d-flex justify-content-end">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
           <h3>Initial Setup</h3>
           <p>The game board features a row of 5 pots, each with unique winning rules. Initially, the contract balance is
             evenly distributed among these pots, sourced either from the developer's funds for game instantiation or
@@ -89,9 +93,15 @@ export default {
     },
 
     setDontShowAgain() {
-      console.log(12312312)
       localStorage.setItem('dontShowReadme', 'true');
       this.dontShowAgain = true;
+      this.$nextTick(() => {
+        const modalElement = document.getElementById('exampleModal');
+        const modalInstance = Modal.getInstance(modalElement);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      });
     },
 
     showModal() {
