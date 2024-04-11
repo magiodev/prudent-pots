@@ -17,7 +17,7 @@
           <div class="d-flex justify-content-center">
             <input
               type="number"
-              class="form-control mb-3 w-50"
+              class="form-control w-50"
               v-model.number="bidAmountOSMO"
               :min="minBid / 1000000"
               :max="maxBid / 1000000"
@@ -25,6 +25,11 @@
               :disabled="!utils.selectedPot || isBusy"
               required
             />
+          </div>
+
+          <!-- User Balance -->
+          <div v-if="userAddress" class="mb-3 small">
+            Balance: {{userBalance || '...'}} <CoinComponent/>
           </div>
 
           <div class="d-flex justify-content-center gap-3 mb-3">
@@ -47,15 +52,16 @@ import mxToast from "@/mixin/toast";
 import mxPot from "@/mixin/pot";
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
 import mxGame from "@/mixin/game";
+import CoinComponent from "@/components/Common/CoinComponent.vue";
 
 export default {
   name: "BidComponent",
-  components: {ButtonComponent},
+  components: {CoinComponent, ButtonComponent},
 
   mixins: [mxChain, mxToast, mxPot, mxGame],
 
   computed: {
-    ...mapGetters(['minBid', 'maxBid', 'gameConfig', 'utils', 'userAddress']),
+    ...mapGetters(['minBid', 'maxBid', 'gameConfig', 'utils', 'userAddress', 'userBalance']),
 
     bidAmountOSMO: {
       get() {
@@ -79,7 +85,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchPlayerAllocations']),
+    ...mapActions(['fetchPlayerData']),
 
     setMinBid() {
       this.bidAmount = this.minBid;
@@ -101,7 +107,7 @@ export default {
         // Fetch new game information after ending the previous match
         await this.fetchInterval()
         this.setMinBid()
-        await this.fetchPlayerAllocations()
+        await this.fetchPlayerData()
       } catch (e) {
         this.toast.error(`${e.message}`)
       }

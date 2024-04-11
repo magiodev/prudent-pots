@@ -14,6 +14,7 @@ export default createStore({
       signer: null,
       querier: null,
       address: null,
+      balance: null,
       allocations: []
     },
 
@@ -45,6 +46,10 @@ export default createStore({
 
     userAddress(state) {
       return state.user.address;
+    },
+
+    userBalance(state) {
+      return state.user.balance;
     },
 
     playerAllocations(state) {
@@ -85,10 +90,6 @@ export default createStore({
   },
 
   mutations: {
-    setUserAddress(state, address) {
-      state.user.address = address;
-    },
-
     // setAllContractState(state, data) {
     //   state.data = data
     // },
@@ -99,6 +100,14 @@ export default createStore({
 
     setUserQuerier(state, querier) {
       state.user.querier = querier;
+    },
+
+    setUserAddress(state, address) {
+      state.user.address = address;
+    },
+
+    setUserBalance(state, balance) {
+      state.user.balance = balance;
     },
 
     setPlayerAllocations(state, allocations) {
@@ -200,14 +209,22 @@ export default createStore({
     //   commit("setAllContractState", data.models);
     // },
 
-    async fetchPlayerAllocations({state, commit}) {
+    async fetchPlayerData({state, commit}) {
       if (!state.user.address || !state.user.querier) {
         console.error("Address or Querier is not initialized");
         return;
       }
 
       // Use CosmWasmClient for the query
-      const data = await state.user.querier.queryContractSmart(
+      const balance = await state.user.querier.queryClient.bank.balance(
+        state.user.address,
+        "uosmo"
+      );
+
+      commit("setUserBalance", Number(balance.amount) / 1000000);
+
+      // Use CosmWasmClient for the query
+      const queryResponse = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
         {
           query_player_allocations: {
@@ -217,7 +234,7 @@ export default createStore({
       );
 
       // Filter out allocations where the amount is "0"
-      const filteredAllocations = data.allocations.allocations.filter(allocation => allocation.amount !== "0");
+      const filteredAllocations = queryResponse.allocations.allocations.filter(allocation => allocation.amount !== "0");
 
       commit("setPlayerAllocations", filteredAllocations);
     },

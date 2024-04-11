@@ -38,12 +38,17 @@ const mxGame = {
       'fetchWinningPots',
       'fetchBidRange',
       'fetchReallocationFeePool',
-      'fetchPlayerAllocations',
+      'fetchPlayerData',
     ]),
 
     async fetchOnce() {
+      // Init signer and querier
       await this.initUser();
-      if (this.userAddress) await this.fetchPlayerAllocations();
+      if (this.userAddress) {
+        console.log("Init user successful. Fetching balance and allocations.")
+        await this.fetchPlayerData();
+      }
+      console.log("Fetching general information.")
       await this.fetchGameConfig();
       await this.fetchGameState();
     },

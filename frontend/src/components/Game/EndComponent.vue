@@ -35,7 +35,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['fetchPlayerAllocations']),
+    ...mapActions(['fetchPlayerData']),
 
     async onEndGame() {
       this.isBusy = true
@@ -43,7 +43,7 @@ export default {
         const tx = await this.endGame()
         this.toast.success(`Tx successful. ${tx.transactionHash}`)
         await this.fetchInterval()
-        await this.fetchPlayerAllocations()
+        await this.fetchPlayerData()
       } catch (e) {
         this.toast.error(`${e.message}`)
       }
