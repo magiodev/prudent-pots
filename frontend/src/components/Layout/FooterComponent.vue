@@ -10,12 +10,12 @@
 
       <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
         <li class="ms-3">
-          <a href="https://github.com/magiodev" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/magiodev/prudent-pots" target="_blank" rel="noopener noreferrer">
             <b-icon-github class="text-white"></b-icon-github>
           </a>
         </li>
         <li class="ms-3">
-          <a href="https://twitter.com/magiodev/prudent-pots" target="_blank" rel="noopener noreferrer">
+          <a href="https://twitter.com/magiodev/status" target="_blank" rel="noopener noreferrer">
             <b-icon-twitter class="text-white"></b-icon-twitter>
           </a>
         </li>
