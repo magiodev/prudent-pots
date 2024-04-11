@@ -41,7 +41,7 @@ export default {
         await this.fetchInterval()
         await this.fetchPlayerData()
       } catch (e) {
-        this.toast.error(`${e.message}`)
+        this.toast.error(`${this.cleanErrorMessage(e.message)}`)
       }
       this.isBusy = false
     }
