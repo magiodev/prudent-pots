@@ -15,6 +15,12 @@ pub enum ContractError {
     #[error("InvalidInput")]
     InvalidInput {},
 
+    #[error("InvalidPot")]
+    InvalidPot {},
+
+    #[error("AlreadyAllocated")]
+    AlreadyAllocated {},
+
     #[error("NoFunds")]
     InsufficientFunds {},
 

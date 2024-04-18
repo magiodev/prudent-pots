@@ -1,6 +1,5 @@
 use cosmwasm_std::{
-    Addr, BankMsg, Coin, CosmosMsg, DepsMut, Env, QuerierWrapper, StdError, StdResult, Storage,
-    Uint128,
+    Addr, BankMsg, Coin, CosmosMsg, DepsMut, Env, QuerierWrapper, Storage, Uint128,
 };
 
 use crate::{
@@ -30,7 +29,7 @@ pub fn is_contract_admin(
 }
 
 // Helper to calculate the minimum bid based on the game's current state
-pub fn calculate_min_bid(storage: &dyn Storage) -> StdResult<Uint128> {
+pub fn calculate_min_bid(storage: &dyn Storage) -> Result<Uint128, ContractError> {
     let average_tokens = calculate_average_tokens(storage)?;
     let config = GAME_CONFIG.load(storage)?;
 
@@ -40,16 +39,16 @@ pub fn calculate_min_bid(storage: &dyn Storage) -> StdResult<Uint128> {
 }
 
 // Helper to calculate the maximum bid based on the game's current state
-pub fn calculate_max_bid(storage: &dyn Storage) -> StdResult<Uint128> {
+pub fn calculate_max_bid(storage: &dyn Storage) -> Result<Uint128, ContractError> {
     let min_bid = calculate_min_bid(storage)?;
 
     // Set the maximum bid as double the minimum bid or average, whichever is higher
-    let max_bid = min_bid.checked_mul(Uint128::from(2u128))?;
+    let max_bid = min_bid.checked_mul(Uint128::from(2u128)).unwrap();
     Ok(max_bid)
 }
 
 // Helper to calculate the average tokens across all pots
-fn calculate_average_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
+fn calculate_average_tokens(storage: &dyn Storage) -> Result<Uint128, ContractError> {
     let pots = get_all_token_counts(storage)?;
     let total: Uint128 = pots.iter().sum();
 
@@ -57,12 +56,14 @@ fn calculate_average_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
         // Avoid division by zero if there are no pots
         Ok(Uint128::zero())
     } else {
-        Ok(total.checked_div(Uint128::from(pots.len() as u128))?)
+        Ok(total
+            .checked_div(Uint128::from(pots.len() as u128))
+            .unwrap())
     }
 }
 
 // Retrieve the token count for each pot
-fn get_all_token_counts(storage: &dyn Storage) -> StdResult<Vec<Uint128>> {
+fn get_all_token_counts(storage: &dyn Storage) -> Result<Vec<Uint128>, ContractError> {
     let mut token_counts = Vec::new();
     for pot_id in 1..=5 {
         // Assuming 5 pots
@@ -73,13 +74,8 @@ fn get_all_token_counts(storage: &dyn Storage) -> StdResult<Vec<Uint128>> {
 }
 
 // Helper to determine if a pot is a winning pot based on its unique rules
-pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
+pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> Result<bool, ContractError> {
     let pot_state = POT_STATES.load(storage, pot_id)?;
-
-    // Check for player allocations
-    if !has_player_allocations(storage, pot_id)? {
-        return Ok(false);
-    }
 
     match pot_id {
         // Lowest
@@ -123,7 +119,7 @@ pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
             Ok(is_highest && is_unique)
         }
 
-        _ => Err(StdError::generic_err("Invalid pot ID")),
+        _ => Err(ContractError::InvalidPot {}),
     }
 }
 
@@ -141,13 +137,13 @@ fn is_median(token_counts: &Vec<Uint128>, value: Uint128) -> bool {
 }
 
 // Get the maximum token count from all pots
-fn get_max_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
+fn get_max_tokens(storage: &dyn Storage) -> Result<Uint128, ContractError> {
     let token_counts = get_all_token_counts(storage)?;
     Ok(*token_counts.iter().max().unwrap_or(&Uint128::zero()))
 }
 
 // Get the minimum token count from all pots
-fn get_min_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
+fn get_min_tokens(storage: &dyn Storage) -> Result<Uint128, ContractError> {
     let token_counts = get_all_token_counts(storage)?;
     Ok(*token_counts.iter().min().unwrap_or(&Uint128::zero()))
 }
@@ -156,7 +152,7 @@ fn get_min_tokens(storage: &dyn Storage) -> StdResult<Uint128> {
 pub fn calculate_total_losing_tokens(
     storage: &dyn Storage,
     winning_pots: &[u8],
-) -> StdResult<Uint128> {
+) -> Result<Uint128, ContractError> {
     let mut total_losing_tokens = Uint128::zero();
 
     // Iterate through all pots
@@ -166,7 +162,7 @@ pub fn calculate_total_losing_tokens(
 
         // Check if the pot is a losing pot or a winning pot without allocations
         if !winning_pots.contains(&pot_id) || !has_player_allocations(storage, pot_id)? {
-            total_losing_tokens = total_losing_tokens.checked_add(pot_state.amount)?;
+            total_losing_tokens = total_losing_tokens.checked_add(pot_state.amount).unwrap();
         }
     }
 
@@ -174,7 +170,7 @@ pub fn calculate_total_losing_tokens(
 }
 
 // Helper to check if a pot has player allocations
-fn has_player_allocations(storage: &dyn Storage, pot_id: u8) -> StdResult<bool> {
+fn has_player_allocations(storage: &dyn Storage, pot_id: u8) -> Result<bool, ContractError> {
     let allocations = PLAYER_ALLOCATIONS.range(storage, None, None, cosmwasm_std::Order::Ascending);
 
     for item in allocations {
@@ -196,70 +192,49 @@ pub fn get_distribute_bank_msgs(
     storage: &dyn Storage,
     winning_pots: &[u8],
     total_losing_tokens: Uint128,
-) -> StdResult<Vec<CosmosMsg>> {
+) -> Result<Vec<CosmosMsg>, ContractError> {
     let config = GAME_CONFIG.load(storage)?;
     let total_distribution_amount = total_losing_tokens.multiply_ratio(1u128, 2u128);
 
-    let winning_pots_with_allocations_count: usize = winning_pots
-        .iter()
-        .filter(|&&pot_id| has_player_allocations(storage, pot_id).unwrap_or(false))
-        .count();
+    let mut pot_contributions: Vec<Uint128> = vec![Uint128::zero(); 5]; // Assumes 5 pots
+    let mut total_winning_tokens = Uint128::zero();
 
-    let individual_pot_distribution_amount = if winning_pots_with_allocations_count > 0 {
-        total_distribution_amount / Uint128::from(winning_pots_with_allocations_count as u128)
-    } else {
-        Uint128::zero()
-    };
-
-    let mut messages: Vec<CosmosMsg> = vec![];
-    let mut total_fee = Uint128::zero();
-
+    // Calculate total token amounts for each winning pot and store them
     for &pot_id in winning_pots {
         if has_player_allocations(storage, pot_id)? {
             let pot_state = POT_STATES.load(storage, pot_id)?;
-            let pot_total_distribution_amount =
-                individual_pot_distribution_amount + pot_state.amount;
-
-            let player_allocations: Vec<_> = PLAYER_ALLOCATIONS
-                .range(storage, None, None, cosmwasm_std::Order::Ascending)
-                .filter_map(Result::ok)
-                .collect();
-
-            let total_player_contributions: Uint128 = player_allocations
-                .iter()
-                .flat_map(|(_, allocations)| allocations.allocations.iter())
-                .filter(|allocation| allocation.pot_id == pot_id && !allocation.amount.is_zero()) // Exclude 0 amount allocations
-                .map(|allocation| allocation.amount)
-                .sum();
-
-            if !total_player_contributions.is_zero() {
-                // Check to avoid division by zero
-                let fee = pot_total_distribution_amount.multiply_ratio(config.fee, 100u128);
-                total_fee += fee;
-                let net_distribution_amount =
-                    pot_total_distribution_amount.checked_sub(fee).unwrap();
-
-                for (addr, allocations) in player_allocations {
-                    for allocation in &allocations.allocations {
-                        if allocation.pot_id == pot_id && !allocation.amount.is_zero() {
-                            // Again, exclude 0 amount allocations
-                            let player_share = net_distribution_amount
-                                .multiply_ratio(allocation.amount, total_player_contributions);
-
-                            messages.push(CosmosMsg::Bank(BankMsg::Send {
-                                to_address: addr.to_string(),
-                                amount: vec![Coin {
-                                    denom: config.game_denom.clone(),
-                                    amount: player_share,
-                                }],
-                            }));
-                        }
-                    }
-                }
-            }
+            pot_contributions[pot_id as usize - 1] = pot_state.amount;
+            total_winning_tokens += pot_state.amount;
         }
     }
 
+    let mut messages: Vec<CosmosMsg> = Vec::new();
+    let mut total_fee = Uint128::zero();
+
+    // Distribute tokens to winning pots based on their contribution to the total
+    for &pot_id in winning_pots {
+        if pot_contributions[pot_id as usize - 1].is_zero() {
+            continue; // Skip pots without player allocations or tokens
+        }
+
+        let pot_share = total_distribution_amount
+            .multiply_ratio(pot_contributions[pot_id as usize - 1], total_winning_tokens);
+        let pot_state = POT_STATES.load(storage, pot_id)?;
+        let pot_total_distribution_amount = pot_share + pot_state.amount;
+        let fee = pot_total_distribution_amount.multiply_ratio(config.fee, 100u128);
+        total_fee += fee;
+        let net_distribution_amount = pot_total_distribution_amount.checked_sub(fee).unwrap();
+
+        distribute_tokens_to_players(
+            storage,
+            &config,
+            pot_id,
+            net_distribution_amount,
+            &mut messages,
+        )?;
+    }
+
+    // Deduct the total fee and add to messages
     if !total_fee.is_zero() {
         messages.push(CosmosMsg::Bank(BankMsg::Send {
             to_address: config.fee_address.to_string(),
@@ -273,8 +248,84 @@ pub fn get_distribute_bank_msgs(
     Ok(messages)
 }
 
+fn distribute_tokens_to_players(
+    storage: &dyn Storage,
+    config: &GameConfig,
+    pot_id: u8,
+    net_distribution_amount: Uint128,
+    messages: &mut Vec<CosmosMsg>,
+) -> Result<(), ContractError> {
+    // Retrieve all player allocations from storage. This pulls the entire list of allocations, filtering out any errors.
+    let player_allocations: Vec<_> = PLAYER_ALLOCATIONS
+        .range(storage, None, None, cosmwasm_std::Order::Ascending)
+        .filter_map(Result::ok)
+        .collect();
+
+    // Calculate the total contributions to the specified pot by all players.
+    let total_player_contributions: Uint128 = player_allocations
+        .iter()
+        .flat_map(|(_, allocations)| allocations.allocations.iter()) // Flatten the structure to iterate over all allocations.
+        .filter(|allocation| allocation.pot_id == pot_id && !allocation.amount.is_zero()) // Filter for allocations to the specific pot that are non-zero.
+        .map(|allocation| allocation.amount)
+        .sum();
+
+    // Early return if there are no contributions to prevent division by zero in later calculations.
+    if total_player_contributions.is_zero() {
+        return Ok(());
+    }
+
+    // Loop through all player allocations to distribute the net amount based on each player's contribution to the pot.
+    for (addr, allocations) in player_allocations {
+        for allocation in &allocations.allocations {
+            // Check if the allocation belongs to the current pot and is not zero.
+            if allocation.pot_id == pot_id && !allocation.amount.is_zero() {
+                // Calculate the share for this player based on their contribution relative to the total contributions.
+                let player_share = net_distribution_amount
+                    .multiply_ratio(allocation.amount, total_player_contributions);
+                // Create a bank message to send the player's share of tokens and push it to the messages vector.
+                messages.push(CosmosMsg::Bank(BankMsg::Send {
+                    to_address: addr.to_string(),
+                    amount: vec![Coin {
+                        denom: config.game_denom.clone(), // Note: `config` needs to be accessible here, consider passing it as an argument if not globally accessible.
+                        amount: player_share,
+                    }],
+                }));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Checks if the specified player has already allocated tokens to the specified pot.
+/// Returns `Ok(())` if no allocations exist or if the allocation is zero, or `Err(ContractError::AlreadyAllocated)` if a non-zero allocation is found.
+pub fn check_existing_allocation(
+    storage: &dyn Storage,
+    player: &Addr,
+    pot_id: u8,
+) -> Result<(), ContractError> {
+    let player_allocs_opt = PLAYER_ALLOCATIONS.may_load(storage, player.clone())?;
+
+    if let Some(player_allocs) = player_allocs_opt {
+        // If allocations exist, check if any non-zero allocation is made to the specified pot.
+        if player_allocs
+            .allocations
+            .iter()
+            .any(|alloc| alloc.pot_id == pot_id && !alloc.amount.is_zero())
+        {
+            return Err(ContractError::AlreadyAllocated {});
+        }
+    }
+
+    Ok(())
+}
+
 // Helper to prepare for the next game
-pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) -> StdResult<()> {
+pub fn prepare_next_game(
+    deps: DepsMut,
+    env: &Env,
+    messages: &Vec<CosmosMsg>,
+) -> Result<(), ContractError> {
     let config = GAME_CONFIG.load(deps.storage)?;
     let game_duration = config.game_duration;
 
@@ -312,10 +363,14 @@ pub fn prepare_next_game(deps: DepsMut, env: &Env, messages: &Vec<CosmosMsg>) ->
         })
         .sum();
 
-    total_tokens_for_next_game = total_tokens_for_next_game.checked_sub(total_outgoing_tokens)?;
+    total_tokens_for_next_game = total_tokens_for_next_game
+        .checked_sub(total_outgoing_tokens)
+        .unwrap();
 
     // Distribute the initial tokens and the reallocation fee pool to the pots for the next game
-    let initial_tokens_per_pot = total_tokens_for_next_game.checked_div(Uint128::from(5u128))?;
+    let initial_tokens_per_pot = total_tokens_for_next_game
+        .checked_div(Uint128::from(5u128))
+        .unwrap();
 
     for pot_id in 1..=5 {
         POT_STATES.save(
@@ -421,7 +476,10 @@ pub fn update_pot_state(
 }
 
 // Helper to create a bank message for the fee transaction
-pub fn create_fee_message(config: &GameConfig, fee: Uint128) -> StdResult<Vec<CosmosMsg>> {
+pub fn create_fee_message(
+    config: &GameConfig,
+    fee: Uint128,
+) -> Result<Vec<CosmosMsg>, ContractError> {
     if fee.is_zero() {
         Ok(vec![])
     } else {

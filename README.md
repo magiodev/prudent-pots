@@ -31,22 +31,17 @@ distribution of winnings at the end of a game, the next game starts immediately.
 
 ### Token Allocation and Reallocation
 
-- **Allocation**: Players can allocate tokens to any pot without an allocation fee.
-- **Reallocation**: Players can reallocate tokens to a different pot, incurring a `GameConfig.fee_reallocation`%
-  reallocation fee that contributes to the next game's pool. This fee encourages players to make thoughtful decisions when reallocating.
+- **Allocation Rules**: Players can allocate tokens to any pot without an allocation fee. Each player is allowed to allocate tokens to a pot only once per game, preventing multiple allocations to the same pot. This rule is designed to ensure that players must carefully consider their initial strategic decisions.
+- **Reallocation Rules**: During reallocation, players are not bound by minimum or maximum bid constraints. However, a `GameConfig.fee_reallocation`% reallocation fee is still applied, contributing to the next game's pool. This fee encourages players to make thoughtful decisions when reallocating their tokens.
 
-### Dynamic Bid Constraints and Reallocation Limits
+### Allocation Dynamic Bid Constraints and Limits
 
-- **Minimum Bid**: The minimum amount a player can allocate or reallocate is dynamically set based on the average token
+- **Minimum Bid**: The minimum amount a player can allocate is dynamically set based on the average token
   count across all pots. This prevents players from placing insignificantly small bets and ensures engagement with the
   game's strategic elements.
-- **Maximum Bid**: The maximum bid is set to double the average token count across all pots, preventing overwhelmingly
+- **Maximum Bid**: The maximum bid a player can allocate is set to double the average token count across all pots, preventing overwhelmingly
   large bets that could unbalance the game.
-- **Reallocation Limits**: During reallocation, players must adhere to the same minimum and maximum bid constraints,
-  ensuring consistency and fairness in strategic decisions throughout the game.
-
-These rules are designed to promote strategic depth, prevent exploitation, and ensure a balanced and engaging game
-experience for all players.
+- **Other Limits**: Additionally, players can both allocate or reallocate tokens only to empty pots.
 
 ### Winning Pot Determination
 
@@ -54,18 +49,8 @@ The winning pot is determined by its specific rules, and players in this pot rec
 of the total tokens, post the deduction of a winning fee, along with redistributed
 tokens from the less successful pots.
 
-For detailed gameplay examples and strategic insights, see [Example Scenarios](./ExampleScenarios.md).
-
-### Mathematical Formulation
-
-#### Token Allocation and Pot Dynamics
-
-- When a player allocates `x` tokens to pot `i`, the new total is `P_i = P_i + x`.
-- If `y` tokens are reallocated from pot `i` to pot `j`, then `P_i = P_i - y` and `P_j = P_j + y * (1 - f_r/100)`,
-  where `f_r` is the reallocation fee percentage.
-
 #### Redistribution of Losing Pots Tokens
 
 - 50% of tokens in losing pots are rolled over to the next game's pool.
-- The remaining 50% are distributed to the winning pots, where players receive a share based on their contribution,
-  after the winning fee is deducted.
+- The remaining 50% are now distributed proportionally to the winning pots based on the amount of tokens in each winning pot. This ensures that the distribution reflects the level of risk and investment players have put into each pot.
+

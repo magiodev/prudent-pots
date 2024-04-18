@@ -3,9 +3,9 @@ use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response, Uint128};
 use crate::{
     helpers::{
         calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens,
-        get_distribute_bank_msgs, is_contract_admin, is_winning_pot, prepare_next_game,
-        update_player_allocation, update_pot_state, validate_and_extend_game_time,
-        validate_and_sum_funds,
+        check_existing_allocation, get_distribute_bank_msgs, is_contract_admin, is_winning_pot,
+        prepare_next_game, update_player_allocation, update_pot_state,
+        validate_and_extend_game_time, validate_and_sum_funds,
     },
     state::{
         GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
@@ -39,6 +39,9 @@ pub fn allocate_tokens(
 ) -> Result<Response, ContractError> {
     // Validate the game's end time and extend it if necessary
     validate_and_extend_game_time(deps.storage, &env)?;
+
+    // Check if the player has already allocated to this pot
+    check_existing_allocation(deps.storage, &info.sender, pot_id)?;
 
     let config = GAME_CONFIG.load(deps.storage)?;
 
@@ -80,8 +83,11 @@ pub fn reallocate_tokens(
 
     // Ensure pots are different
     if from_pot_id == to_pot_id {
-        return Err(ContractError::InvalidInput {});
+        return Err(ContractError::InvalidPot {});
     }
+
+    // Check if the player has already allocated to the target pot
+    check_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
 
     let config = GAME_CONFIG.load(deps.storage)?;
 
@@ -102,17 +108,6 @@ pub fn reallocate_tokens(
 
     let fee = amount.multiply_ratio(config.fee_reallocation, 100u128);
     let net_amount = amount.checked_sub(fee).unwrap();
-
-    // Ensure the reallocation amount is within the set minimum and maximum bid limits
-    let min_bid = calculate_min_bid(deps.storage)?; // Convert DepsMut to Deps with as_ref()
-    let max_bid = calculate_max_bid(deps.storage)?;
-
-    if net_amount < min_bid || net_amount > max_bid {
-        return Err(ContractError::BidOutOfRange {
-            min: min_bid,
-            max: max_bid,
-        });
-    }
 
     // Deduct the reallocation fee and update the reallocation fee pool
     REALLOCATION_FEE_POOL.update(deps.storage, |mut current| -> Result<_, ContractError> {
