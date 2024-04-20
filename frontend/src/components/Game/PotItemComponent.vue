@@ -17,13 +17,13 @@
            :class="utils.selectedPot === pot.pot_id ? 'd-block' : ''" :src="imagePotHighlight" alt="Pot Item"/>
       <img class="pot-image w-100 position-relative" :src="imagePot" alt="Pot Item"/>
       <div class="pot-content">
-        <span class="pot-tokens py-1 px-2">{{ Number(pot.amount / 1000000) }} <CoinComponent/></span>
+        <span class="pot-tokens py-1 px-2">{{ Number(pot.amount / 1000000).toFixed(6) }} <CoinComponent/></span>
       </div>
     </div>
 
     <div class="allocations card mt-3 p-1" :data-pot-id="pot.pot_id">
       <draggable
-        v-model="allocationsList"
+        v-model="allPotsAllocations"
         group="allocations"
         @start="onDragStart"
         @end="onDragEnd"
@@ -38,11 +38,15 @@
             </div>
           </div>
         </template>
-        <template #footer v-if="!allocationsList.length">
+        <template #footer v-if="!allPotsAllocations.length">
           <span class="text-secondary drag-here">{{ !playerAllocations.length ? 'No bets' : 'Drag here' }}</span>
         </template>
       </draggable>
     </div>
+
+    <!-- <div class="pot-share" v-if="allocations">-->
+    <!--   Your share: ({{Number(allocations / pot.amount * 100).toFixed(2)}}%)-->
+    <!-- </div>-->
   </div>
 </template>
 
@@ -82,7 +86,7 @@ export default {
       return this.playerAllocations.find(a => a.pot_id === this.pot.pot_id)?.amount || 0;
     },
 
-    allocationsList() {
+    allPotsAllocations() {
       // Including only the allocation for this specific pot
       const allocationForThisPot = this.playerAllocations.find(a => a.pot_id === this.pot.pot_id);
       return allocationForThisPot

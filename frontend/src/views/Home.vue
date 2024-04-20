@@ -3,6 +3,15 @@
     <div class="row first-section">
       <div class="col">
         <TimerComponent class="mb-3 mb-md-5"/>
+
+        <div class="text-center">
+          <ul class="list-unstyled">
+            <li>You can allocate to empty pots.</li>
+            <li>You can reallocate to another empty pot by drag-and-drop.</li>
+            <li>Reallocation fee pool contributes to the next game.</li>
+          </ul>
+        </div>
+
         <PotsComponent class="mb-md-5 mt-5"/>
       </div>
     </div>

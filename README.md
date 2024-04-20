@@ -49,7 +49,7 @@ The winning pot is determined by its specific rules, and players in this pot rec
 of the total tokens, post the deduction of a winning fee, along with redistributed
 tokens from the less successful pots.
 
-#### Redistribution of Losing Pots Tokens
+### Redistribution of Losing Pots Tokens
 
 - 50% of tokens in losing pots are rolled over to the next game's pool.
 - The remaining 50% are now distributed proportionally to the winning pots based on the amount of tokens in each winning pot. This ensures that the distribution reflects the level of risk and investment players have put into each pot.
