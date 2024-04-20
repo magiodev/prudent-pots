@@ -1,11 +1,29 @@
 <template>
-  <!-- Button trigger modal -->
-  <div class="readme-component d-flex justify-content-end">
-    <ButtonComponent text="README" data-bs-toggle="modal" data-bs-target="#exampleModal" :is-small="true"/>
+  <p class="text-center mb-0">
+    <a class="btn btn-link" data-bs-toggle="collapse" href="#collapseReadme" role="button" aria-expanded="false"
+       aria-controls="collapseReadme">
+      Game instructions
+    </a>
+  </p>
+
+  <div class="collapse text-center" id="collapseReadme">
+    <ul class="list-unstyled">
+      <li>Allocate to empty pots.</li>
+      <li>Reallocate to another empty pot via drag-and-drop; includes a fee.</li>
+      <li>Reallocation fees contribute to the next game's pool.</li>
+      <li>Losing pots' half tokens are redistributed proportionally to winning pots.</li>
+      <li>Game timer resets with last-minute actions.</li>
+      <li>A fee from winning pots funds the DAO treasury.</li>
+    </ul>
+
+    <!-- Button trigger modal -->
+    <div class="readme-component d-flex justify-content-center">
+      <ButtonComponent text="README" data-bs-toggle="modal" data-bs-target="#readmeModal" :is-small="true"/>
+    </div>
   </div>
 
   <!-- Modal -->
-  <div class="readme-modal modal fade modal-lg" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+  <div class="readme-modal modal fade modal-lg" id="readmeModal" tabindex="-1" aria-labelledby="readmeModalLabel"
        aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -34,14 +52,13 @@
           </ul>
 
           <h3>Token Allocation and Reallocation</h3>
-          <p>Players can allocate tokens to any pot without a fee. Yet, reallocating tokens incurs a
-            {{ gameConfig.fee_reallocation }}% fee. This reallocation fee contributes to the next game's pool,
-            encouraging
-            players to make thoughtful decisions about their token placements.</p>
+          <p>Players can allocate tokens to any empty pot without a fee. Reallocating tokens incurs a
+            {{ gameConfig.fee_reallocation }}% fee, and can only be done to pots that currently have no tokens from the
+            player.</p>
 
           <h3>Dynamic Bid Constraints and Reallocation Limits</h3>
           <p>Minimum and maximum bid limits are dynamically set based on the average token count across pots, promoting
-            strategic engagement and fairness. These constraints apply to both allocations and reallocations.</p>
+            strategic engagement and fairness. These constraints apply only to allocations.</p>
 
           <h3>Winning Pot Determination</h3>
           <p>The winning pot is determined by its specific rules, and players in this pot receive their proportional
@@ -50,11 +67,11 @@
             tokens from the less successful pots.</p>
 
           <p>Explore detailed gameplay examples and strategic insights at the <a
-            href="https://github.com/magiodev/prudent-pots">GitHub repository</a>.</p>
+            href="https://github.com/magiodev/prudent-pots" target="_blank">GitHub repository</a>.</p>
 
           <!-- "Do not show again" link -->
           <div class="text-center mb-5 pb-5">
-            <ButtonComponent text="Do not show again" :is-small="true" @click.prevent="setDontShowAgain" />
+            <ButtonComponent text="Do not show again" :is-small="true" @click.prevent="setDontShowAgain"/>
           </div>
         </div>
 
@@ -96,7 +113,7 @@ export default {
       localStorage.setItem('dontShowReadme', 'true');
       this.dontShowAgain = true;
       this.$nextTick(() => {
-        const modalElement = document.getElementById('exampleModal');
+        const modalElement = document.getElementById('readmeModal');
         const modalInstance = Modal.getInstance(modalElement);
         if (modalInstance) {
           modalInstance.hide();
@@ -106,7 +123,7 @@ export default {
 
     showModal() {
       this.$nextTick(() => {
-        const modal = new Modal(document.getElementById('exampleModal'));
+        const modal = new Modal(document.getElementById('readmeModal'));
         modal.show();
       });
     },

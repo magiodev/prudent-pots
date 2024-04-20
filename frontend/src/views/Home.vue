@@ -2,17 +2,11 @@
   <div class="container-fluid">
     <div class="row first-section">
       <div class="col">
-        <TimerComponent class="mb-3 mb-md-5"/>
+        <TimerComponent class="mb-3"/>
 
-        <div class="text-center">
-          <ul class="list-unstyled">
-            <li>You can allocate to empty pots.</li>
-            <li>You can reallocate to another empty pot by drag-and-drop.</li>
-            <li>Reallocation fee pool contributes to the next game.</li>
-          </ul>
-        </div>
+        <ReadmeComponent/>
 
-        <PotsComponent class="mb-md-5 mt-5"/>
+        <PotsComponent class="mb-md-5 mt-3"/>
       </div>
     </div>
 
@@ -32,11 +26,12 @@ import TimerComponent from "@/components/Common/TimerComponent.vue";
 import {mapGetters} from "vuex";
 import mxGame from "@/mixin/game";
 import ReportComponent from "@/components/Common/ReportComponent.vue";
+import ReadmeComponent from "@/components/Common/ReadmeComponent.vue";
 
 export default {
   name: 'HomeView',
 
-  components: {ReportComponent, TimerComponent, PotsComponent, BidComponent},
+  components: {ReadmeComponent, ReportComponent, TimerComponent, PotsComponent, BidComponent},
 
   mixins: [mxGame],
 
@@ -52,6 +47,7 @@ export default {
     margin-top: -100px;
   }
 }
+
 .graphic-items {
   &:before {
     content: url("@/assets/tree.png");
@@ -64,6 +60,7 @@ export default {
       left: -325px;
     }
   }
+
   &:after {
     content: url("@/assets/tombs.png");
     position: absolute;
