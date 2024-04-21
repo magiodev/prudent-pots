@@ -218,7 +218,7 @@ export default createStore({
       // Use CosmWasmClient for the query
       const balance = await state.user.querier.queryClient.bank.balance(
         state.user.address,
-        "uosmo"
+        process.env.VUE_APP_GAME_DENOM
       );
 
       commit("setUserBalance", Number(balance.amount) / 1000000);
