@@ -8,12 +8,13 @@
 
   <div class="collapse text-center" id="collapseReadme">
     <ul class="list-unstyled">
-      <li>Allocate to empty pots.</li>
-      <li>Reallocate to another empty pot via drag-and-drop; includes a fee.</li>
+      <li>You can allocate once per pot.</li>
+      <li>You can reallocate to another pot via drag-and-drop; includes a fee.</li>
+      <li>There are min and max bids.</li>
+      <li>Timer resets with late-game actions.</li>
+      <li>Half of the tokens from losing pots are redistributed proportionally to winning pots.</li>
       <li>Reallocation fees contribute to the next game's pool.</li>
-      <li>Losing pots' half tokens are redistributed proportionally to winning pots.</li>
-      <li>Game timer resets with last-minute actions.</li>
-      <li>A fee from winning pots funds the DAO treasury.</li>
+      <li>A fee from winning pots funds the treasury.</li>
     </ul>
 
     <!-- Button trigger modal -->
