@@ -18,14 +18,15 @@ const mxGame = {
     },
 
     timeLeftHuman() {
-      const timeDiff = this.timeLeftSeconds * 1000;  // Convert back to milliseconds for calculation
+      const timeDiff = this.timeLeftSeconds * 1000;
       if (timeDiff <= 0) {
-        return "0h 0m 0s";
+        return "0d 0h 0m 0s";
       }
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
       const seconds = Math.floor((timeDiff / 1000) % 60);
-      return `${hours}h ${minutes}m ${seconds}s`;
+      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
     },
   },
 
