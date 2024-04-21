@@ -15,7 +15,7 @@
           </a>
         </li>
         <li class="ms-3">
-          <a href="https://twitter.com/magiodev/status" target="_blank" rel="noopener noreferrer">
+          <a href="https://twitter.com/magiodev/status/1781957200446922947" target="_blank" rel="noopener noreferrer">
             <b-icon-twitter class="text-white"></b-icon-twitter>
           </a>
         </li>

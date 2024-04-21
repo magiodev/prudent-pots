@@ -134,10 +134,24 @@ export default {
     ...mapGetters(['gameConfig']),
 
     gameDuration() {
-      const minutes = Math.floor(this.gameConfig.game_duration / 60);
-      const seconds = this.gameConfig.game_duration % 60;
-      return `${minutes} minutes and ${seconds} seconds`;
-    },
+      const totalSeconds = this.gameConfig.game_duration;
+
+      const days = Math.floor(totalSeconds / (60 * 60 * 24));
+      const hours = Math.floor((totalSeconds / (60 * 60)) % 24);
+      const minutes = Math.floor((totalSeconds / 60) % 60);
+      const seconds = totalSeconds % 60;
+
+      let durationString = "";
+      if (days > 0) {
+        durationString += `${days} day${days > 1 ? "s" : ""}, `;
+      }
+      if (hours > 0 || days > 0) {
+        durationString += `${hours} hour${hours > 1 ? "s" : ""}, `;
+      }
+      durationString += `${minutes} minute${minutes > 1 ? "s" : ""} and ${seconds} second${seconds > 1 ? "s" : ""}`;
+
+      return durationString;
+    }
   },
 }
 </script>
