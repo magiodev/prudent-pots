@@ -10,11 +10,14 @@
 </template>
 
 <script>
-import {mapActions, mapGetters} from "vuex";
+import {mapGetters} from "vuex";
 import imageWalletIcon from "@/assets/wallet-icon.png"
+import mxGame from "@/mixin/game";
 
 export default {
   name: "WalletComponent",
+
+  mixins: [mxGame],
 
   computed: {
     ...mapGetters(["userSigner", "userAddress"])
@@ -27,10 +30,8 @@ export default {
   },
 
   methods: {
-    ...mapActions(["initUser"]),
-
     async onClickConnect() {
-      await this.initUser()
+      await this.fetchOnce()
     }
   }
 }

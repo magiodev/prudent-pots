@@ -7,8 +7,9 @@
          :data-bs-content="getPotDescription(pot.pot_id)"
          data-bs-trigger="hover"
     >
-      <h2 class="d-inline me-2" :class="isPotWinning ? 'text-pp-winner' : 'text-pp-loser'">{{ getPotName(pot.pot_id)
-        }}</h2>
+      <h2 class="d-inline me-2" :class="isPotWinning ? 'text-pp-winner' : 'text-pp-loser'">
+        {{ getPotName(pot.pot_id) }}
+      </h2>
       <PotItemIconComponent :isWinning="isPotWinning" :potId="pot.pot_id"/>
     </div>
 
@@ -33,7 +34,11 @@
         <template #item="{ element }">
           <div class="draggable-item bg-primary" v-if="Number(element.amount)">
             <div class="draggable-item-text">
-              {{ element.amount / 1000000 }}
+              {{
+                !drag
+                  ? element.amount / 1000000
+                  : (element.amount * (1 - gameConfig.fee_reallocation / 100)) / 1000000
+              }}
               <CoinComponent class="d-inline"/>
             </div>
           </div>
@@ -76,7 +81,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['winningPots', 'playerAllocations', 'utils']),
+    ...mapGetters(['winningPots', 'playerAllocations', 'utils', 'gameConfig']),
 
     isPotWinning() {
       return this.winningPots.includes(this.pot.pot_id);
