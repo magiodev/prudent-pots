@@ -172,7 +172,7 @@ export default createStore({
         const aminoTypes = new AminoTypes(aminoConverters);
 
         const signingClient = await SigningStargateClient.connectWithSigner(
-          process.env.VUE_APP_RPC,
+          process.env.VUE_APP_RPC_EXECUTE,
           offlineSigner,
           // other options
           {
@@ -184,7 +184,7 @@ export default createStore({
       }
 
       // Initialize CosmWasmClient for querying
-      const queryClient = await CosmWasmClient.connect(process.env.VUE_APP_RPC);
+      const queryClient = await CosmWasmClient.connect(process.env.VUE_APP_RPC_QUERY);
       commit("setUserQuerier", queryClient);
     },
 
