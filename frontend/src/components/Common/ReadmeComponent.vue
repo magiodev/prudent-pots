@@ -11,6 +11,7 @@
       <li>You can allocate once per pot.</li>
       <li>You can reallocate to another pot via drag-and-drop; includes a fee.</li>
       <li>There are min and max bids.</li>
+      <li>A pot cannot contain more tokens than the sum of all the others.</li>
       <li>Timer resets with late-game actions.</li>
       <li>Half of the tokens from losing pots are redistributed proportionally to winning pots.</li>
       <li>Reallocation fees contribute to the next game's pool.</li>
@@ -58,8 +59,10 @@
             player.</p>
 
           <h3>Dynamic Bid Constraints and Reallocation Limits</h3>
-          <p>Minimum and maximum bid limits are dynamically set based on the average token count across pots, promoting
-            strategic engagement and fairness. These constraints apply only to allocations.</p>
+          <p>Minimum and maximum bid limits are dynamically set based on the average token count across pots. These
+            constraints apply only to allocations.</p>
+          <p>A single pot is not allowed to hold more tokens than the combined total of tokens present in all the other
+            pots.</p>
 
           <h3>Winning Pot Determination</h3>
           <p>The winning pot is determined by its specific rules, and players in this pot receive their proportional

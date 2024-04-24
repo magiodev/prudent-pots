@@ -37,7 +37,7 @@
               {{
                 !drag
                   ? element.amount / 1000000
-                  : (element.amount * (1 - gameConfig.fee_reallocation / 100)) / 1000000
+                  : Number((element.amount * (1 - gameConfig.fee_reallocation / 100)) / 1000000).toFixed(6)
               }}
               <CoinComponent class="d-inline"/>
             </div>
