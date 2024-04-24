@@ -30,6 +30,9 @@ pub enum ContractError {
     #[error("GameStillActive")]
     GameStillActive {},
 
+    #[error("PotLimitReached: A pot cannot contain more tokens than the sum of the others.")]
+    PotLimitReached {},
+
     #[error("BidOutOfRange. Min: {min:?}, Max: {max:?}")]
     BidOutOfRange { min: Uint128, max: Uint128 },
     // #[error("Custom Error val: {val:?}")]

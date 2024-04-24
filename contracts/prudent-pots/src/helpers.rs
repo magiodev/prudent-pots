@@ -492,3 +492,32 @@ pub fn create_fee_message(
         })])
     }
 }
+
+pub fn validate_pot_limit_not_exceeded(
+    storage: &dyn Storage,
+    pot_id: u8,
+    amount: Uint128,
+) -> Result<(), ContractError> {
+    let pots = POT_STATES.range(storage, None, None, cosmwasm_std::Order::Ascending);
+    let mut sum_of_other_pots = Uint128::zero();
+    let mut current_pot_amount = Uint128::zero();
+
+    // Calculate the sum of all other pots and find the current pot amount
+    for item in pots {
+        let (id, token_allocation) = item?;
+        if id == pot_id {
+            current_pot_amount = token_allocation.amount;
+        } else {
+            sum_of_other_pots = sum_of_other_pots
+                .checked_add(token_allocation.amount)
+                .unwrap();
+        }
+    }
+
+    // Check if adding the amount to the current pot exceeds the sum of all other pots
+    if current_pot_amount.checked_add(amount).unwrap() > sum_of_other_pots {
+        Err(ContractError::PotLimitReached {})
+    } else {
+        Ok(())
+    }
+}

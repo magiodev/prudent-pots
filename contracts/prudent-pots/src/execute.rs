@@ -5,7 +5,7 @@ use crate::{
         calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens,
         check_existing_allocation, get_distribute_bank_msgs, is_contract_admin, is_winning_pot,
         prepare_next_game, update_player_allocation, update_pot_state,
-        validate_and_extend_game_time, validate_and_sum_funds,
+        validate_and_extend_game_time, validate_and_sum_funds, validate_pot_limit_not_exceeded,
     },
     state::{
         GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
@@ -37,15 +37,12 @@ pub fn allocate_tokens(
     info: MessageInfo,
     pot_id: u8,
 ) -> Result<Response, ContractError> {
-    // Validate the game's end time and extend it if necessary
-    validate_and_extend_game_time(deps.storage, &env)?;
-
-    // Check if the player has already allocated to this pot
-    check_existing_allocation(deps.storage, &info.sender, pot_id)?;
-
     let config = GAME_CONFIG.load(deps.storage)?;
 
+    validate_and_extend_game_time(deps.storage, &env)?;
     let amount = validate_and_sum_funds(&info.funds, &config.game_denom)?;
+    validate_pot_limit_not_exceeded(deps.storage, pot_id, amount)?;
+    check_existing_allocation(deps.storage, &info.sender, pot_id)?;
 
     // Implementing dynamic bid constraints
     let min_bid = calculate_min_bid(deps.storage)?;
@@ -78,18 +75,14 @@ pub fn reallocate_tokens(
     from_pot_id: u8,
     to_pot_id: u8,
 ) -> Result<Response, ContractError> {
-    // Validate the game's end time and extend it if necessary
-    validate_and_extend_game_time(deps.storage, &env)?;
+    let config = GAME_CONFIG.load(deps.storage)?;
 
-    // Ensure pots are different
     if from_pot_id == to_pot_id {
         return Err(ContractError::InvalidPot {});
     }
 
-    // Check if the player has already allocated to the target pot
+    validate_and_extend_game_time(deps.storage, &env)?;
     check_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
-
-    let config = GAME_CONFIG.load(deps.storage)?;
 
     // Load the player's allocations
     let mut player_allocations = PLAYER_ALLOCATIONS.load(deps.storage, info.sender.clone())?;
@@ -105,6 +98,8 @@ pub fn reallocate_tokens(
     if amount.is_zero() {
         return Err(ContractError::InsufficientFunds {});
     }
+
+    validate_pot_limit_not_exceeded(deps.storage, to_pot_id, amount)?;
 
     let fee = amount.multiply_ratio(config.fee_reallocation, 100u128);
     let net_amount = amount.checked_sub(fee).unwrap();
