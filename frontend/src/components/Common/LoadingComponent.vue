@@ -6,6 +6,6 @@
 
 <script>
 export default {
-  name: "LoadingComponent",
+  name: "LoadingComponent"
 }
 </script>

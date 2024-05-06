@@ -1,7 +1,17 @@
 <template>
   <div class="end-component py-3">
-    <h2 class="text-pp-purple-2">Time's up!</h2>
-    <h4 class="text-pp-purple-2">Please trigger the end game process.</h4>
+    <h2>Time's up!</h2>
+    <h4>Please trigger the end game process.</h4>
+
+    <div class="end-inputs mb-3">
+      <!-- Input for denomAmount -->
+      <label for="denomAmount" class="form-label">Enter Denomination Amount:</label>
+      <input id="denomAmount" type="number" class="form-control" v-model="denomAmount">
+
+      <!-- Input for raffleCw721TokenIds as a comma-separated string -->
+      <label for="tokenIds" class="form-label">Enter Token IDs (comma-separated):</label>
+      <input id="tokenIds" class="form-control" v-model="tokenId" placeholder="e.g., 1,2,3">
+    </div>
 
     <ButtonComponent
       :isDisabled="isBusy || !userAddress"
@@ -31,6 +41,8 @@ export default {
   data() {
     return {
       isBusy: false,
+      tokenId: null,
+      denomAmount: 0
     };
   },
 
@@ -40,7 +52,7 @@ export default {
     async onEndGame() {
       this.isBusy = true
       try {
-        const tx = await this.endGame()
+        const tx = await this.endGame(this.tokenId, this.denomAmount)
         this.toast.success(`Tx successful. ${tx.transactionHash}`)
         await this.fetchInterval()
         await this.fetchPlayerData()
@@ -52,7 +64,3 @@ export default {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-
-</style>

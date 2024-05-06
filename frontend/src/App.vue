@@ -1,17 +1,21 @@
 <template>
   <div id="app-body" class="d-flex flex-column">
-    <NavbarComponent/>
-    <div class="main-section flex-grow-1">
-      <LoadingComponent v-if="isBusy"/>
-      <router-view v-else/>
-    </div>
-    <FooterComponent/>
+    <LoadingComponent v-if="isBusy"/>
+    <template v-else>
+      <NavbarComponent/>
+      <div class="main-section flex-grow-1">
+        <router-view/>
+      </div>
+      <SidebarComponent/>
+      <FooterComponent/>
+    </template>
   </div>
 </template>
 
 <script>
 import NavbarComponent from "@/components/Layout/NavbarComponent.vue";
 import LoadingComponent from "@/components/Common/LoadingComponent.vue";
+import SidebarComponent from "@/components/Layout/SidebarComponent.vue";
 import FooterComponent from "@/components/Layout/FooterComponent.vue";
 import mxGame from "@/mixin/game";
 import {mapGetters} from "vuex";
@@ -21,7 +25,7 @@ export default {
 
   mixins: [mxGame],
 
-  components: {FooterComponent, LoadingComponent, NavbarComponent},
+  components: {SidebarComponent, FooterComponent, LoadingComponent, NavbarComponent},
 
   computed: {
     ...mapGetters(['gameConfig'])
@@ -30,6 +34,7 @@ export default {
   data() {
     return {
       isBusy: true,
+      intervalTimeout: Number(process.env.VUE_APP_INTERVAL_TIMEOUT)
     }
   },
 
@@ -43,8 +48,7 @@ export default {
     this.intervalId = setInterval(() => {
       const isGameEnd = this.timeLeftSeconds < Number(this.gameConfig.game_extend)
       this.fetchInterval(isGameEnd);
-      console.log(`Auto-fetch!`)
-    }, 3000);
+    }, this.intervalTimeout);
   },
 
   unmounted() {

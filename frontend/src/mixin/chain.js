@@ -6,7 +6,7 @@ const mxChain = {
   mixins: [mxToast],
 
   computed: {
-    ...mapGetters(['userSigner', 'userAddress', 'gameConfig'])
+    ...mapGetters(['userSigner', 'userAddress', 'gameConfig']),
   },
 
   methods: {
@@ -23,7 +23,7 @@ const mxChain = {
             }
           })),
           funds: [
-            {denom: this.gameConfig.game_denom, amount: amount.toString()}
+            {denom: this.gameConfig.game_denom, amount: Math.ceil(amount).toString()}
           ],
         }
       }
@@ -49,20 +49,75 @@ const mxChain = {
       return this._submitTx(msg)
     },
 
-    async endGame() {
+    async approveCw721(tokenId) {
       /** @type {import("@cosmjs/proto-signing").EncodeObject} */
       const msg = {
         typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
         value: {
           sender: this.userAddress,
-          contract: process.env.VUE_APP_CONTRACT,
+          contract: process.env.VUE_APP_CONTRACT_CW721,
           msg: toUtf8(JSON.stringify({
-            game_end: {}
+            approve_all: {
+              token_id: tokenId.toString(),
+              spender: process.env.VUE_APP_CONTRACT,
+              expires: null,
+            }
           })),
           funds: [],
         }
       }
       return this._submitTx(msg)
+    },
+
+    async approveAllCw721() {
+      /** @type {import("@cosmjs/proto-signing").EncodeObject} */
+      const msg = {
+        typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+        value: {
+          sender: this.userAddress,
+          contract: process.env.VUE_APP_CONTRACT_CW721,
+          msg: toUtf8(JSON.stringify({
+            approve_all: {
+              operator: process.env.VUE_APP_CONTRACT,
+            }
+          })),
+          funds: [],
+        }
+      }
+      return this._submitTx(msg)
+    },
+
+    async endGame(tokenId, denomAmount) {
+      /** @type {import("@cosmjs/proto-signing").EncodeObject} */
+      let msg = {
+        typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+        value: {
+          sender: this.userAddress,
+          contract: process.env.VUE_APP_CONTRACT,
+          msg: toUtf8(JSON.stringify({
+            game_end: {
+              raffle_cw721_token_id: tokenId || null
+            }
+          })),
+          funds: [],
+        }
+      }
+
+      // Only if there is any raffle denom amount.
+      if (denomAmount) {
+        msg.value.funds.push({
+          denom: process.env.VUE_APP_GAME_DENOM,
+          amount: denomAmount.toString()
+        })
+      }
+
+      return this._submitTx(msg)
+    },
+
+    // Utils
+
+    displayAmount(amount, decimals = 6) {
+      return (amount / 1000000).toFixed(decimals);
     },
 
     // PRIVATE
@@ -88,7 +143,7 @@ const mxChain = {
       const baseFee = 0.0025
 
       // baseFee * 3 doesn't seem to be necessary after v23 upgrade, but leaving that here for the moment
-      const amount = Math.ceil(baseFee * 1 * gas).toString();
+      const amount = Math.ceil(baseFee * gas).toString();
       return {
         amount: [{denom: this.gameConfig.game_denom, amount}],
         gas: gas.toString(),
