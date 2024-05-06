@@ -1,4 +1,4 @@
-use cosmwasm_std::{StdError, Uint128};
+use cosmwasm_std::{DivideByZeroError, OverflowError, StdError, Uint128};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -33,8 +33,26 @@ pub enum ContractError {
     #[error("PotLimitReached: A pot cannot contain more tokens than the sum of the others.")]
     PotLimitReached {},
 
+    #[error("PreviousRaffleNftIsUnwon")]
+    PreviousRaffleNftIsUnwon {},
+
+    #[error("Cw721TokenNotReceived")]
+    Cw721TokenNotReceived {},
+
+    #[error("{0}")]
+    OverflowError(#[from] OverflowError),
+
+    #[error("{0}")]
+    DivideByZeroError(#[from] DivideByZeroError),
+
     #[error("BidOutOfRange. Min: {min:?}, Max: {max:?}")]
     BidOutOfRange { min: Uint128, max: Uint128 },
+
+    #[error("NotEnoughFundsForNextRound")]
+    NotEnoughFundsForNextRound {},
+
+    #[error("Unknown Reply ID")]
+    UnknownReply {},
     // #[error("Custom Error val: {val:?}")]
     // CustomError { val: String },
     // Add any other custom errors you like here.

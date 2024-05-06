@@ -3,13 +3,13 @@ pub mod tests {
     use crate::{
         contract::instantiate,
         msg::InstantiateMsg,
-        state::{GameConfig, PlayerAllocations, TokenAllocation, PLAYER_ALLOCATIONS, POT_STATES},
+        state::{GameConfig, TokenAllocation, PLAYER_ALLOCATIONS, POT_STATES},
     };
     use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, StdError, Storage, Uint128};
 
     // Fixture methods
 
-    pub fn setup_game(
+    pub fn setup_game_no_raffle_works(
         mut deps: DepsMut,
         env: &Env,
         info: MessageInfo,
@@ -23,7 +23,9 @@ pub mod tests {
             fee_reallocation: 5,
             fee_address: Addr::unchecked("fee_address"),
             game_denom: "token".to_string(),
-            min_bid: Uint128::new(1000000u128),
+            game_cw721: Addr::unchecked("nft"),
+            min_pot_initial_allocation: Uint128::new(200u128),
+            decay_factor: Uint128::new(95u128),
         };
 
         // Perform instantiation first
@@ -49,18 +51,13 @@ pub mod tests {
     }
 
     fn setup_pot_allocation(storage: &mut dyn Storage, pot_id: u8, player: &Addr, amount: Uint128) {
-        let mut player_allocations =
-            PLAYER_ALLOCATIONS
-                .load(storage, player.clone())
-                .unwrap_or(PlayerAllocations {
-                    allocations: vec![],
-                });
+        let mut player_allocations = PLAYER_ALLOCATIONS
+            .load(storage, player.to_string())
+            .unwrap_or(vec![]);
 
-        player_allocations
-            .allocations
-            .push(TokenAllocation { pot_id, amount });
+        player_allocations.push(TokenAllocation { pot_id, amount });
         PLAYER_ALLOCATIONS
-            .save(storage, player.clone(), &player_allocations)
+            .save(storage, player.to_string(), &player_allocations)
             .unwrap();
 
         // Update the pot state to reflect the new allocation
@@ -76,3 +73,5 @@ pub mod tests {
             .unwrap();
     }
 }
+
+// TODO: setup_game_raffle_works

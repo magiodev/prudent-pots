@@ -6,15 +6,17 @@ mod tests {
         Addr, Uint128,
     };
 
-    use crate::{helpers::is_winning_pot, tests::instantiate::tests::setup_game};
+    use crate::{
+        helpers::pot::is_winning_pot, tests::instantiate::tests::setup_game_no_raffle_works,
+    };
 
     #[test]
     fn is_winning_pot_lowest() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
-        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
-        setup_game(
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
+        setup_game_no_raffle_works(
             deps.as_mut(),
             &env,
             info,
@@ -48,10 +50,10 @@ mod tests {
     #[test]
     fn is_winning_pot_even() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
-        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
-        setup_game(
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
+        setup_game_no_raffle_works(
             deps.as_mut(),
             &env,
             info,
@@ -85,10 +87,10 @@ mod tests {
     #[test]
     fn is_winning_pot_median() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
-        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
-        setup_game(
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
+        setup_game_no_raffle_works(
             deps.as_mut(),
             &env,
             info,
@@ -122,10 +124,10 @@ mod tests {
     #[test]
     fn is_winning_pot_odd() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
-        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
-        setup_game(
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
+        setup_game_no_raffle_works(
             deps.as_mut(),
             &env,
             info,
@@ -159,10 +161,10 @@ mod tests {
     #[test]
     fn identify_all_winning_pots_for_highest() {
         // Setup
-        let mut deps = mock_dependencies_with_balance(&coins(50, "token"));
+        let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
-        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(50, "token"));
-        setup_game(
+        let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
+        setup_game_no_raffle_works(
             deps.as_mut(),
             &env,
             info,

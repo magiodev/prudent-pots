@@ -1,16 +1,22 @@
-use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response, Uint128};
+use cosmwasm_std::{attr, Addr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
+use cw721::TokensResponse;
 
 use crate::{
     helpers::{
-        calculate_max_bid, calculate_min_bid, calculate_total_losing_tokens,
-        check_existing_allocation, get_distribute_bank_msgs, is_contract_admin, is_winning_pot,
-        prepare_next_game, update_player_allocation, update_pot_state,
-        validate_and_extend_game_time, validate_and_sum_funds, validate_pot_limit_not_exceeded,
+        game_end::{
+            calculate_total_losing_tokens, get_distribution_send_msgs, prepare_next_game,
+            process_raffle_winner,
+        },
+        pot::{
+            calculate_max_bid, calculate_min_bid, get_winning_pots, set_first_bidder_if_not_set,
+            update_player_allocation, update_pot_state,
+        },
+        validate::{
+            validate_and_extend_game_time, validate_existing_allocation, validate_funds,
+            validate_game_end_time, validate_is_contract_admin, validate_pot_limit_not_exceeded,
+        },
     },
-    state::{
-        GameConfig, TokenAllocation, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES,
-        REALLOCATION_FEE_POOL,
-    },
+    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, REALLOCATION_FEE_POOL},
     ContractError,
 };
 
@@ -18,16 +24,54 @@ pub fn update_config(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    config: GameConfig,
+    fee: Option<u64>,
+    fee_reallocation: Option<u64>,
+    fee_address: Option<Addr>,
+    game_denom: Option<String>,
+    game_cw721: Option<Addr>, // this is the cw721 collection addy we use as optional raffle prize
+    game_duration: Option<u64>,
+    game_extend: Option<u64>,
+    min_pot_initial_allocation: Option<Uint128>,
+    decay_factor: Option<Uint128>, // i.e. 95 as 95%
 ) -> Result<Response, ContractError> {
-    is_contract_admin(&deps.querier, &env, &info.sender)?;
+    validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
 
-    // Implement update config logic here
+    let mut game_config = GAME_CONFIG.load(deps.storage)?;
+
+    if let Some(fee) = fee {
+        game_config.fee = fee;
+    }
+    if let Some(fee_reallocation) = fee_reallocation {
+        game_config.fee_reallocation = fee_reallocation;
+    }
+    if let Some(fee_address) = fee_address {
+        game_config.fee_address = fee_address;
+    }
+    if let Some(game_denom) = game_denom {
+        game_config.game_denom = game_denom;
+    }
+    if let Some(game_cw721) = game_cw721 {
+        game_config.game_cw721 = game_cw721;
+    }
+    if let Some(game_duration) = game_duration {
+        game_config.game_duration = game_duration;
+    }
+    if let Some(game_extend) = game_extend {
+        game_config.game_extend = game_extend;
+    }
+    if let Some(min_pot_initial_allocation) = min_pot_initial_allocation {
+        game_config.min_pot_initial_allocation = min_pot_initial_allocation;
+    }
+    if let Some(decay_factor) = decay_factor {
+        game_config.decay_factor = decay_factor;
+    }
+    GAME_CONFIG.save(deps.storage, &game_config)?;
+
     Ok(Response::new().add_attributes(vec![
         attr("method", "execute"),
         attr("action", "update_config"),
         attr("admin", info.sender),
-        attr("config", format!("{:?}", config)),
+        attr("config", format!("{:?}", game_config)),
     ]))
 }
 
@@ -37,17 +81,27 @@ pub fn allocate_tokens(
     info: MessageInfo,
     pot_id: u8,
 ) -> Result<Response, ContractError> {
-    let config = GAME_CONFIG.load(deps.storage)?;
+    let game_config = GAME_CONFIG.load(deps.storage)?;
+    let game_state = GAME_STATE.load(deps.storage)?;
 
     validate_and_extend_game_time(deps.storage, &env)?;
-    let amount = validate_and_sum_funds(&info.funds, &config.game_denom)?;
+    let amount = validate_funds(&info.funds, &game_config.game_denom)?;
     validate_pot_limit_not_exceeded(deps.storage, pot_id, amount)?;
-    check_existing_allocation(deps.storage, &info.sender, pot_id)?;
+    validate_existing_allocation(deps.storage, &info.sender, pot_id)?;
 
-    // Implementing dynamic bid constraints
-    let min_bid = calculate_min_bid(deps.storage)?;
+    // Query the cw721 token
+    let cw721_tokens: TokensResponse = deps.querier.query_wasm_smart(
+        game_config.game_cw721,
+        &cw721::Cw721QueryMsg::Tokens {
+            owner: info.sender.to_string(),
+            start_after: None,
+            limit: None,
+        },
+    )?;
+
+    // Dynamic bid constraints
+    let min_bid = calculate_min_bid(deps.storage, cw721_tokens.tokens.len())?;
     let max_bid = calculate_max_bid(deps.storage)?;
-
     if amount < min_bid || amount > max_bid {
         return Err(ContractError::BidOutOfRange {
             min: min_bid,
@@ -56,12 +110,16 @@ pub fn allocate_tokens(
     }
 
     // Update the player's allocation and pot state
-    update_player_allocation(deps.storage, &info.sender, pot_id, amount)?;
-    update_pot_state(deps.storage, pot_id, amount)?;
+    update_player_allocation(deps.storage, &info.sender, pot_id, amount, true)?;
+    update_pot_state(deps.storage, pot_id, amount, true)?;
+
+    // Update the first bidder for the current pot_id
+    set_first_bidder_if_not_set(deps.storage, pot_id, &info.sender, env.block.time.seconds())?;
 
     Ok(Response::new().add_attributes(vec![
         attr("method", "execute"),
         attr("action", "allocate_tokens"),
+        attr("round_count", game_state.round_count.to_string()),
         attr("player", info.sender),
         attr("pot_id", pot_id.to_string()),
         attr("amount", amount.to_string()),
@@ -75,98 +133,48 @@ pub fn reallocate_tokens(
     from_pot_id: u8,
     to_pot_id: u8,
 ) -> Result<Response, ContractError> {
-    let config = GAME_CONFIG.load(deps.storage)?;
+    let game_config = GAME_CONFIG.load(deps.storage)?;
+    let game_state = GAME_STATE.load(deps.storage)?;
 
     if from_pot_id == to_pot_id {
         return Err(ContractError::InvalidPot {});
     }
 
     validate_and_extend_game_time(deps.storage, &env)?;
-    check_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
+    validate_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
 
-    // Load the player's allocations
-    let mut player_allocations = PLAYER_ALLOCATIONS.load(deps.storage, info.sender.clone())?;
-
-    // Find the allocation for the from_pot and determine the amount to reallocate
-    let amount = player_allocations
-        .allocations
-        .iter()
+    // Load and check the player's allocations
+    let amount = PLAYER_ALLOCATIONS
+        .load(deps.storage, info.sender.to_string())?
+        .into_iter()
         .find(|a| a.pot_id == from_pot_id)
         .map_or(Uint128::zero(), |allocation| allocation.amount);
 
-    // Ensure there is an amount to reallocate
     if amount.is_zero() {
         return Err(ContractError::InsufficientFunds {});
     }
 
     validate_pot_limit_not_exceeded(deps.storage, to_pot_id, amount)?;
 
-    let fee = amount.multiply_ratio(config.fee_reallocation, 100u128);
-    let net_amount = amount.checked_sub(fee).unwrap();
+    let fee = amount.multiply_ratio(game_config.fee_reallocation, 100u128);
+    let net_amount = amount.checked_sub(fee)?;
 
-    // Deduct the reallocation fee and update the reallocation fee pool
+    // Deduct the burning fee and update the burning fee pool
     REALLOCATION_FEE_POOL.update(deps.storage, |mut current| -> Result<_, ContractError> {
-        current = current.checked_add(fee).unwrap();
+        current = current.checked_add(fee)?;
         Ok(current)
     })?;
 
-    // Check if the player has enough tokens in the from_pot to reallocate
-    let from_allocation = player_allocations
-        .allocations
-        .iter_mut()
-        .find(|a| a.pot_id == from_pot_id);
-    match from_allocation {
-        Some(allocation) if allocation.amount >= amount => {
-            allocation.amount = Uint128::zero();
-        }
-        _ => return Err(ContractError::InsufficientFunds {}),
-    }
-
-    // Add the amount to the to_pot
-    let to_allocation = player_allocations
-        .allocations
-        .iter_mut()
-        .find(|a| a.pot_id == to_pot_id);
-    match to_allocation {
-        Some(allocation) => {
-            allocation.amount = allocation.amount.checked_add(net_amount).unwrap();
-        }
-        None => {
-            player_allocations.allocations.push(TokenAllocation {
-                pot_id: to_pot_id,
-                amount: net_amount,
-            });
-        }
-    }
-
-    // Save the updated allocations
-    PLAYER_ALLOCATIONS.save(deps.storage, info.sender.clone(), &player_allocations)?;
-
-    // Update the pot's state for the pot from which the tokens are being reallocated
-    POT_STATES.update(
-        deps.storage,
-        from_pot_id,
-        |pot_state| -> Result<_, ContractError> {
-            let mut state = pot_state.unwrap();
-            state.amount = state.amount.checked_sub(amount).unwrap(); // remove it adding the fee to avoid inflating
-            Ok(state)
-        },
-    )?;
-
-    // Update the pot's state for the pot to which the tokens are being reallocated
-    POT_STATES.update(
-        deps.storage,
-        to_pot_id,
-        |pot_state| -> Result<_, ContractError> {
-            let mut state = pot_state.unwrap();
-            state.amount = state.amount.checked_add(net_amount).unwrap();
-            Ok(state)
-        },
-    )?;
+    // Update allocations and pot states using helper functions
+    update_player_allocation(deps.storage, &info.sender, from_pot_id, amount, false)?; // sub
+    update_player_allocation(deps.storage, &info.sender, to_pot_id, net_amount, true)?; // add
+    update_pot_state(deps.storage, from_pot_id, amount, false)?; // sub
+    update_pot_state(deps.storage, to_pot_id, net_amount, true)?; // add
 
     Ok(Response::new().add_attributes(vec![
         attr("method", "execute"),
         attr("action", "reallocate_tokens"),
+        attr("round_count", game_state.round_count.to_string()),
         attr("player", info.sender.to_string()),
         attr("from_pot_id", from_pot_id.to_string()),
         attr("to_pot_id", to_pot_id.to_string()),
@@ -175,35 +183,72 @@ pub fn reallocate_tokens(
     ]))
 }
 
-pub fn game_end(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
-    // Verify if the game's end time has been reached
-    let game_state = GAME_STATE.load(deps.storage)?;
-    if env.block.time.seconds() < game_state.end_time {
-        return Err(ContractError::GameStillActive {});
-    }
+pub fn game_end(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    new_raffle_cw721_id: Option<String>,
+) -> Result<Response, ContractError> {
+    validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
+    validate_game_end_time(deps.storage, &env)?;
 
-    // Determine the winning pot(s) based on the unique rules for each pot
-    let mut winning_pots = Vec::new();
-    for pot_id in 1..=5 {
-        if is_winning_pot(deps.storage, pot_id)? {
-            winning_pots.push(pot_id);
-        }
-    }
-
-    // Calculate the total amount in losing pots to be redistributed
+    // Determine the winning pots and calculate total losing tokens
+    let winning_pots = get_winning_pots(deps.storage)?;
     let total_losing_tokens = calculate_total_losing_tokens(deps.storage, &winning_pots)?;
 
-    // Redistribute the tokens from losing to winning pots, and also winning pots amount with users' allocations based on contributors shares:
-    let bank_msgs = get_distribute_bank_msgs(deps.storage, &winning_pots, total_losing_tokens)?;
+    // Process raffle winner and prepare distribution messages
+    let (mut msgs, raffle_submsgs, new_raffle_denom_amount, updated_new_raffle_cw721_id) =
+        process_raffle_winner(
+            &deps.as_ref(),
+            &env,
+            &info.funds,
+            &winning_pots,
+            new_raffle_cw721_id,
+        )?;
 
-    // Prepare for the next game
-    prepare_next_game(deps, &env, &bank_msgs)?;
+    // Add messages for redistributing tokens from losing to winning pots
+    msgs.extend(get_distribution_send_msgs(
+        &deps.as_ref(),
+        &winning_pots,
+        total_losing_tokens,
+    )?);
 
-    // Construct the response with appropriate attributes
-    Ok(Response::new().add_messages(bank_msgs).add_attributes(vec![
-        attr("method", "execute"),
-        attr("action", "game_end"),
-        attr("winning_pots", format!("{:?}", winning_pots)),
-        attr("total_losing_tokens", total_losing_tokens),
-    ]))
+    // Iterate again the msgs generated to know how much tokens effectively we send,
+    // as total_losing_tokens contains also next game funds we want to preserve.
+    let total_outgoing_tokens = msgs
+        .iter()
+        .filter_map(|msg| {
+            if let CosmosMsg::Bank(BankMsg::Send { amount, .. }) = msg {
+                Some(amount)
+            } else {
+                None
+            }
+        })
+        .flatten()
+        .map(|coin| coin.amount)
+        .sum();
+
+    // Reset and prepare for the next game
+    let (old_round_count, _new_round_count) = prepare_next_game(
+        deps,
+        &env,
+        total_outgoing_tokens,
+        updated_new_raffle_cw721_id,
+        Some(new_raffle_denom_amount),
+    )?;
+
+    Ok(Response::new()
+        .add_messages(msgs)
+        .add_submessages(raffle_submsgs)
+        .add_attributes(vec![
+            attr("method", "execute"),
+            attr("action", "game_end"),
+            attr("round_count", old_round_count.to_string()),
+            attr("winning_pots", format!("{:?}", winning_pots)),
+            //attr("treasury_outgoing_tokens", todo!()),
+            //attr("winner_outgoing_tokens", todo!()),
+            //attr("raffle_outgoing_nft", todo!()),
+            //attr("raffle_outgoing_tokens", todo!()),
+            //attr("next_round_tokens", todo!()),
+        ]))
 }
