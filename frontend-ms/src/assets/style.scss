@@ -1,0 +1,88 @@
+@import "vue-toastification/src/scss/_variables";
+@import "vue-toastification/src/scss/_toastContainer";
+@import "vue-toastification/src/scss/_toast";
+@import "vue-toastification/src/scss/_closeButton";
+@import "vue-toastification/src/scss/_progressBar";
+@import "vue-toastification/src/scss/_icon";
+@import "vue-toastification/src/scss/animations/_bounce";
+
+// Base color definitions
+$pp-color-3: #181a18; // Accent color for highlights and secondary elements
+$pp-color-4: #39f90d; // Base color for buttons
+$pp-color-5: rgb(136, 229, 74);
+$text-color: #d1dfd4;
+
+// Button color variants for different states
+$button-color: $pp-color-4; // Default button color
+$button-text-color: $pp-color-4; // Text color for buttons
+$button-hover-color: lighten($pp-color-4, 10%); // Button color on hover
+$button-active-color: darken($pp-color-4, 10%); // Button color when active/pressed
+$button-disabled-bg: #e0e0e0; // Button background when disabled
+$button-disabled-text: #a0a0a0; // Text color for disabled buttons
+
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Reddit+Mono:wght@200..900&display=swap');
+
+html {
+  overflow-x: hidden;
+
+  body {
+    overflow-x: hidden;
+    background: $pp-color-3 !important;
+    color: $text-color;
+
+    * {
+      font-family: "Reddit Mono", monospace;
+    }
+
+    h1, h2, h3, h4, h5, h6, button {
+      font-family: "Pixelify Sans", sans-serif;
+    }
+
+    a {
+      color: $pp-color-5;
+    }
+  }
+}
+
+p:last-child, ul:last-child {
+  margin-bottom: 0;
+}
+
+.bg-pp-color-3 {
+  background: $pp-color-3;
+}
+
+.bg-pp-color-4 {
+  background: $pp-color-4;
+}
+
+.bg-pp-color-5 {
+  background: $pp-color-5;
+}
+
+.text-pp-color-3 {
+  color: $pp-color-3;
+}
+
+.text-pp-color-4 {
+  color: $pp-color-4;
+}
+
+.text-pp-color-5 {
+  color: $pp-color-5;
+}
+
+.text-pp-winner {
+  color: #22b573;
+}
+
+.text-pp-loser {
+  color: #c1275e;
+}
+
+.pp-card {
+  border: 1px solid $pp-color-4;
+  border-radius: 1em;
+  padding: 2em;
+}
