@@ -50,7 +50,7 @@ pub fn instantiate(
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Initialize game state and pots for the next game
-    prepare_next_game(deps, &env, Uint128::zero(), None, None)?;
+    prepare_next_game(deps, &env, Uint128::zero(), None, None, None)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -71,7 +71,7 @@ pub fn execute(
             fee_reallocation,
             fee_address,
             game_denom,
-            game_cw721,
+            game_cw721_addrs,
             game_duration,
             game_extend,
             min_pot_initial_allocation,
@@ -84,7 +84,7 @@ pub fn execute(
             fee_reallocation,
             fee_address,
             game_denom,
-            game_cw721,
+            game_cw721_addrs,
             game_duration,
             game_extend,
             min_pot_initial_allocation,
@@ -97,7 +97,14 @@ pub fn execute(
         } => reallocate_tokens(deps, env, info, from_pot_id, to_pot_id),
         ExecuteMsg::GameEnd {
             raffle_cw721_token_id,
-        } => game_end(deps, env, info, raffle_cw721_token_id),
+            raffle_cw721_token_addr,
+        } => game_end(
+            deps,
+            env,
+            info,
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+        ),
     }
 }
 
@@ -114,7 +121,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GameConfig {} => to_json_binary(&query_game_config(deps)?),
         QueryMsg::GameState {} => to_json_binary(&query_game_state(deps)?),
-        QueryMsg::BidRange { cw721_count } => to_json_binary(&query_bid_range(deps, cw721_count)?),
+        QueryMsg::BidRange { address } => to_json_binary(&query_bid_range(deps, address)?),
         QueryMsg::PotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
         QueryMsg::PotsState {} => to_json_binary(&query_pots_state(deps)?),
         QueryMsg::WinningPots {} => to_json_binary(&query_winning_pots(deps)?),

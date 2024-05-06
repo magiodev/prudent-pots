@@ -36,6 +36,9 @@ pub enum ContractError {
     #[error("PreviousRaffleNftIsUnwon")]
     PreviousRaffleNftIsUnwon {},
 
+    #[error("InvalidRaffleNft")]
+    InvalidRaffleNft {},
+
     #[error("Cw721TokenNotReceived")]
     Cw721TokenNotReceived {},
 

@@ -85,7 +85,7 @@ fn test_game_end_one_winner_simple_works() {
 
     // Game end and new raffles
     let info = mock_info(ADMIN_ADDRESS, &vec![]);
-    game_end(&mut app, &pp_addr, &info, None).unwrap();
+    game_end(&mut app, &pp_addr, &info, None, None).unwrap();
 
     // Get user balance after game_end
     let user5_balance_after = app.wrap().query_balance("user5", DENOM_GAME).unwrap();
@@ -158,6 +158,7 @@ fn test_game_end_one_winner_raffle_both_works() {
         vec![coin(100_000_000u128, DENOM_GAME.to_string())],
         Some(Raffle {
             cw721_token_id: Some("1".to_string()),
+            cw721_addr: None, // this will be overridden by the fixture after cw721 contract instantiation
             denom_amount: Uint128::new(100_000_000u128),
         }),
     );
@@ -179,6 +180,7 @@ fn test_game_end_one_winner_raffle_both_works() {
         raffle.raffle,
         Raffle {
             cw721_token_id: Some("1".to_string()),
+            cw721_addr: Some(cw721_addr.to_string()),
             denom_amount: Uint128::new(100_000_000u128)
         }
     );
@@ -317,7 +319,14 @@ fn test_game_end_one_winner_raffle_both_works() {
 
     // Game end and new raffles
     let info = mock_info(ADMIN_ADDRESS, &coins(200_000_000u128, DENOM_GAME));
-    let _res = game_end(&mut app, &pp_addr, &info, Some("2".to_string())).unwrap();
+    let _res = game_end(
+        &mut app,
+        &pp_addr,
+        &info,
+        Some("2".to_string()),
+        Some(cw721_addr.to_string()),
+    )
+    .unwrap();
 
     // Game state extend_count after
     let game_state: GameStateResponse = app
@@ -378,6 +387,7 @@ fn test_game_end_one_winner_raffle_both_works() {
         raffle.raffle,
         Raffle {
             cw721_token_id: Some("2".to_string()),
+            cw721_addr: Some(cw721_addr.to_string()),
             denom_amount: Uint128::new(200_000_000u128)
         }
     );

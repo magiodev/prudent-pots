@@ -35,7 +35,7 @@ mod tests {
 
         // Test case
 
-        prepare_next_game(deps.as_mut(), &env, Uint128::zero(), None, None).unwrap();
+        prepare_next_game(deps.as_mut(), &env, Uint128::zero(), None, None, None).unwrap();
 
         // Verify new GAME_STATE after running prepare next game
         let game_state = GAME_STATE.load(deps.as_mut().storage).unwrap();

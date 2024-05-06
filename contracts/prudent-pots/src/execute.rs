@@ -1,5 +1,4 @@
 use cosmwasm_std::{attr, Addr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
-use cw721::TokensResponse;
 
 use crate::{
     helpers::{
@@ -28,7 +27,7 @@ pub fn update_config(
     fee_reallocation: Option<u64>,
     fee_address: Option<Addr>,
     game_denom: Option<String>,
-    game_cw721: Option<Addr>, // this is the cw721 collection addy we use as optional raffle prize
+    game_cw721_addrs: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
     game_duration: Option<u64>,
     game_extend: Option<u64>,
     min_pot_initial_allocation: Option<Uint128>,
@@ -39,9 +38,15 @@ pub fn update_config(
     let mut game_config = GAME_CONFIG.load(deps.storage)?;
 
     if let Some(fee) = fee {
+        if fee > 10 {
+            return Err(ContractError::InvalidInput {});
+        }
         game_config.fee = fee;
     }
     if let Some(fee_reallocation) = fee_reallocation {
+        if fee_reallocation > 50 {
+            return Err(ContractError::InvalidInput {});
+        }
         game_config.fee_reallocation = fee_reallocation;
     }
     if let Some(fee_address) = fee_address {
@@ -50,19 +55,32 @@ pub fn update_config(
     if let Some(game_denom) = game_denom {
         game_config.game_denom = game_denom;
     }
-    if let Some(game_cw721) = game_cw721 {
-        game_config.game_cw721 = deps.api.addr_validate(game_cw721.as_str())?;
+    if !game_config
+        .game_cw721_addrs
+        .iter()
+        .eq(game_cw721_addrs.iter())
+    {
+        for address in &game_cw721_addrs {
+            deps.api.addr_validate(address.as_str())?;
+        }
+        game_config.game_cw721_addrs = game_cw721_addrs;
     }
     if let Some(game_duration) = game_duration {
         game_config.game_duration = game_duration;
     }
     if let Some(game_extend) = game_extend {
+        if game_extend > game_config.game_duration {
+            return Err(ContractError::InvalidInput {});
+        }
         game_config.game_extend = game_extend;
     }
     if let Some(min_pot_initial_allocation) = min_pot_initial_allocation {
         game_config.min_pot_initial_allocation = min_pot_initial_allocation;
     }
     if let Some(decay_factor) = decay_factor {
+        if decay_factor.lt(&Uint128::new(50u128)) || decay_factor.gt(&Uint128::new(99u128)) {
+            return Err(ContractError::InvalidInput {});
+        }
         game_config.decay_factor = decay_factor;
     }
     GAME_CONFIG.save(deps.storage, &game_config)?;
@@ -89,19 +107,9 @@ pub fn allocate_tokens(
     validate_pot_limit_not_exceeded(deps.storage, pot_id, amount)?;
     validate_existing_allocation(deps.storage, &info.sender, pot_id)?;
 
-    // Query the cw721 token
-    let cw721_tokens: TokensResponse = deps.querier.query_wasm_smart(
-        game_config.game_cw721,
-        &cw721::Cw721QueryMsg::Tokens {
-            owner: info.sender.to_string(),
-            start_after: None,
-            limit: None,
-        },
-    )?;
-
     // Dynamic bid constraints
-    let min_bid = calculate_min_bid(deps.storage, cw721_tokens.tokens.len())?;
-    let max_bid = calculate_max_bid(deps.storage)?;
+    let min_bid = calculate_min_bid(&deps.as_ref(), Some(info.sender.to_string()))?;
+    let max_bid = calculate_max_bid(&deps.as_ref())?;
     if amount < min_bid || amount > max_bid {
         return Err(ContractError::BidOutOfRange {
             min: min_bid,
@@ -188,23 +196,35 @@ pub fn game_end(
     env: Env,
     info: MessageInfo,
     new_raffle_cw721_id: Option<String>,
+    new_raffle_cw721_addr: Option<String>,
 ) -> Result<Response, ContractError> {
     validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
     validate_game_end_time(deps.storage, &env)?;
+
+    // Ensure both or neither options are provided
+    if new_raffle_cw721_id.is_some() != new_raffle_cw721_addr.is_some() {
+        return Err(ContractError::InvalidRaffleNft {});
+    }
 
     // Determine the winning pots and calculate total losing tokens
     let winning_pots = get_winning_pots(deps.storage)?;
     let total_losing_tokens = calculate_total_losing_tokens(deps.storage, &winning_pots)?;
 
     // Process raffle winner and prepare distribution messages
-    let (mut msgs, raffle_submsgs, new_raffle_denom_amount, updated_new_raffle_cw721_id) =
-        process_raffle_winner(
-            &deps.as_ref(),
-            &env,
-            &info.funds,
-            &winning_pots,
-            new_raffle_cw721_id,
-        )?;
+    let (
+        mut msgs,
+        raffle_submsgs,
+        new_raffle_denom_amount,
+        updated_new_raffle_cw721_id,
+        updated_new_raffle_cw721_addr,
+    ) = process_raffle_winner(
+        &deps.as_ref(),
+        &env,
+        &info.funds,
+        &winning_pots,
+        new_raffle_cw721_id,
+        new_raffle_cw721_addr,
+    )?;
 
     // Add messages for redistributing tokens from losing to winning pots
     msgs.extend(get_distribution_send_msgs(
@@ -234,6 +254,7 @@ pub fn game_end(
         &env,
         total_outgoing_tokens,
         updated_new_raffle_cw721_id,
+        updated_new_raffle_cw721_addr,
         Some(new_raffle_denom_amount),
     )?;
 

@@ -20,6 +20,7 @@ pub fn prepare_next_game(
     env: &Env,
     total_outgoing_tokens: Uint128,
     raffle_cw721_token_id: Option<String>,
+    raffle_cw721_addr: Option<String>,
     raffle_denom_amount: Option<Uint128>,
 ) -> Result<(u64, u64), ContractError> {
     let config = GAME_CONFIG.load(deps.storage)?;
@@ -84,6 +85,7 @@ pub fn prepare_next_game(
         deps.storage,
         &Raffle {
             cw721_token_id: raffle_cw721_token_id,
+            cw721_addr: raffle_cw721_addr,
             denom_amount: raffle_denom_amount.unwrap_or_default(),
         },
     )?;
@@ -98,6 +100,8 @@ pub fn get_raffle_winner(
 ) -> Result<Option<String>, ContractError> {
     let mut max_total = Uint128::zero();
     let mut winner: Option<String> = None;
+
+    // TODO: Early return if there is not raffle.denom_amount nor raffle.cw721_id
 
     // Traverse all player allocations
     let all_allocations =
@@ -156,7 +160,17 @@ pub fn process_raffle_winner(
     funds: &Vec<Coin>,
     winning_pots: &Vec<u8>,
     mut new_raffle_cw721_id: Option<String>,
-) -> Result<(Vec<CosmosMsg>, Vec<SubMsg>, Uint128, Option<String>), ContractError> {
+    mut new_raffle_cw721_addr: Option<String>,
+) -> Result<
+    (
+        Vec<CosmosMsg>,
+        Vec<SubMsg>,
+        Uint128,
+        Option<String>,
+        Option<String>,
+    ),
+    ContractError,
+> {
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let raffle = RAFFLE.load(deps.storage)?;
 
@@ -174,7 +188,7 @@ pub fn process_raffle_winner(
             if let Some(cw721_id) = &raffle.cw721_token_id {
                 let transfer_nft_msg = SubMsg::reply_always(
                     WasmMsg::Execute {
-                        contract_addr: game_config.game_cw721.to_string(),
+                        contract_addr: raffle.cw721_addr.unwrap(), // TODO: Better handle this unwrap
                         msg: to_json_binary(&cw721::Cw721ExecuteMsg::TransferNft {
                             recipient: recipient.clone(),
                             token_id: cw721_id.clone(),
@@ -218,6 +232,7 @@ pub fn process_raffle_winner(
             // if there is still the previous one
             if raffle.cw721_token_id.is_some() {
                 new_raffle_cw721_id = raffle.cw721_token_id;
+                new_raffle_cw721_addr = raffle.cw721_addr;
             }
             // else we set either the new one already passed from above, or None
 
@@ -227,11 +242,14 @@ pub fn process_raffle_winner(
     }
 
     // Send the new NFTs for the next raffle prize if any to process
-    // TODO: Check that new_raffle_cw721_id at this point is different than raffle.cw721_token_id
-    if let Some(cw721_id) = new_raffle_cw721_id.clone() {
+    // TODO: Check if new_raffle_cw721_id is different from the old one and ensure the address is valid
+    // if new_raffle_cw721_id != raffle.cw721_token_id || new_raffle_cw721_addr != raffle.cw721_addr {}
+    if let (Some(cw721_id), Some(cw721_addr)) =
+        (new_raffle_cw721_id.clone(), new_raffle_cw721_addr.clone())
+    {
         let transfer_nft_msg = SubMsg::reply_always(
             WasmMsg::Execute {
-                contract_addr: game_config.game_cw721.to_string(),
+                contract_addr: cw721_addr,
                 msg: to_json_binary(&cw721::Cw721ExecuteMsg::TransferNft {
                     recipient: env.contract.address.to_string(),
                     token_id: cw721_id,
@@ -247,7 +265,8 @@ pub fn process_raffle_winner(
         msgs,
         submsgs,
         new_raffle_denom_amount,
-        new_raffle_cw721_id.clone(),
+        new_raffle_cw721_id,
+        new_raffle_cw721_addr,
     ))
 }
 

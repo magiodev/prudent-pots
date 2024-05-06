@@ -1,4 +1,5 @@
-use cosmwasm_std::{Addr, Storage, Uint128};
+use cosmwasm_std::{Addr, Deps, Storage, Uint128};
+use cw721::TokensResponse;
 
 use crate::{
     state::{
@@ -81,25 +82,36 @@ pub fn update_pot_state(
 }
 
 // Helper to calculate the minimum bid based on the game's current state
-pub fn calculate_min_bid(
-    storage: &dyn Storage,
-    cw721_count: usize,
-) -> Result<Uint128, ContractError> {
-    let game_config = GAME_CONFIG.load(storage)?;
+pub fn calculate_min_bid(deps: &Deps, address: Option<String>) -> Result<Uint128, ContractError> {
+    let game_config = GAME_CONFIG.load(deps.storage)?;
 
-    let average_tokens = calculate_average_tokens(storage)?;
+    let average_tokens = calculate_average_tokens(deps.storage)?;
 
-    // Calidate average_tokens is not 0. this shouldnt happen but better safe than sorry
+    // Validate average_tokens is not 0. This shouldn't happen but better safe than sorry
     if average_tokens.is_zero() {
         return Err(ContractError::InvalidInput {});
     }
 
+    let mut cw721_count = 0;
+
+    // Only proceed with querying cw721 tokens if a sender is provided
+    if let Some(owner) = address {
+        // Query multiple cw721 addresses and count the total number of tokens
+        for addr in &game_config.game_cw721_addrs {
+            let tokens_resp: TokensResponse = deps.querier.query_wasm_smart(
+                addr,
+                &cw721::Cw721QueryMsg::Tokens {
+                    owner: owner.clone(), // Pass the owner directly since it's now available
+                    start_after: None,
+                    limit: None,
+                },
+            )?;
+            cw721_count += tokens_resp.tokens.len();
+        }
+    }
+
     // Apply discount based on the number of tokens owned
-    let min_bid = calculate_discounted_bid(
-        average_tokens,
-        cw721_count as u128,
-        game_config.decay_factor,
-    );
+    let min_bid = calculate_discounted_bid(average_tokens, cw721_count, game_config.decay_factor);
 
     Ok(min_bid)
 }
@@ -119,7 +131,7 @@ fn calculate_average_tokens(storage: &dyn Storage) -> Result<Uint128, ContractEr
 
 fn calculate_discounted_bid(
     mut min_bid: Uint128,
-    token_amount: u128,
+    token_amount: usize,
     decay_factor: Uint128,
 ) -> Uint128 {
     let discount_percentage = Uint128::from(100u128) - decay_factor;
@@ -135,9 +147,9 @@ fn calculate_discounted_bid(
 }
 
 // Helper to calculate the maximum bid based on the game's current state
-pub fn calculate_max_bid(storage: &dyn Storage) -> Result<Uint128, ContractError> {
+pub fn calculate_max_bid(deps: &Deps) -> Result<Uint128, ContractError> {
     // we hardcode 1 here to avoid creating a maxBid limit. we just want a minBid discount
-    let original_min_bid = calculate_min_bid(storage, 0)?;
+    let original_min_bid = calculate_min_bid(deps, None)?;
 
     // Set the maximum bid as double the minimum bid or average, whichever is higher
     let max_bid = original_min_bid.checked_mul(Uint128::from(2u128))?;

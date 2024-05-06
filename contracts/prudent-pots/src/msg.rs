@@ -18,7 +18,7 @@ pub enum ExecuteMsg {
         fee_reallocation: Option<u64>,
         fee_address: Option<Addr>,
         game_denom: Option<String>,
-        game_cw721: Option<Addr>, // this is the cw721 collection addy we use as optional raffle prize
+        game_cw721_addrs: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
         game_duration: Option<u64>,
         game_extend: Option<u64>,
         min_pot_initial_allocation: Option<Uint128>,
@@ -33,6 +33,7 @@ pub enum ExecuteMsg {
     },
     GameEnd {
         raffle_cw721_token_id: Option<String>,
+        raffle_cw721_token_addr: Option<String>,
     },
 }
 
@@ -54,7 +55,7 @@ pub enum QueryMsg {
     #[returns(GameStateResponse)]
     GameState {},
     #[returns(BidRangeResponse)]
-    BidRange { cw721_count: usize },
+    BidRange { address: Option<String> },
     #[returns(PotStateResponse)]
     PotState { pot_id: u8 },
     #[returns(PotsStateResponse)]

@@ -23,7 +23,7 @@ pub mod tests {
             fee_reallocation: 5,
             fee_address: Addr::unchecked("fee_address"),
             game_denom: "token".to_string(),
-            game_cw721: Addr::unchecked("nft"),
+            game_cw721_addrs: vec![Addr::unchecked("nft")],
             min_pot_initial_allocation: Uint128::new(200u128),
             decay_factor: Uint128::new(95u128),
         };
