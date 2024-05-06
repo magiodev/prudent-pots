@@ -8,7 +8,7 @@ pub struct GameConfig {
     pub fee_reallocation: u64,
     pub fee_address: Addr,
     pub game_denom: String,
-    pub game_cw721: Addr, // this is the cw721 collection addy we use as optional raffle prize
+    pub game_cw721: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
     pub game_duration: u64,
     pub game_extend: u64,
     pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO
@@ -17,7 +17,8 @@ pub struct GameConfig {
 
 #[cw_serde]
 pub struct Raffle {
-    pub cw721_token_id: Option<String>,
+    pub cw721_token_id: Option<String>, // the tokenId of the raffle nft to be won
+    pub cw721_addr: Option<Addr>, // one of the whitelisted addys
     pub denom_amount: Uint128, // this is limited to the same game_config.game_denom for now
 }
 
