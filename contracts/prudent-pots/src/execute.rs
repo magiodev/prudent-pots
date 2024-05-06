@@ -45,13 +45,13 @@ pub fn update_config(
         game_config.fee_reallocation = fee_reallocation;
     }
     if let Some(fee_address) = fee_address {
-        game_config.fee_address = fee_address;
+        game_config.fee_address = deps.api.addr_validate(fee_address.as_str())?;
     }
     if let Some(game_denom) = game_denom {
         game_config.game_denom = game_denom;
     }
     if let Some(game_cw721) = game_cw721 {
-        game_config.game_cw721 = game_cw721;
+        game_config.game_cw721 = deps.api.addr_validate(game_cw721.as_str())?;
     }
     if let Some(game_duration) = game_duration {
         game_config.game_duration = game_duration;

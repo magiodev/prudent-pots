@@ -11,7 +11,7 @@ pub struct GameConfig {
     pub game_cw721: Addr, // this is the cw721 collection addy we use as optional raffle prize
     pub game_duration: u64,
     pub game_extend: u64,
-    pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $DENOM
+    pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO
     pub decay_factor: Uint128,               // i.e. 95 as 95%
 }
 
