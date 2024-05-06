@@ -1,18 +1,21 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+    to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
-use crate::helpers::{prepare_next_game, validate_and_sum_funds};
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::helpers::game_end::prepare_next_game;
+use crate::helpers::validate::{validate_funds, validate_pot_initial_amount};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, ReplyMsg};
 use crate::query::{
-    query_bid_range, query_game_config, query_game_state, query_player_allocations,
-    query_pot_state, query_pots_state, query_reallocation_fee_pool, query_winning_pots,
+    query_all_players_allocations, query_bid_range, query_game_config, query_game_state,
+    query_player_allocations, query_pot_state, query_pots_state, query_raffle,
+    query_raffle_denom_split, query_raffle_winner, query_reallocation_fee_pool, query_winning_pots,
 };
+use crate::reply::game_end_reply;
 use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
@@ -35,18 +38,19 @@ pub fn instantiate(
     if msg.config.game_duration == 0 {
         return Err(ContractError::InvalidInput {});
     }
-    if msg.config.min_bid.is_zero() {
+    if msg.config.min_pot_initial_allocation.is_zero() {
         return Err(ContractError::InvalidInput {});
     }
 
-    // Validate and sum initial funds
-    validate_and_sum_funds(&info.funds, &msg.config.game_denom)?;
+    // On instantiation there is no raffle. All funds are always for the first no raffled round.
+    let total_amount = validate_funds(&info.funds, &msg.config.game_denom)?;
+    validate_pot_initial_amount(&msg.config.min_pot_initial_allocation, &total_amount)?;
 
     GAME_CONFIG.save(deps.storage, &msg.config)?;
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Initialize game state and pots for the next game
-    prepare_next_game(deps, &env, &vec![])?;
+    prepare_next_game(deps, &env, Uint128::zero(), None, None, None)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -62,31 +66,73 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, config),
+        ExecuteMsg::UpdateConfig {
+            fee,
+            fee_reallocation,
+            fee_address,
+            game_denom,
+            game_cw721_addrs,
+            game_duration,
+            game_extend,
+            min_pot_initial_allocation,
+            decay_factor,
+        } => update_config(
+            deps,
+            env,
+            info,
+            fee,
+            fee_reallocation,
+            fee_address,
+            game_denom,
+            game_cw721_addrs,
+            game_duration,
+            game_extend,
+            min_pot_initial_allocation,
+            decay_factor,
+        ),
         ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, env, info, pot_id),
         ExecuteMsg::ReallocateTokens {
             from_pot_id,
             to_pot_id,
         } => reallocate_tokens(deps, env, info, from_pot_id, to_pot_id),
-        ExecuteMsg::GameEnd {} => game_end(deps, env),
+        ExecuteMsg::GameEnd {
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+        } => game_end(
+            deps,
+            env,
+            info,
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+        ),
+    }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    match msg.id.into() {
+        ReplyMsg::GameEnd {} => game_end_reply(msg.result),
+        _ => Err(ContractError::UnknownReply {}),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::QueryGameConfig {} => to_json_binary(&query_game_config(deps)?),
-        QueryMsg::QueryGameState {} => to_json_binary(&query_game_state(deps)?),
-        QueryMsg::QueryBidRange {} => to_json_binary(&query_bid_range(deps)?),
-        QueryMsg::QueryPotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
-        QueryMsg::QueryPotsState {} => to_json_binary(&query_pots_state(deps)?),
-        QueryMsg::QueryWinningPots {} => to_json_binary(&query_winning_pots(deps)?),
-        QueryMsg::QueryPlayerAllocations { address } => {
+        QueryMsg::GameConfig {} => to_json_binary(&query_game_config(deps)?),
+        QueryMsg::GameState {} => to_json_binary(&query_game_state(deps)?),
+        QueryMsg::BidRange { address } => to_json_binary(&query_bid_range(deps, address)?),
+        QueryMsg::PotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
+        QueryMsg::PotsState {} => to_json_binary(&query_pots_state(deps)?),
+        QueryMsg::WinningPots {} => to_json_binary(&query_winning_pots(deps)?),
+        QueryMsg::PlayerAllocations { address } => {
             to_json_binary(&query_player_allocations(deps, address)?)
         }
-        QueryMsg::QueryReallocationFeePool {} => {
-            to_json_binary(&query_reallocation_fee_pool(deps)?)
-        }
+        QueryMsg::AllPlayersAllocations {} => to_json_binary(&query_all_players_allocations(deps)?),
+        QueryMsg::ReallocationFeePool {} => to_json_binary(&query_reallocation_fee_pool(deps)?),
+        QueryMsg::Raffle {} => to_json_binary(&query_raffle(deps)?),
+        QueryMsg::RaffleWinner {} => to_json_binary(&query_raffle_winner(deps)?),
+        QueryMsg::RaffleDenomSplit {} => to_json_binary(&query_raffle_denom_split(deps)?),
     }
 }
 

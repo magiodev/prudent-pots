@@ -7,11 +7,11 @@ mod tests {
     };
 
     use crate::{
-        helpers::get_distribute_bank_msgs, state::GAME_CONFIG,
-        tests::instantiate::tests::setup_game,
+        helpers::game_end::get_distribution_send_msgs, state::GAME_CONFIG,
+        tests::instantiate::tests::setup_game_no_raffle_works,
     };
 
-    /// Test `get_distribute_bank_msgs_single_winner` to ensure proper distribution of tokens
+    /// Test `get_distribution_send_msgs_single_winner` to ensure proper distribution of tokens
     /// in a scenario where there's a single winner with player allocations.
     ///
     /// Initial Setup:
@@ -35,17 +35,17 @@ mod tests {
     ///
     /// - Remaining tokens for the next game should be the other half of the losing tokens: 890.5 tokens.
     ///
-    /// This test invokes `get_distribute_bank_msgs` with Pot 2 as the winner and asserts:
+    /// This test invokes `get_distribution_send_msgs` with Pot 2 as the winner and asserts:
     ///   - That the BankMsg::Send message is generated correctly for Player1.
     ///   - That Player1 receives the correct amount of tokens.
     ///   - That the remaining tokens for the next game are correctly calculated and stored.
     #[test]
-    fn get_distribute_bank_msgs_single_winner() {
+    fn get_distribution_send_msgs_single_winner() {
         // Setup
         let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game(
+        setup_game_no_raffle_works(
             deps.as_mut(),
             &env,
             info,
@@ -61,12 +61,11 @@ mod tests {
         // Pot 4 - 200 tokens (looser, no alloc)
         // Pot 5 - 200 tokens (looser, no alloc)
 
-        // Invoke get_distribute_bank_msgs assuming pot 2 is the winner
+        // Invoke get_distribution_send_msgs assuming pot 2 is the winner
         let winning_pots = vec![2];
         let total_losing_tokens = Uint128::new(200 + 1181 + 200 + 200); // Total losing tokens excluding the winning pot
         let messages =
-            get_distribute_bank_msgs(deps.as_mut().storage, &winning_pots, total_losing_tokens)
-                .unwrap();
+            get_distribution_send_msgs(&deps.as_ref(), &winning_pots, total_losing_tokens).unwrap();
 
         // Assertions
         let config = GAME_CONFIG.load(deps.as_ref().storage).unwrap();
