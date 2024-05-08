@@ -32,7 +32,7 @@ export default {
 @import "@/assets/style.scss";
 
 .btn, .btn:hover, .btn:focus {
-  color: $pp-color-5;
+  color: $pp-color-4;
   text-transform: uppercase;
 }
 </style>

@@ -3,9 +3,9 @@ import {createRouter, createWebHistory} from "vue-router";
 const routes = [
   {
     path: "/",
-    name: process.env.VUE_APP_TITLE,
+    name: "Prudent Pots",
     meta: {
-      title: process.env.VUE_APP_TITLE
+      title: "Prudent Pots"
     },
     component: () => import("@/views/Home"),
   },

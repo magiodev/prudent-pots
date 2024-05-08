@@ -25,9 +25,9 @@
               />
             </div>
             <div class="d-flex justify-content-center gap-3 mb-3">
-              <ButtonComponent text="Min" @click.prevent="setMinBid" :isSmall="true"/>
-              <ButtonComponent text="Avg" @click.prevent="setAverageBid" :isSmall="true"/>
-              <ButtonComponent text="Max" @click.prevent="setMaxBid" :isSmall="true"/>
+              <ButtonComponent text="Min" @click.prevent="setMinBid" :isSmall="true" :isDisabled="!userAddress"/>
+              <ButtonComponent text="Avg" @click.prevent="setAverageBid" :isSmall="true" :isDisabled="!userAddress"/>
+              <ButtonComponent text="Max" @click.prevent="setMaxBid" :isSmall="true" :isDisabled="!userAddress"/>
             </div>
             <ButtonComponent v-if="userAddress" :isDisabled="!utils.selectedPot || isBusy" :isBusy="isBusy"
                              text="Place Bid"

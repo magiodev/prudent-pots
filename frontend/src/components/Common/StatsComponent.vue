@@ -71,8 +71,8 @@ export default {
 
 .stats-component {
   .stats-item {
-    border-bottom: 1px solid $pp-color-3;
-    border-right: 1px solid $pp-color-3;
+    border-bottom: 1px solid $pp-color-4;
+    border-right: 1px solid $pp-color-4;
 
     &:last-child {
       border-right: none;

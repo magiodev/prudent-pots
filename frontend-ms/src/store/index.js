@@ -271,6 +271,7 @@ export default createStore({
       // Filter out allocations where the amount is "0"
       const filteredAllocations = queryResponse.allocations.allocations.filter(allocation => allocation.amount !== "0");
       commit("setPlayerAllocations", filteredAllocations);
+      console.log("fetchPlayerAllocations done.")
     },
 
     async fetchGameConfig({state, commit}) {
@@ -284,6 +285,7 @@ export default createStore({
         process.env.VUE_APP_CONTRACT,
         {game_config: {}}
       );
+      console.log("fetchGameConfig done.")
       commit("setGameConfig", data.config);
     },
 
@@ -301,7 +303,7 @@ export default createStore({
     },
 
     async fetchGameActivity({state, commit}) {
-      if (!state.user.querier) {
+      if (!state.user.querier || !state.gameState) {
         console.error("Querier is not initialized");
         return;
       }
@@ -309,7 +311,8 @@ export default createStore({
       let groupedByRoundCount = {};
 
       const data = await state.user.querier.searchTx([
-        {key: "wasm._contract_address", value: process.env.VUE_APP_CONTRACT}
+        {key: "wasm._contract_address", value: process.env.VUE_APP_CONTRACT},
+        {key: "wasm.round_count", value: state.gameState.round_count} // TODO: enhance
       ]);
 
       data.forEach(item => {
@@ -480,6 +483,8 @@ export default createStore({
         }
       );
       commit("setUserCw721Balance", data.tokens);
+      console.log("fetchCw721Tokens done.")
+
     },
   },
 

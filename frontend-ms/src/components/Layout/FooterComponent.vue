@@ -12,7 +12,7 @@
       <div class="col-md-4">
         <ul class="nav list-unstyled d-flex justify-content-center justify-content-md-end">
           <li class="ms-3">
-            <a href="https://github.com/magiodev/prudent-pots-ms" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/magiodev/prudent-pots" target="_blank" rel="noopener noreferrer">
               <b-icon-github class="text-white"></b-icon-github>
             </a>
           </li>

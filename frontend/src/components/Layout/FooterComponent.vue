@@ -6,7 +6,7 @@
       </div>
 
       <div class="col-md-4 text-center d-none d-md-block">
-        <img class="logo" :src="`${skin}/favicon.ico`" :alt="title">
+        <img class="logo" src="/favicon.ico" :alt="title">
       </div>
 
       <div class="col-md-4">
@@ -33,8 +33,7 @@ export default {
 
   data() {
     return {
-      skin: process.env.VUE_APP_SKIN,
-      title: process.env.VUE_APP_TITLE
+      title: "Prudent Pots"
     }
   }
 }
@@ -44,7 +43,7 @@ export default {
 @import "@/assets/style.scss";
 
 .footer {
-  border-top: 1px solid $pp-color-3;
+  border-top: 1px solid $pp-color-4;
 
   .logo {
     height: 32px;

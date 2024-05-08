@@ -6,10 +6,13 @@
         <div>
           <img class="skull me-2 d-inline" :src="imageSkull" alt="Skull"/>
           <h2 class="text-pp-purple-2 d-inline">{{ timeLeftHuman }}</h2>
+          <h4>Extend count: {{gameState.extend_count}}</h4>
         </div>
       </template>
-      <h2 class="text-pp-color-4">Time's up!</h2>
-      <p class="text-pp-color-4">Check the results in the section below.</p>
+      <div v-else>
+        <h2 class="text-pp-color-4">Time's up!</h2>
+        <p class="text-pp-color-4">Check the results in the section below.</p>
+      </div>
     </div>
   </div>
 </template>

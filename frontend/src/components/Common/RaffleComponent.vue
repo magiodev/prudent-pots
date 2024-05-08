@@ -43,7 +43,7 @@ export default {
   .raffle-item {
     .nft-image {
       border-radius: 1em;
-      border: 1px solid $pp-color-3;
+      border: 1px solid $pp-color-4;
       width: 25%;
       min-width: 72px;
     }

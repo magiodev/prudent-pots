@@ -34,7 +34,7 @@ export default {
   data() {
     return {
       imageLogo,
-      title: process.env.VUE_APP_TITLE
+      title: "Prudent Pots"
     }
   }
 }
@@ -53,10 +53,7 @@ export default {
       text-transform: uppercase;
 
       .nav-link, .navbar-toggler-icon {
-        color: $pp-color-5;
-        @media(min-width: 992px) {
-          border-left: 1px solid $pp-color-5;
-        }
+        color: $pp-color-4;
       }
     }
   }

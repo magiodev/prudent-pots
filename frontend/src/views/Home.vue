@@ -69,6 +69,6 @@ export default {
 }
 
 .raffle, .game {
-  border-bottom: 1px solid $pp-color-3;
+  border-bottom: 1px solid $pp-color-4;
 }
 </style>

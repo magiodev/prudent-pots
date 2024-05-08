@@ -57,7 +57,7 @@ export default {
   }
   height: 100%;
   background-color: $pp-color-5;
-  border-left: 1px solid $pp-color-3;
+  border-left: 1px solid $pp-color-4;
   transition: transform 0.3s ease;
   transform: translateX(100%);
 }
@@ -74,7 +74,7 @@ export default {
   height: 0;
   border-style: solid;
   border-width: 25px 25px 25px 0;
-  border-color: transparent $pp-color-3 transparent transparent;
+  border-color: transparent $pp-color-4 transparent transparent;
   background-color: transparent;
   cursor: pointer;
   transform: translateY(-50%);
