@@ -6,7 +6,7 @@
       </div>
 
       <div class="col-md-4 text-center d-none d-md-block">
-        <img class="logo" :src="`${skin}/favicon.png`" :alt="title">
+        <img class="logo" :src="`${skin}/favicon.ico`" :alt="title">
       </div>
 
       <div class="col-md-4">

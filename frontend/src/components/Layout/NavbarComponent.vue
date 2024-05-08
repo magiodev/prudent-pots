@@ -45,10 +45,8 @@ export default {
 
 .navbar {
   .container-fluid {
-    border-bottom: 1px solid $pp-color-3;
-
     .logo {
-      height: 60px;
+      height: 80px;
     }
 
     .navbar-nav {

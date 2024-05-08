@@ -18,6 +18,7 @@ export default {
 
 <style scoped lang="scss">
 .coin-component {
+  border-radius: 50%;
   width: 1.25em;
   height: auto;
   vertical-align: sub;

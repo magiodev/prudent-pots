@@ -9,6 +9,7 @@
         </div>
       </template>
       <h2 class="text-pp-color-4">Time's up!</h2>
+      <p class="text-pp-color-4">Check the results in the section below.</p>
     </div>
   </div>
 </template>

@@ -23,7 +23,7 @@
           <td>{{ displayAmount(stats.totalBet, 2) }} <CoinComponent/></td>
           <td>{{ displayAmount(stats.winningPots, 2) }} <CoinComponent/></td>
           <td>{{ displayAmount(stats.losingPots, 2) }} <CoinComponent/></td>
-          <td>{{ displayAmount(stats.redistributionShare, 2) }}<CoinComponent/> ({{ stats.sharesInPercentage }}%)
+          <td>{{ displayAmount(stats.redistributionShare, 2) }} <CoinComponent/> ({{ stats.sharesInPercentage }}%)
             <!--{{ displayAmount(stats.winningFee) }} fee. <CoinComponent/> -->
           </td>
           <td>{{ displayAmount(stats.winningPots + stats.redistributionShare, 2) }} <CoinComponent/></td>
