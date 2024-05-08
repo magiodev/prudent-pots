@@ -1,5 +1,5 @@
 <template>
-  <div class="footer container bg-pp-color-5">
+  <div class="footer container-fluid bg-pp-color-5">
     <footer class="row align-items-center py-3 text-white">
       <div class="col-md-4 text-md-start text-center mb-2 mb-md-0">
         © {{ new Date().getFullYear() }} {{title}}
@@ -44,7 +44,7 @@ export default {
 @import "@/assets/style.scss";
 
 .footer {
-  border: 1px solid $pp-color-5;
+  border-top: 1px solid $pp-color-3;
 
   .logo {
     height: 32px;

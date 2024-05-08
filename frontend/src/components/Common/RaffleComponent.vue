@@ -7,7 +7,7 @@
     <div class="col-4 offset-2 col-md-3 offset-md-3 raffle-item py-2">
       <div class="pp-card p-2">
         <h5 v-if="raffle?.nft?.id" class="text-pp-color-4">#{{ raffle.nft.id }}</h5>
-        <img v-if="raffle?.nft?.imageUrl" class="nft-image mb-0" :src="raffle.nft.imageUrl" alt="MS"/>
+        <img v-if="raffle?.nft?.imageUrl" class="nft-image mb-0" :src="raffle.nft.imageUrl" alt="{NFT_NAME}"/>
       </div>
     </div>
 
@@ -41,12 +41,12 @@ export default {
 @import "@/assets/style";
 .raffle-component {
   .title {
-    border-bottom: 1px solid $pp-color-4;
+    border-bottom: 1px solid $pp-color-3;
   }
   .raffle-item {
     .nft-image {
       border-radius: 1em;
-      border: 1px solid $pp-color-4;
+      border: 1px solid $pp-color-3;
       width: 25%;
       min-width: 72px;
     }

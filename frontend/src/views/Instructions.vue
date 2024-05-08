@@ -82,7 +82,7 @@ export default {
 @import "@/assets/style.scss";
 
 .instructions {
-  border-left: 1px solid $pp-color-5;
-  border-right: 1px solid $pp-color-5;
+  border-left: 1px solid $pp-color-3;
+  border-right: 1px solid $pp-color-3;
 }
 </style>

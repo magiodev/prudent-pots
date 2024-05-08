@@ -8,7 +8,7 @@
           <h2 class="text-pp-purple-2 d-inline">{{ timeLeftHuman }}</h2>
         </div>
       </template>
-      <EndComponent v-else />
+      <h2 class="text-pp-color-4">Time's up!</h2>
     </div>
   </div>
 </template>

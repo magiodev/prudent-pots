@@ -1,6 +1,6 @@
 <template>
   <nav class="navbar navbar-expand-lg p-0">
-    <div class="container">
+    <div class="container-fluid">
       <router-link class="navbar-brand" to="/">
         <img class="logo" :src="imageLogo" :alt="title"/>
       </router-link>
@@ -44,8 +44,8 @@ export default {
 @import "@/assets/style.scss";
 
 .navbar {
-  .container {
-    border: 1px solid $pp-color-5;
+  .container-fluid {
+    border-bottom: 1px solid $pp-color-3;
 
     .logo {
       height: 60px;

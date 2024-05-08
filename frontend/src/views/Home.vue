@@ -1,6 +1,6 @@
 <template>
 
-  <div class="container">
+  <div class="container-fluid">
     <div class="row banner">
       <TimerComponent/>
     </div>
@@ -69,11 +69,11 @@ export default {
 }
 
 .banner, .raffle, .game, .bet {
-  border-left: 1px solid $pp-color-5;
-  border-right: 1px solid $pp-color-5;
+  //border-left: 1px solid $pp-color-3;
+  //border-right: 1px solid $pp-color-3;
 }
 
 .banner, .raffle, .game {
-  border-bottom: 1px solid $pp-color-5;
+  border-bottom: 1px solid $pp-color-3;
 }
 </style>

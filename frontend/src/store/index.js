@@ -309,7 +309,8 @@ export default createStore({
       let groupedByRoundCount = {};
 
       const data = await state.user.querier.searchTx([
-        {key: "wasm._contract_address", value: process.env.VUE_APP_CONTRACT}
+        {key: "wasm._contract_address", value: process.env.VUE_APP_CONTRACT},
+        {key: "wasm.round_count", value: state.gameState.round_count} // TODO: enhance
       ]);
 
       data.forEach(item => {
@@ -422,7 +423,7 @@ export default createStore({
       if (data.raffle.cw721_token_id) {
         const metadata = (await axios.get(`${process.env.VUE_APP_NFT_BASE_URL}/${data.raffle.cw721_token_id}.json`)).data
 
-        // MS id fix: Extract the real token id from .name
+        // {NFT_NAME} id fix: Extract the real token id from .name
         const parts = metadata.name.split('#');
         const id = parts.length > 1 ? parts[1] : null;
 

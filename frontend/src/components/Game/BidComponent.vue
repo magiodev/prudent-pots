@@ -5,11 +5,6 @@
       <div class="col-lg-5 text-center text-white mb-5" v-if="timeLeftSeconds">
         <h2 class="mb-3">Place Your Bet</h2>
         <div class="pp-card position-relative">
-          <!-- Hover animation -->
-          <div class="mascotte position-absolute d-none d-lg-block pp-card bg-pp-color-5 p-0">
-            <img class="img-fluid" alt="Sticker" :src="currentImage"/>
-          </div>
-
           <div class="selected-pot mb-3">
             <p v-if="utils.selectedPot">
               Selected pot: {{ getPotName(utils.selectedPot) }}
@@ -47,9 +42,9 @@
               <CoinComponent/>
             </div>
             <div v-if="userAddress" class="small">
-              <span v-if="userCw721Balance.length">You hodl {{ userCw721Balance.length }} MS so you're eligible for a discount of {{ displayAmount(maxBid / 2 - minBid)
+              <span v-if="userCw721Balance.length">You hodl {{ userCw721Balance.length }} {NFT_NAME} so you're eligible for a discount of {{ displayAmount(maxBid / 2 - minBid)
                 }} <CoinComponent/> on the min bet amount.</span>
-              <span v-else>You own {{ userCw721Balance.length }} MS so you're not eligible for a discount on the min. bet amount.</span>
+              <span v-else>You own {{ userCw721Balance.length }} {NFT_NAME} so you're not eligible for a discount on the min. bet amount.</span>
             </div>
           </form>
         </div>

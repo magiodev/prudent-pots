@@ -34,55 +34,8 @@
     <p v-else class="text-center text-pp-color-4 small">There are no bets in this round yet.</p>
   </div>
 
-  <div class="col raffle text-white mb-3">
-    <h3 class="text-center">Raffle</h3>
 
-    <template v-if="raffle.cw721_token_id || Number(raffle.denom_amount)">
-      <table class="table m-0 bg-transparent text-pp-color-5 small">
-        <tbody>
-        <tr>
-          <td>NFT Prize</td>
-          <td>
-            {{ raffle?.nft?.id ? `MS #${raffle.nft.id}` : 'There is raffle NFT for this round.' }}
-          </td>
-        </tr>
-        <tr>
-          <td>Denom Prize</td>
-          <td>
-            {{ displayAmount(raffle.denom_amount, 2) }}
-            <CoinComponent/>
-          </td>
-        </tr>
-        <tr>
-          <td>{{ timeLeftSeconds ? 'Current ' : '' }}Winner</td>
-          <td>
-            {{ raffleWinner ? `${raffleWinner.substring(0, 15)}...` : 'No raffle winner in this round. Balances will be kept by the contract for the next round.'
-            }}{{ raffleWinner && timeLeftSeconds ? ', but the round is still ongoing and it could change.' : '' }}
-          </td>
-        </tr>
-        <tr v-if="Number(raffle.denom_amount)">
-          <td>Treasury Split</td>
-          <td>Raffle $ prize will be split, as {{ gameState.extend_count }} time extends:
-            <ul class="list-unstyled">
-              <li v-if="raffleWinner">Winner: {{ displayAmount(raffleDenomSplit.distributedPrize, 2) }}
-                <CoinComponent/>
-              </li>
-              <li v-else>Contract: {{ displayAmount(raffleDenomSplit.distributedPrize, 2) }}
-                <CoinComponent/>
-              </li>
-              <li>Treasury: {{ displayAmount(raffleDenomSplit.remainingPrize, 2) }}
-                <CoinComponent/>
-              </li>
-            </ul>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </template>
-    <p v-else class="text-center text-pp-color-4 small">There are no raffle prizes assigned to this round.</p>
-  </div>
-
-  <div class="col general-stats text-center text-white" v-if="!timeLeftSeconds">
+  <div class="col general-stats text-center text-white mb-3" v-if="!timeLeftSeconds">
     <h3 class="text-center">General Winning Stats</h3>
 
     <table class="table m-0 small">
@@ -144,6 +97,55 @@
       </tbody>
     </table>
   </div>
+
+  <div class="col raffle text-white">
+    <h3 class="text-center">Raffle</h3>
+
+    <template v-if="raffle.cw721_token_id || Number(raffle.denom_amount)">
+      <table class="table m-0 bg-transparent text-pp-color-4 small">
+        <tbody>
+        <tr>
+          <td>NFT Prize</td>
+          <td>
+            {{ raffle?.nft?.id ? `{NFT_NAME} #${raffle.nft.id}` : 'There is raffle NFT for this round.' }}
+          </td>
+        </tr>
+        <tr>
+          <td>Denom Prize</td>
+          <td>
+            {{ displayAmount(raffle.denom_amount, 2) }}
+            <CoinComponent/>
+          </td>
+        </tr>
+        <tr>
+          <td>{{ timeLeftSeconds ? 'Current ' : '' }}Winner</td>
+          <td>
+            {{ raffleWinner ? `${raffleWinner.substring(0, 15)}...` : 'No raffle winner in this round. Balances will be kept by the contract for the next round.'
+            }}{{ raffleWinner && timeLeftSeconds ? ', but the round is still ongoing and it could change.' : '' }}
+          </td>
+        </tr>
+        <tr v-if="Number(raffle.denom_amount)">
+          <td>Treasury Split</td>
+          <td>Raffle $ prize will be split, as {{ gameState.extend_count }} time extends:
+            <ul class="list-unstyled">
+              <li v-if="raffleWinner">Winner: {{ displayAmount(raffleDenomSplit.distributedPrize, 2) }}
+                <CoinComponent/>
+              </li>
+              <li v-else>Contract: {{ displayAmount(raffleDenomSplit.distributedPrize, 2) }}
+                <CoinComponent/>
+              </li>
+              <li>Treasury: {{ displayAmount(raffleDenomSplit.remainingPrize, 2) }}
+                <CoinComponent/>
+              </li>
+            </ul>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </template>
+    <p v-else class="text-center text-pp-color-4 small">There are no raffle prizes assigned to this round.</p>
+  </div>
+
 </template>
 
 <script>
