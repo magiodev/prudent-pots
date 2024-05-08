@@ -1,0 +1,909 @@
+{
+  "contract_name": "prudent-pots",
+  "contract_version": "0.1.0",
+  "idl_version": "1.0.0",
+  "instantiate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InstantiateMsg",
+    "type": "object",
+    "required": [
+      "config"
+    ],
+    "properties": {
+      "config": {
+        "$ref": "#/definitions/GameConfig"
+      }
+    },
+    "additionalProperties": false,
+    "definitions": {
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
+      },
+      "GameConfig": {
+        "type": "object",
+        "required": [
+          "decay_factor",
+          "fee",
+          "fee_address",
+          "fee_reallocation",
+          "game_cw721_addrs",
+          "game_denom",
+          "game_duration",
+          "game_extend",
+          "min_pot_initial_allocation"
+        ],
+        "properties": {
+          "decay_factor": {
+            "$ref": "#/definitions/Uint128"
+          },
+          "fee": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "fee_address": {
+            "$ref": "#/definitions/Addr"
+          },
+          "fee_reallocation": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "game_cw721_addrs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Addr"
+            }
+          },
+          "game_denom": {
+            "type": "string"
+          },
+          "game_duration": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "game_extend": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "min_pot_initial_allocation": {
+            "$ref": "#/definitions/Uint128"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Uint128": {
+        "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+        "type": "string"
+      }
+    }
+  },
+  "execute": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ExecuteMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "update_config"
+        ],
+        "properties": {
+          "update_config": {
+            "type": "object",
+            "required": [
+              "game_cw721_addrs"
+            ],
+            "properties": {
+              "decay_factor": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Uint128"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fee": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "fee_address": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Addr"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fee_reallocation": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "game_cw721_addrs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Addr"
+                }
+              },
+              "game_denom": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "game_duration": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "game_extend": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "min_pot_initial_allocation": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Uint128"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "allocate_tokens"
+        ],
+        "properties": {
+          "allocate_tokens": {
+            "type": "object",
+            "required": [
+              "pot_id"
+            ],
+            "properties": {
+              "pot_id": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "reallocate_tokens"
+        ],
+        "properties": {
+          "reallocate_tokens": {
+            "type": "object",
+            "required": [
+              "from_pot_id",
+              "to_pot_id"
+            ],
+            "properties": {
+              "from_pot_id": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              },
+              "to_pot_id": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "game_end"
+        ],
+        "properties": {
+          "game_end": {
+            "type": "object",
+            "properties": {
+              "raffle_cw721_token_addr": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "raffle_cw721_token_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ],
+    "definitions": {
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
+      },
+      "Uint128": {
+        "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+        "type": "string"
+      }
+    }
+  },
+  "query": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "QueryMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "game_config"
+        ],
+        "properties": {
+          "game_config": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "game_state"
+        ],
+        "properties": {
+          "game_state": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "bid_range"
+        ],
+        "properties": {
+          "bid_range": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "pot_state"
+        ],
+        "properties": {
+          "pot_state": {
+            "type": "object",
+            "required": [
+              "pot_id"
+            ],
+            "properties": {
+              "pot_id": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "pots_state"
+        ],
+        "properties": {
+          "pots_state": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "winning_pots"
+        ],
+        "properties": {
+          "winning_pots": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "player_allocations"
+        ],
+        "properties": {
+          "player_allocations": {
+            "type": "object",
+            "required": [
+              "address"
+            ],
+            "properties": {
+              "address": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "all_players_allocations"
+        ],
+        "properties": {
+          "all_players_allocations": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "reallocation_fee_pool"
+        ],
+        "properties": {
+          "reallocation_fee_pool": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "raffle"
+        ],
+        "properties": {
+          "raffle": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "raffle_winner"
+        ],
+        "properties": {
+          "raffle_winner": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "raffle_denom_split"
+        ],
+        "properties": {
+          "raffle_denom_split": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
+  "migrate": null,
+  "sudo": null,
+  "responses": {
+    "all_players_allocations": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AllPlayersAllocationsResponse",
+      "type": "object",
+      "required": [
+        "allocations"
+      ],
+      "properties": {
+        "allocations": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/TokenAllocation"
+                }
+              }
+            ],
+            "maxItems": 2,
+            "minItems": 2
+          }
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "TokenAllocation": {
+          "type": "object",
+          "required": [
+            "amount",
+            "pot_id"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "pot_id": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "bid_range": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BidRangeResponse",
+      "type": "object",
+      "required": [
+        "max_bid",
+        "min_bid"
+      ],
+      "properties": {
+        "max_bid": {
+          "$ref": "#/definitions/Uint128"
+        },
+        "min_bid": {
+          "$ref": "#/definitions/Uint128"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "game_config": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "GameConfigResponse",
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/GameConfig"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        },
+        "GameConfig": {
+          "type": "object",
+          "required": [
+            "decay_factor",
+            "fee",
+            "fee_address",
+            "fee_reallocation",
+            "game_cw721_addrs",
+            "game_denom",
+            "game_duration",
+            "game_extend",
+            "min_pot_initial_allocation"
+          ],
+          "properties": {
+            "decay_factor": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "fee": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "fee_address": {
+              "$ref": "#/definitions/Addr"
+            },
+            "fee_reallocation": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "game_cw721_addrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Addr"
+              }
+            },
+            "game_denom": {
+              "type": "string"
+            },
+            "game_duration": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "game_extend": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "min_pot_initial_allocation": {
+              "$ref": "#/definitions/Uint128"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "game_state": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "GameStateResponse",
+      "type": "object",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "$ref": "#/definitions/GameState"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "GameState": {
+          "type": "object",
+          "required": [
+            "end_time",
+            "extend_count",
+            "round_count",
+            "start_time"
+          ],
+          "properties": {
+            "end_time": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "extend_count": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "round_count": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "start_time": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "player_allocations": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PlayerAllocationsResponse",
+      "type": "object",
+      "required": [
+        "allocations"
+      ],
+      "properties": {
+        "allocations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TokenAllocation"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "TokenAllocation": {
+          "type": "object",
+          "required": [
+            "amount",
+            "pot_id"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "pot_id": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "pot_state": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PotStateResponse",
+      "type": "object",
+      "required": [
+        "pot"
+      ],
+      "properties": {
+        "pot": {
+          "$ref": "#/definitions/TokenAllocation"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "TokenAllocation": {
+          "type": "object",
+          "required": [
+            "amount",
+            "pot_id"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "pot_id": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "pots_state": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PotsStateResponse",
+      "type": "object",
+      "required": [
+        "pots"
+      ],
+      "properties": {
+        "pots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TokenAllocation"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "TokenAllocation": {
+          "type": "object",
+          "required": [
+            "amount",
+            "pot_id"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "pot_id": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "raffle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RaffleResponse",
+      "type": "object",
+      "required": [
+        "raffle"
+      ],
+      "properties": {
+        "raffle": {
+          "$ref": "#/definitions/Raffle"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Raffle": {
+          "type": "object",
+          "required": [
+            "denom_amount"
+          ],
+          "properties": {
+            "cw721_addr": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cw721_token_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "denom_amount": {
+              "$ref": "#/definitions/Uint128"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "raffle_denom_split": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RaffleDenomSplitResponse",
+      "type": "object",
+      "required": [
+        "prize_to_distribute",
+        "prize_to_treasury"
+      ],
+      "properties": {
+        "prize_to_distribute": {
+          "$ref": "#/definitions/Uint128"
+        },
+        "prize_to_treasury": {
+          "$ref": "#/definitions/Uint128"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "raffle_winner": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RaffleWinnerResponse",
+      "type": "object",
+      "properties": {
+        "raffle_winner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "reallocation_fee_pool": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ReallocationFeePoolResponse",
+      "type": "object",
+      "required": [
+        "reallocation_fee_pool"
+      ],
+      "properties": {
+        "reallocation_fee_pool": {
+          "$ref": "#/definitions/Uint128"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "winning_pots": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WinningPotsResponse",
+      "type": "object",
+      "required": [
+        "pots"
+      ],
+      "properties": {
+        "pots": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GameStateResponse",
+  "type": "object",
+  "required": [
+    "state"
+  ],
+  "properties": {
+    "state": {
+      "$ref": "#/definitions/GameState"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "GameState": {
+      "type": "object",
+      "required": [
+        "end_time",
+        "extend_count",
+        "round_count",
+        "start_time"
+      ],
+      "properties": {
+        "end_time": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "extend_count": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "round_count": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "start_time": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
