@@ -21,7 +21,8 @@ export default createStore({
       address: null,
       balance: null,
       cw721balance: [],
-      allocations: []
+      allocations: [],
+      reallocations: null
     },
 
     gameConfig: null,
@@ -70,6 +71,10 @@ export default createStore({
 
     playerAllocations(state) {
       return state.user.allocations
+    },
+
+    playerReallocations(state) {
+      return state.user.reallocations
     },
 
     gameConfig(state) {
@@ -148,6 +153,10 @@ export default createStore({
 
     setPlayerAllocations(state, allocations) {
       state.user.allocations = allocations;
+    },
+
+    setPlayerReallocations(state, reallocations) {
+      state.user.reallocations = reallocations;
     },
 
     // Game
@@ -259,7 +268,7 @@ export default createStore({
       commit("setUserBalance", mxChainUtils.methods.displayAmount(Number(balance.amount)));
 
       // Player Allocations
-      const queryResponse = await state.user.querier.queryContractSmart(
+      const allocationsResponse = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
         {
           player_allocations: {
@@ -269,9 +278,19 @@ export default createStore({
       );
       // TODO: This could be avoided in favor of allPlayersAllocation.find(address => this.user) (pseudo code)
       // Filter out allocations where the amount is "0"
-      const filteredAllocations = queryResponse.allocations.allocations.filter(allocation => allocation.amount !== "0");
+      const filteredAllocations = allocationsResponse.allocations.allocations.filter(allocation => allocation.amount !== "0");
       commit("setPlayerAllocations", filteredAllocations);
-      console.log("fetchPlayerAllocations done.")
+
+      // Player Reallocations
+      const reallocationsResponse = await state.user.querier.queryContractSmart(
+        process.env.VUE_APP_CONTRACT,
+        {
+          player_reallocations: {
+            address: state.user.address
+          }
+        }
+      );
+      commit("setPlayerReallocations", reallocationsResponse.reallocations);
     },
 
     async fetchGameConfig({state, commit}) {
