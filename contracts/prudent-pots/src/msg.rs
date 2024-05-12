@@ -21,8 +21,10 @@ pub enum ExecuteMsg {
         game_cw721_addrs: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
         game_duration: Option<u64>,
         game_extend: Option<u64>,
+        game_end_threshold: Option<u64>,
         min_pot_initial_allocation: Option<Uint128>,
         decay_factor: Option<Uint128>,
+        reallocations_limit: Option<u64>,
     },
     AllocateTokens {
         pot_id: u8,
@@ -64,6 +66,8 @@ pub enum QueryMsg {
     WinningPots {},
     #[returns(PlayerAllocationsResponse)]
     PlayerAllocations { address: String },
+    #[returns(PlayerReallocationsResponse)]
+    PlayerReallocations { address: String },
     #[returns(AllPlayersAllocationsResponse)]
     AllPlayersAllocations {},
     #[returns(ReallocationFeePoolResponse)]
@@ -110,6 +114,11 @@ pub struct WinningPotsResponse {
 #[cw_serde]
 pub struct PlayerAllocationsResponse {
     pub allocations: Vec<TokenAllocation>,
+}
+
+#[cw_serde]
+pub struct PlayerReallocationsResponse {
+    pub reallocations: u64,
 }
 
 #[cw_serde]

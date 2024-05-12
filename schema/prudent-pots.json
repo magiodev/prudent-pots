@@ -30,8 +30,10 @@
           "game_cw721_addrs",
           "game_denom",
           "game_duration",
+          "game_end_threshold",
           "game_extend",
-          "min_pot_initial_allocation"
+          "min_pot_initial_allocation",
+          "reallocations_limit"
         ],
         "properties": {
           "decay_factor": {
@@ -64,6 +66,11 @@
             "format": "uint64",
             "minimum": 0.0
           },
+          "game_end_threshold": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
           "game_extend": {
             "type": "integer",
             "format": "uint64",
@@ -71,6 +78,11 @@
           },
           "min_pot_initial_allocation": {
             "$ref": "#/definitions/Uint128"
+          },
+          "reallocations_limit": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
           }
         },
         "additionalProperties": false
@@ -153,6 +165,14 @@
                 "format": "uint64",
                 "minimum": 0.0
               },
+              "game_end_threshold": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
               "game_extend": {
                 "type": [
                   "integer",
@@ -170,6 +190,14 @@
                     "type": "null"
                   }
                 ]
+              },
+              "reallocations_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
               }
             },
             "additionalProperties": false
@@ -392,6 +420,27 @@
       {
         "type": "object",
         "required": [
+          "player_reallocations"
+        ],
+        "properties": {
+          "player_reallocations": {
+            "type": "object",
+            "required": [
+              "address"
+            ],
+            "properties": {
+              "address": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
           "all_players_allocations"
         ],
         "properties": {
@@ -565,8 +614,10 @@
             "game_cw721_addrs",
             "game_denom",
             "game_duration",
+            "game_end_threshold",
             "game_extend",
-            "min_pot_initial_allocation"
+            "min_pot_initial_allocation",
+            "reallocations_limit"
           ],
           "properties": {
             "decay_factor": {
@@ -599,6 +650,11 @@
               "format": "uint64",
               "minimum": 0.0
             },
+            "game_end_threshold": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
             "game_extend": {
               "type": "integer",
               "format": "uint64",
@@ -606,6 +662,11 @@
             },
             "min_pot_initial_allocation": {
               "$ref": "#/definitions/Uint128"
+            },
+            "reallocations_limit": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
             }
           },
           "additionalProperties": false
@@ -704,6 +765,22 @@
           "type": "string"
         }
       }
+    },
+    "player_reallocations": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PlayerReallocationsResponse",
+      "type": "object",
+      "required": [
+        "reallocations"
+      ],
+      "properties": {
+        "reallocations": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
     },
     "pot_state": {
       "$schema": "http://json-schema.org/draft-07/schema#",
