@@ -66,6 +66,8 @@ pub enum QueryMsg {
     WinningPots {},
     #[returns(PlayerAllocationsResponse)]
     PlayerAllocations { address: String },
+    #[returns(PlayerReallocationsResponse)]
+    PlayerReallocations { address: String },
     #[returns(AllPlayersAllocationsResponse)]
     AllPlayersAllocations {},
     #[returns(ReallocationFeePoolResponse)]
@@ -112,6 +114,11 @@ pub struct WinningPotsResponse {
 #[cw_serde]
 pub struct PlayerAllocationsResponse {
     pub allocations: Vec<TokenAllocation>,
+}
+
+#[cw_serde]
+pub struct PlayerReallocationsResponse {
+    pub reallocations: u64,
 }
 
 #[cw_serde]

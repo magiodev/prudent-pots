@@ -7,11 +7,13 @@ use crate::{
     },
     msg::{
         AllPlayersAllocationsResponse, BidRangeResponse, GameConfigResponse, GameStateResponse,
-        PlayerAllocationsResponse, PotStateResponse, PotsStateResponse, RaffleDenomSplitResponse,
-        RaffleResponse, RaffleWinnerResponse, ReallocationFeePoolResponse, WinningPotsResponse,
+        PlayerAllocationsResponse, PlayerReallocationsResponse, PotStateResponse,
+        PotsStateResponse, RaffleDenomSplitResponse, RaffleResponse, RaffleWinnerResponse,
+        ReallocationFeePoolResponse, WinningPotsResponse,
     },
     state::{
-        GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES, RAFFLE, REALLOCATION_FEE_POOL,
+        GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, PLAYER_REALLOCATIONS, POT_STATES, RAFFLE,
+        REALLOCATION_FEE_POOL,
     },
 };
 
@@ -63,9 +65,21 @@ pub fn query_player_allocations(
     // Attempt to load player allocations. If not found, return an empty PlayerAllocations struct.
     let allocations = PLAYER_ALLOCATIONS
         .may_load(deps.storage, address)?
-        .unwrap_or_else(|| Vec::new());
+        .unwrap_or_default();
 
     Ok(PlayerAllocationsResponse { allocations })
+}
+
+pub fn query_player_reallocations(
+    deps: Deps,
+    address: String,
+) -> StdResult<PlayerReallocationsResponse> {
+    // Attempt to load player reallocations count. If not found, return an deafult PlayerReallocations count 0.
+    let reallocations = PLAYER_REALLOCATIONS
+        .may_load(deps.storage, address)?
+        .unwrap_or_default();
+
+    Ok(PlayerReallocationsResponse { reallocations })
 }
 
 pub fn query_all_players_allocations(deps: Deps) -> StdResult<AllPlayersAllocationsResponse> {
