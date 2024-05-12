@@ -26,7 +26,6 @@ const mxPot = {
     },
 
     formattedPotNames(potIds) {
-      console.log(typeof potIds)
       if (Array.isArray(potIds)) {
         return potIds.map(potId => this.getPotName(potId)).join(', ');
       }

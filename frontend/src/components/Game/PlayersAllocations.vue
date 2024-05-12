@@ -199,7 +199,7 @@ export default {
       let totalFees = 0;
       let totalRedistributed = 0;
 
-      this.allPlayersAllocations.forEach(([address, {allocations}]) => {
+      this.allPlayersAllocations.forEach(([address, allocations]) => {
         let stats = {
           totalBet: 0,
           winningPots: 0,
@@ -270,7 +270,7 @@ export default {
       const potInitialFunds = parseInt(pot.amount);
       const totalPotAllocations = this.calculateTotalInPots(
         this.allPlayersAllocations.flatMap(([, alloc]) =>
-          alloc.allocations.filter(a => a.pot_id === pot.pot_id)
+          alloc.filter(a => a.pot_id === pot.pot_id)
         )
       );
       return potInitialFunds - totalPotAllocations;

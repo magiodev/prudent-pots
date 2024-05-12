@@ -41,7 +41,7 @@
               Balance: {{ userBalance || '...' }}
               <CoinComponent/>
             </div>
-            <div v-if="userAddress" class="small">
+            <div v-if="userAddress && cw721Contract" class="small">
               <span v-if="userCw721Balance.length">You hodl {{ userCw721Balance.length }} {NFT_NAME} so you're eligible for a discount of {{ displayAmount(maxBid / 2 - minBid)
                 }} <CoinComponent/> on the min bet amount.</span>
               <span v-else>You own {{ userCw721Balance.length }} {NFT_NAME} so you're not eligible for a discount on the min. bet amount.</span>
@@ -100,7 +100,8 @@ export default {
   data() {
     return {
       isBusy: false,
-      bidAmount: 0
+      bidAmount: 0,
+      cw721Contract: process.env.VUE_APP_CONTRACT_CW721
     };
   },
   created() {

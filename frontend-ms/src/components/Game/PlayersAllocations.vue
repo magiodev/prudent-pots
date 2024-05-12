@@ -10,23 +10,35 @@
           <th scope="col">Total</th>
           <th scope="col">Winning</th>
           <th scope="col">Losing</th>
-          <th scope="col">Share of Prize ({{ displayAmount(totalPrizeOnlyLosingDistribution + (calculateInitialFundsShare({
-            pot_id: this.pots[0].pot_id,
-            amount: this.pots[0].amount
-          }) * this.winningPots.length), 2) }})</th>
+          <th scope="col">Share of Prize
+            ({{ displayAmount(totalPrizeOnlyLosingDistribution + (calculateInitialFundsShare({
+              pot_id: this.pots[0].pot_id,
+              amount: this.pots[0].amount
+            }) * this.winningPots.length), 2) }})
+          </th>
           <th scope="col">Receives</th>
         </tr>
         </thead>
         <tbody>
         <tr v-for="(stats, address) in statistics.playerStatistics" :key="address">
           <td>{{ address.substring(0, 15) }}...</td>
-          <td>{{ displayAmount(stats.totalBet, 2) }} <CoinComponent/></td>
-          <td>{{ displayAmount(stats.winningPots, 2) }} <CoinComponent/></td>
-          <td>{{ displayAmount(stats.losingPots, 2) }} <CoinComponent/></td>
-          <td>{{ displayAmount(stats.redistributionShare, 2) }} <CoinComponent/> ({{ stats.sharesInPercentage }}%)
+          <td>{{ displayAmount(stats.totalBet, 2) }}
+            <CoinComponent/>
+          </td>
+          <td>{{ displayAmount(stats.winningPots, 2) }}
+            <CoinComponent/>
+          </td>
+          <td>{{ displayAmount(stats.losingPots, 2) }}
+            <CoinComponent/>
+          </td>
+          <td>{{ displayAmount(stats.redistributionShare, 2) }}
+            <CoinComponent/>
+            ({{ stats.sharesInPercentage }}%)
             <!--{{ displayAmount(stats.winningFee) }} fee. <CoinComponent/> -->
           </td>
-          <td>{{ displayAmount(stats.winningPots + stats.redistributionShare, 2) }} <CoinComponent/></td>
+          <td>{{ displayAmount(stats.winningPots + stats.redistributionShare, 2) }}
+            <CoinComponent/>
+          </td>
         </tr>
         </tbody>
       </table>
@@ -197,7 +209,7 @@ export default {
       let totalFees = 0;
       let totalRedistributed = 0;
 
-      this.allPlayersAllocations.forEach(([address, {allocations}]) => {
+      this.allPlayersAllocations.forEach(([address, allocations]) => {
         let stats = {
           totalBet: 0,
           winningPots: 0,
@@ -268,7 +280,7 @@ export default {
       const potInitialFunds = parseInt(pot.amount);
       const totalPotAllocations = this.calculateTotalInPots(
         this.allPlayersAllocations.flatMap(([, alloc]) =>
-          alloc.allocations.filter(a => a.pot_id === pot.pot_id)
+          alloc.filter(a => a.pot_id === pot.pot_id)
         )
       );
       return potInitialFunds - totalPotAllocations;

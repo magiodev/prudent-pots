@@ -410,7 +410,7 @@ export default createStore({
 
       const data = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
-        {bid_range: {cw721_count: state.user.cw721balance.length}}
+        {bid_range: {address: state.user.address}}
       );
       commit("setBidRange", {min_bid: Number(data.min_bid), max_bid: Number(data.max_bid)});
     },
@@ -493,17 +493,17 @@ export default createStore({
         return;
       }
 
-      const data = await state.user.querier.queryContractSmart(
-        process.env.VUE_APP_CONTRACT_CW721,
-        {
-          tokens: {
-            owner: state.user.address
+      if (process.env.VUE_APP_CONTRACT_CW721) {
+        const data = await state.user.querier.queryContractSmart(
+          process.env.VUE_APP_CONTRACT_CW721,
+          {
+            tokens: {
+              owner: state.user.address
+            }
           }
-        }
-      );
-      commit("setUserCw721Balance", data.tokens);
-      console.log("fetchCw721Tokens done.")
-
+        );
+        commit("setUserCw721Balance", data.tokens);
+      }
     },
   },
 
