@@ -148,6 +148,4 @@ pub struct RaffleDenomSplitResponse {
 }
 
 #[cw_serde]
-pub struct MigrateMsg {
-    pub new_game_config: GameConfig,
-}
+pub struct MigrateMsg {}
