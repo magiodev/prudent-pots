@@ -26,6 +26,7 @@
         "game_cw721_addrs",
         "game_denom",
         "game_duration",
+        "game_end_threshold",
         "game_extend",
         "min_pot_initial_allocation"
       ],
@@ -56,6 +57,11 @@
           "type": "string"
         },
         "game_duration": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "game_end_threshold": {
           "type": "integer",
           "format": "uint64",
           "minimum": 0.0
