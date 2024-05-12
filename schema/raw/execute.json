@@ -70,6 +70,14 @@
               "format": "uint64",
               "minimum": 0.0
             },
+            "game_end_threshold": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0.0
+            },
             "game_extend": {
               "type": [
                 "integer",
@@ -87,6 +95,14 @@
                   "type": "null"
                 }
               ]
+            },
+            "reallocations_limit": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0.0
             }
           },
           "additionalProperties": false

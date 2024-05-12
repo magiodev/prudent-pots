@@ -12,8 +12,9 @@ use crate::helpers::validate::{validate_funds, validate_pot_initial_amount};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, ReplyMsg};
 use crate::query::{
     query_all_players_allocations, query_bid_range, query_game_config, query_game_state,
-    query_player_allocations, query_pot_state, query_pots_state, query_raffle,
-    query_raffle_denom_split, query_raffle_winner, query_reallocation_fee_pool, query_winning_pots,
+    query_player_allocations, query_player_reallocations, query_pot_state, query_pots_state,
+    query_raffle, query_raffle_denom_split, query_raffle_winner, query_reallocation_fee_pool,
+    query_winning_pots,
 };
 use crate::reply::game_end_reply;
 use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
@@ -74,8 +75,10 @@ pub fn execute(
             game_cw721_addrs,
             game_duration,
             game_extend,
+            game_end_threshold,
             min_pot_initial_allocation,
             decay_factor,
+            reallocations_limit,
         } => update_config(
             deps,
             env,
@@ -87,8 +90,10 @@ pub fn execute(
             game_cw721_addrs,
             game_duration,
             game_extend,
+            game_end_threshold,
             min_pot_initial_allocation,
             decay_factor,
+            reallocations_limit,
         ),
         ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, env, info, pot_id),
         ExecuteMsg::ReallocateTokens {
@@ -127,6 +132,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::WinningPots {} => to_json_binary(&query_winning_pots(deps)?),
         QueryMsg::PlayerAllocations { address } => {
             to_json_binary(&query_player_allocations(deps, address)?)
+        }
+        QueryMsg::PlayerReallocations { address } => {
+            to_json_binary(&query_player_reallocations(deps, address)?)
         }
         QueryMsg::AllPlayersAllocations {} => to_json_binary(&query_all_players_allocations(deps)?),
         QueryMsg::ReallocationFeePool {} => to_json_binary(&query_reallocation_fee_pool(deps)?),

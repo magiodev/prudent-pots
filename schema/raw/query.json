@@ -122,6 +122,27 @@
     {
       "type": "object",
       "required": [
+        "player_reallocations"
+      ],
+      "properties": {
+        "player_reallocations": {
+          "type": "object",
+          "required": [
+            "address"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
         "all_players_allocations"
       ],
       "properties": {

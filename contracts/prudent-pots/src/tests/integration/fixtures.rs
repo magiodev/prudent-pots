@@ -120,8 +120,10 @@ pub fn default_with_balances(
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)],
                     game_duration: 1, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
                     game_extend: 600u64,
+                    game_end_threshold: 600u64,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
                     decay_factor: Uint128::new(95u128),
+                    reallocations_limit: 10,
                 },
             };
             pp_addr = instantiate_pp(
@@ -157,8 +159,10 @@ pub fn default_with_balances(
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)], // set the same to avoid updating
                     game_duration: Some(GAME_DURATION),
                     game_extend: None,
+                    game_end_threshold: None,
                     min_pot_initial_allocation: None,
                     decay_factor: None,
+                    reallocations_limit: None,
                 },
             )
             .unwrap();
@@ -191,8 +195,10 @@ pub fn default_with_balances(
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)],
                     game_duration: GAME_DURATION,
                     game_extend: 600u64,
+                    game_end_threshold: 600u64,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
                     decay_factor: Uint128::new(95u128),
+                    reallocations_limit: 10,
                 },
             };
             pp_addr = instantiate_pp(
