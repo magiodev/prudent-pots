@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, Coin, Env, QuerierWrapper, Storage, Uint128};
 
 use crate::{
-    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, POT_STATES},
+    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, PLAYER_REALLOCATIONS, POT_STATES},
     ContractError,
 };
 
@@ -72,6 +72,32 @@ pub fn validate_pot_initial_amount(
     } else {
         Ok(amount_per_pot)
     }
+}
+
+pub fn validate_increase_player_reallocations(
+    storage: &mut dyn Storage,
+    player: &Addr,
+) -> Result<(), ContractError> {
+    // Load game configuration and the current number of reallocations for the player.
+    let game_config = GAME_CONFIG.load(storage)?;
+    let current_reallocations = PLAYER_REALLOCATIONS
+        .may_load(storage, player.to_string())?
+        .unwrap_or_default();
+
+    // Check if the player has reached the reallocation limit.
+    if current_reallocations >= game_config.reallocations_limit {
+        return Err(ContractError::InvalidInput {});
+    }
+
+    // Safely increase the reallocation count, handling potential overflow.
+    let new_reallocations = current_reallocations
+        .checked_add(1)
+        .ok_or(ContractError::InvalidInput {})?;
+
+    // Save the updated number of reallocations.
+    PLAYER_REALLOCATIONS.save(storage, player.to_string(), &new_reallocations)?;
+
+    Ok(())
 }
 
 /// Checks if the specified player has already allocated tokens to the specified pot.

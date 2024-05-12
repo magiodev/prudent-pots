@@ -27,6 +27,7 @@ pub mod tests {
             game_cw721_addrs: vec![Addr::unchecked("nft")],
             min_pot_initial_allocation: Uint128::new(200u128),
             decay_factor: Uint128::new(95u128),
+            reallocations_limit: 10,
         };
 
         // Perform instantiation first

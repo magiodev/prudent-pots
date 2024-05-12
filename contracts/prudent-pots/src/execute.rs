@@ -12,8 +12,9 @@ use crate::{
         },
         validate::{
             validate_and_extend_game_time, validate_existing_allocation, validate_funds,
-            validate_game_end_time, validate_is_contract_admin,
-            validate_is_contract_admin_game_end, validate_pot_limit_not_exceeded,
+            validate_game_end_time, validate_increase_player_reallocations,
+            validate_is_contract_admin, validate_is_contract_admin_game_end,
+            validate_pot_limit_not_exceeded,
         },
     },
     state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, REALLOCATION_FEE_POOL},
@@ -34,6 +35,7 @@ pub fn update_config(
     game_end_threshold: Option<u64>,
     min_pot_initial_allocation: Option<Uint128>,
     decay_factor: Option<Uint128>, // i.e. 95 as 95%
+    reallocations_limit: Option<u64>,
 ) -> Result<Response, ContractError> {
     validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
 
@@ -87,6 +89,9 @@ pub fn update_config(
             return Err(ContractError::InvalidInput {});
         }
         game_config.decay_factor = decay_factor;
+    }
+    if let Some(reallocations_limit) = reallocations_limit {
+        game_config.reallocations_limit = reallocations_limit;
     }
     GAME_CONFIG.save(deps.storage, &game_config)?;
 
@@ -152,7 +157,7 @@ pub fn reallocate_tokens(
     if from_pot_id == to_pot_id {
         return Err(ContractError::InvalidPot {});
     }
-
+    validate_increase_player_reallocations(deps.storage, &info.sender)?;
     validate_and_extend_game_time(deps.storage, &env)?;
     validate_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
 

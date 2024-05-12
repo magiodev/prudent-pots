@@ -25,6 +25,7 @@ fn test_update_config_works() {
             game_end_threshold: Some(600 * 3),
             min_pot_initial_allocation: Some(Uint128::new(1_000_000u128)),
             decay_factor: Some(Uint128::new(50u128)),
+            reallocations_limit: Some(10),
         },
     )
     .unwrap();
@@ -49,6 +50,7 @@ fn test_update_config_works() {
             game_end_threshold: 600 * 3,
             min_pot_initial_allocation: Uint128::new(1_000_000u128),
             decay_factor: Uint128::new(50u128),
+            reallocations_limit: 10,
         },
     };
     assert_eq!(new_config, expected_new_config);

@@ -7,7 +7,7 @@ use crate::{
     msg::ReplyMsg,
     state::{
         GameConfig, GameState, Raffle, TokenAllocation, FIRST_BIDDER, GAME_CONFIG, GAME_STATE,
-        PLAYER_ALLOCATIONS, POT_STATES, RAFFLE, REALLOCATION_FEE_POOL,
+        PLAYER_ALLOCATIONS, PLAYER_REALLOCATIONS, POT_STATES, RAFFLE, REALLOCATION_FEE_POOL,
     },
     ContractError,
 };
@@ -51,8 +51,9 @@ pub fn prepare_next_game(
     };
     GAME_STATE.save(deps.storage, &new_game_state)?;
 
-    // Reset player allocations for the next game, and first bidder
+    // Reset player allocations, player reallocations and first bidder states for the next game
     PLAYER_ALLOCATIONS.clear(deps.storage);
+    PLAYER_REALLOCATIONS.clear(deps.storage);
     FIRST_BIDDER.clear(deps.storage);
 
     // Start initial tokens allocation workflow by querying the contract balance

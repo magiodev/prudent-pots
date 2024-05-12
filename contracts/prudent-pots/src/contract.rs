@@ -77,6 +77,7 @@ pub fn execute(
             game_end_threshold,
             min_pot_initial_allocation,
             decay_factor,
+            reallocations_limit,
         } => update_config(
             deps,
             env,
@@ -91,6 +92,7 @@ pub fn execute(
             game_end_threshold,
             min_pot_initial_allocation,
             decay_factor,
+            reallocations_limit,
         ),
         ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, env, info, pot_id),
         ExecuteMsg::ReallocateTokens {

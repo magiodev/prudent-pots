@@ -24,6 +24,7 @@ pub enum ExecuteMsg {
         game_end_threshold: Option<u64>,
         min_pot_initial_allocation: Option<Uint128>,
         decay_factor: Option<Uint128>,
+        reallocations_limit: Option<u64>,
     },
     AllocateTokens {
         pot_id: u8,

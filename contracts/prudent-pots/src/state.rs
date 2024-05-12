@@ -14,6 +14,7 @@ pub struct GameConfig {
     pub game_end_threshold: u64,
     pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO
     pub decay_factor: Uint128,               // i.e. 95 as 95%
+    pub reallocations_limit: u64,
 }
 
 #[cw_serde]
@@ -53,6 +54,7 @@ pub const GAME_CONFIG: Item<GameConfig> = Item::new("game_config");
 pub const GAME_STATE: Item<GameState> = Item::new("game_state");
 pub const POT_STATES: Map<u8, TokenAllocation> = Map::new("pot_states");
 pub const PLAYER_ALLOCATIONS: Map<String, Vec<TokenAllocation>> = Map::new("player_allocations");
+pub const PLAYER_REALLOCATIONS: Map<String, u64> = Map::new("player_reallocations");
 pub const REALLOCATION_FEE_POOL: Item<Uint128> = Item::new("reallocation_fee_pool");
 pub const RAFFLE: Item<Raffle> = Item::new("raffle");
 pub const FIRST_BIDDER: Map<u8, FirstBidder> = Map::new("first_bidder");

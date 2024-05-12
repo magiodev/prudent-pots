@@ -123,6 +123,7 @@ pub fn default_with_balances(
                     game_end_threshold: 600u64,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
                     decay_factor: Uint128::new(95u128),
+                    reallocations_limit: 10,
                 },
             };
             pp_addr = instantiate_pp(
@@ -161,6 +162,7 @@ pub fn default_with_balances(
                     game_end_threshold: None,
                     min_pot_initial_allocation: None,
                     decay_factor: None,
+                    reallocations_limit: None,
                 },
             )
             .unwrap();
@@ -196,6 +198,7 @@ pub fn default_with_balances(
                     game_end_threshold: 600u64,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
                     decay_factor: Uint128::new(95u128),
+                    reallocations_limit: 10,
                 },
             };
             pp_addr = instantiate_pp(
