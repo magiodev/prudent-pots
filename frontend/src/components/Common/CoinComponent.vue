@@ -1,9 +1,10 @@
 <template>
-  <img :src="imageCoin" class="coin-component" alt="Coin" />
+  <img :src="imageCoin" class="coin-component" alt="Coin"/>
 </template>
 
 <script>
 import imageCoin from "@/assets/neutron.png"
+
 export default {
   name: "CoinComponent",
 
@@ -17,7 +18,7 @@ export default {
 
 <style scoped lang="scss">
 .coin-component {
-  border-radius: 100%;
+  border-radius: 50%;
   width: 1.25em;
   height: auto;
   vertical-align: sub;

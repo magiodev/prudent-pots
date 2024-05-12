@@ -39,10 +39,10 @@ export default {
   outline: none;
   vertical-align: middle;
   font-weight: 600;
-  color: white;
+  color: $pp-color-5;
   text-transform: uppercase;
   padding: .5em 1.5em;
-  background: $pp-purple-2; // Now the button is green
+  background: $pp-color-4;
   border: 0;
   font-size: 2em;
 
@@ -50,19 +50,18 @@ export default {
     font-size: 1.25em;
   }
 
-  &:hover {
-    color: $pp-green-1;
-  }
-
-  &:active {
+  &:hover, &:active {
     background: $pp-green-1;
-    color: $pp-purple-1;
   }
 
   &:disabled {
     cursor: not-allowed;
     color: $button-disabled-text;
     background: $button-disabled-bg;
+  }
+
+  img {
+    width: 32px;
   }
 }
 </style>

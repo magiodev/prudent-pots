@@ -7,20 +7,18 @@
 @import "vue-toastification/src/scss/animations/_bounce";
 
 // Base color definitions
-$pp-purple-1: #391358; // Primary background color
-$pp-purple-2: #7D34B7; // Main color for text and important elements
-$pp-purple-3: #D284E9; // Accent color for highlights and secondary elements
+$pp-color-3: #391358; // Primary background color
+$pp-color-4: #7D34B7; // Main color for text and important elements
+$pp-color-5: #D284E9; // Accent color for highlights and secondary elements
 $pp-green-1: #28EC8E; // Base color for buttons
 
 // Button color variants for different states
 $button-color: $pp-green-1; // Default button color
-$button-text-color: $pp-purple-1; // Text color for buttons
+$button-text-color: $pp-color-5; // Text color for buttons
 $button-hover-color: lighten($pp-green-1, 10%); // Button color on hover
 $button-active-color: darken($pp-green-1, 10%); // Button color when active/pressed
 $button-disabled-bg: #e0e0e0; // Button background when disabled
 $button-disabled-text: #a0a0a0; // Text color for disabled buttons
-
-// Basic
 
 @font-face {
   font-family: 'TrashHand';
@@ -29,9 +27,10 @@ $button-disabled-text: #a0a0a0; // Text color for disabled buttons
 
 html {
   overflow-x: hidden;
+
   body {
     overflow-x: hidden;
-    background: $pp-purple-3 !important;
+    background: $pp-color-5 !important;
     color: white;
 
     * {
@@ -48,19 +47,28 @@ p:last-child, ul:last-child {
   margin-bottom: 0;
 }
 
-
-.bg-pp-purple-1 {
-  background: $pp-purple-1;
-}
-.bg-pp-purple-2 {
-  background: $pp-purple-2;
-}
-.bg-pp-purple-3 {
-  background: $pp-purple-3;
+.bg-pp-color-3 {
+  background: $pp-color-3;
 }
 
-.text-pp-purple-2 {
-  color: $pp-purple-2;
+.bg-pp-color-4 {
+  background: $pp-color-4;
+}
+
+.bg-pp-color-5 {
+  background: $pp-color-5;
+}
+
+.text-pp-color-3 {
+  color: $pp-color-3;
+}
+
+.text-pp-color-4 {
+  color: $pp-color-4;
+}
+
+.text-pp-color-5 {
+  color: $pp-color-5;
 }
 
 .text-pp-winner {
@@ -69,4 +77,10 @@ p:last-child, ul:last-child {
 
 .text-pp-loser {
   color: #c1275e;
+}
+
+.pp-card {
+  border: 1px solid $pp-color-3;
+  border-radius: 1em;
+  padding: 2em;
 }

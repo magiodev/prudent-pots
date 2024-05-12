@@ -1,0 +1,30 @@
+// Base color definitions
+//$pp-color-1: #391358; // Primary background color
+//$pp-color-2: #7D34B7; // Main color for text and important elements
+$pp-color-3: #181a18; // Accent color for highlights and secondary elements
+$pp-color-4: #39f90d; // Base color for buttons
+$pp-color-5: rgb(136, 229, 74);
+$text-color: #d1dfd4;
+
+// Button color variants for different states
+$button-color: $pp-color-4; // Default button color
+$button-text-color: $pp-color-4; // Text color for buttons
+$button-hover-color: lighten($pp-color-4, 10%); // Button color on hover
+$button-active-color: darken($pp-color-4, 10%); // Button color when active/pressed
+$button-disabled-bg: #e0e0e0; // Button background when disabled
+$button-disabled-text: #a0a0a0; // Text color for disabled buttons
+
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Reddit+Mono:wght@200..900&display=swap');
+
+html {
+  body {
+    * {
+      font-family: "Reddit Mono", monospace;
+    }
+
+    h1, h2, h3, h4, h5, h6, button {
+      font-family: "Pixelify Sans", sans-serif;
+    }
+  }
+}

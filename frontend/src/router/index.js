@@ -5,9 +5,25 @@ const routes = [
     path: "/",
     name: "Prudent Pots",
     meta: {
-      title: "Prudent Pots",
+      title: "Prudent Pots"
     },
     component: () => import("@/views/Home"),
+  },
+  {
+    path: "/instructions",
+    name: "Instructions",
+    meta: {
+      title: "Instructions",
+    },
+    component: () => import("@/views/Instructions"),
+  },
+  {
+    path: "/end",
+    name: "End",
+    meta: {
+      title: "End",
+    },
+    component: () => import("@/views/End"),
   },
   {
     path: "/:pathMatch(.*)*",

@@ -23,6 +23,3 @@ artifacts/
 .idea
 .vscode
 .vercel
-
-.env
-.env.*

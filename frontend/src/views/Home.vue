@@ -1,19 +1,26 @@
 <template>
+
   <div class="container-fluid">
-    <div class="row first-section">
+    <div class="row banner mb-5">
+      <TimerComponent/>
+    </div>
+
+    <div class="row raffle">
       <div class="col">
-        <TimerComponent class="mb-3"/>
-
-        <ReadmeComponent/>
-
-        <PotsComponent class="mb-md-5 mt-3"/>
+        <RaffleComponent/>
       </div>
     </div>
 
-    <div class="row graphic-items position-relative bg-pp-purple-1">
-      <div class="col py-3 py-md-5">
-        <BidComponent v-if="timeLeftSeconds"/>
-        <ReportComponent v-else/>
+    <div class="row game">
+      <div class="col">
+        <StatsComponent/>
+        <PotsComponent class="mt-lg-5 mt-3 mb-lg-5"/>
+      </div>
+    </div>
+
+    <div class="row bet position-relative bg-pp-color-5">
+      <div class="col py-3 py-lg-5">
+        <BidComponent/>
       </div>
     </div>
   </div>
@@ -25,13 +32,13 @@ import BidComponent from "@/components/Game/BidComponent.vue";
 import TimerComponent from "@/components/Common/TimerComponent.vue";
 import {mapGetters} from "vuex";
 import mxGame from "@/mixin/game";
-import ReportComponent from "@/components/Common/ReportComponent.vue";
-import ReadmeComponent from "@/components/Common/ReadmeComponent.vue";
+import StatsComponent from "@/components/Common/StatsComponent.vue";
+import RaffleComponent from "@/components/Common/RaffleComponent.vue";
 
 export default {
   name: 'HomeView',
 
-  components: {ReadmeComponent, ReportComponent, TimerComponent, PotsComponent, BidComponent},
+  components: {RaffleComponent, StatsComponent, TimerComponent, PotsComponent, BidComponent},
 
   mixins: [mxGame],
 
@@ -42,35 +49,26 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.first-section {
-  @media(min-width: 768px) {
-    margin-top: -100px;
+@import "@/assets/style.scss";
+
+.banner {
+  position: relative;
+  overflow: hidden; // Ensures the image doesn't show outside the banner
+  // TODO: background: url("@/assets/skins/mp/banner-move.gif") no-repeat;
+  background-size: auto 100%; // Adjust the width freely, but fit the height
+  animation: slide 90s infinite alternate ease-in-out; // Adjust the timing as needed
+}
+
+@keyframes slide {
+  from {
+    background-position: 0% center;
+  }
+  to {
+    background-position: 100% center;
   }
 }
 
-.graphic-items {
-  &:before {
-    content: url("@/assets/tree.png");
-    position: absolute;
-    top: -400px;
-    left: -210px;
-    transform: scale(.3);
-    display: inline-block;
-    @media (max-width: 767px) {
-      left: -325px;
-    }
-  }
-
-  &:after {
-    content: url("@/assets/tombs.png");
-    position: absolute;
-    top: -210px;
-    right: -200px;
-    transform: scale(.3);
-    display: inline-block;
-    @media (max-width: 767px) {
-      right: -325px;
-    }
-  }
+.raffle, .game {
+  border-bottom: 1px solid $pp-color-4;
 }
 </style>

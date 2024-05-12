@@ -1,17 +1,18 @@
 <template>
-  <div class="row">
-    <div class="offset-sm-3 col-sm-6 offset-lg-4 col-lg-4">
-      <div class="timer-card text-center py-5">
-        <template v-if="timeLeftSeconds">
-          <h4 class="text-pp-purple-2">Game Ends: {{ new Date(gameState.end_time * 1000).toLocaleString() }}</h4>
-          <div>
-            <img class="skull me-2 d-inline" :src="imageSkull" alt="Skull"/>
-            <h2 class="text-pp-purple-2 d-inline">{{ timeLeftHuman }}</h2>
-          </div>
-        </template>
-        <EndComponent v-else />
+  <div class="timer-component offset-md-1 col-md-10 offset-lg-2 col-lg-8 offset-xl-3 col-xl-6 position-relative">
+    <div class="timer-card text-center py-5">
+      <template v-if="timeLeftSeconds">
+        <h4 class="text-pp-purple-2">Game Ends: {{ new Date(gameState.end_time * 1000).toLocaleString() }}</h4>
+        <div>
+          <img class="skull me-2 d-inline" :src="imageSkull" alt="Skull"/>
+          <h2 class="text-pp-purple-2 d-inline">{{ timeLeftHuman }}</h2>
+          <h4>Extend count: {{gameState.extend_count}}</h4>
+        </div>
+      </template>
+      <div v-else>
+        <h2 class="text-pp-color-4">Time's up!</h2>
+        <p class="text-pp-color-4">Check the results in the section below.</p>
       </div>
-      <p class="text-center text-pp-purple-2">Reallocation fee pool: {{ reallocationFeePool / 1000000 }} <CoinComponent/></p>
     </div>
   </div>
 </template>
@@ -20,17 +21,14 @@
 import {mapGetters} from "vuex";
 import mxGame from "@/mixin/game";
 import imageSkull from "@/assets/skull.png"
-import EndComponent from "@/components/Game/EndComponent.vue";
-import CoinComponent from "@/components/Common/CoinComponent.vue";
 
 export default {
   name: "TimerComponent",
-  components: {CoinComponent, EndComponent},
 
   mixins: [mxGame],
 
   computed: {
-    ...mapGetters(['gameState', 'reallocationFeePool'])
+    ...mapGetters(['gameState'])
   },
 
   data() {

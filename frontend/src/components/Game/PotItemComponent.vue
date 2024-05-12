@@ -1,5 +1,5 @@
 <template>
-  <div class="pot-item-component col-4 col-md-2 text-center text-black mb-md-0 mb-3" :id="'pot-id-'+pot.pot_id">
+  <div class="pot-item-component col-4 col-lg-2 text-center text-black mb-lg-0 mb-3" :id="'pot-id-'+pot.pot_id">
     <div class="pot-header"
          ref="popover"
          data-bs-toggle="popover"
@@ -7,22 +7,23 @@
          :data-bs-content="getPotDescription(pot.pot_id)"
          data-bs-trigger="hover"
     >
-      <h2 class="d-inline me-2" :class="isPotWinning ? 'text-pp-winner' : 'text-pp-loser'">
+      <h4 class="d-inline me-0 me-md-2" :class="isPotWinning ? 'text-pp-winner' : 'text-pp-loser'">
         {{ getPotName(pot.pot_id) }}
-      </h2>
-      <PotItemIconComponent :isWinning="isPotWinning" :potId="pot.pot_id"/>
+      </h4>
+      <PotItemIconComponent :isWinning="isPotWinning" :potId="pot.pot_id" class="d-none d-md-inline-block"/>
     </div>
 
-    <div class="pot-item position-relative" @click="onPotClick(pot.pot_id)">
+    <div class="pot-item position-relative mb-3" @click="onPotClick(pot.pot_id)">
       <img class="pot-highlight-image w-100 position-absolute"
            :class="utils.selectedPot === pot.pot_id ? 'd-block' : ''" :src="imagePotHighlight" alt="Pot Item"/>
       <img class="pot-image w-100 position-relative" :src="imagePot" alt="Pot Item"/>
-      <div class="pot-content">
-        <span class="pot-tokens py-1 px-2">{{ Number(pot.amount / 1000000).toFixed(6) }} <CoinComponent/></span>
-      </div>
     </div>
 
-    <div class="allocations card mt-3 p-1" :data-pot-id="pot.pot_id">
+    <div class="pot-content mb-3">
+      <span class="pot-tokens py-2 px-3">{{ displayAmount(pot.amount) }} <CoinComponent/></span>
+    </div>
+
+    <div class="allocations card p-1" :data-pot-id="pot.pot_id">
       <draggable
         v-model="allPotsAllocations"
         group="allocations"
@@ -36,8 +37,8 @@
             <div class="draggable-item-text">
               {{
                 !drag
-                  ? element.amount / 1000000
-                  : Number((element.amount * (1 - gameConfig.fee_reallocation / 100)) / 1000000).toFixed(6)
+                  ? displayAmount(element.amount)
+                  : displayAmount(element.amount * (1 - gameConfig.fee_reallocation / 100))
               }}
               <CoinComponent class="d-inline"/>
             </div>
@@ -48,10 +49,6 @@
         </template>
       </draggable>
     </div>
-
-    <!-- <div class="pot-share" v-if="allocations">-->
-    <!--   Your share: ({{Number(allocations / pot.amount * 100).toFixed(2)}}%)-->
-    <!-- </div>-->
   </div>
 </template>
 
@@ -65,13 +62,14 @@ import imagePotHighlight from "@/assets/pot-highlight.png"
 import CoinComponent from "@/components/Common/CoinComponent.vue";
 import PotItemIconComponent from "@/components/Game/PotItemIconComponent.vue";
 import {Popover} from "bootstrap";
+import mxChain from "@/mixin/chain";
 
 export default {
   name: "PotItemComponent",
 
   components: {PotItemIconComponent, CoinComponent, draggable},
 
-  mixins: [mxPot],
+  mixins: [mxPot, mxChain],
 
   props: {
     pot: {
@@ -148,7 +146,8 @@ export default {
 <style lang="scss" scoped>
 .pot-item:hover {
   .pot-highlight-image {
-    display: block;
+    opacity: 1;
+    transform: scale(1.1);
   }
 }
 
@@ -156,29 +155,8 @@ export default {
   //position: absolute;
   left: 0;
   top: 0;
-  display: none;
-}
-
-.pot-content {
-  position: absolute;
-  top: 60%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.pot-tokens {
-  font-weight: bold;
-  font-size: calc(8px + 1vw); /* Adjust 12px and 1vw as needed */
-
-  border-radius: .75em;
-  background-color: white;
-  white-space: nowrap;
-}
-
-.pot-header {
-  h2 {
-    //text-shadow: 1px 2px 10px rgba(0, 0, 0, 0.2);
-  }
+  opacity: 0;
+  transition: .15s;
 }
 
 .pot-footer > button:hover {
