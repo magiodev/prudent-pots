@@ -12,7 +12,8 @@ use crate::{
         },
         validate::{
             validate_and_extend_game_time, validate_existing_allocation, validate_funds,
-            validate_game_end_time, validate_is_contract_admin, validate_pot_limit_not_exceeded,
+            validate_game_end_time, validate_is_contract_admin,
+            validate_is_contract_admin_game_end, validate_pot_limit_not_exceeded,
         },
     },
     state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, REALLOCATION_FEE_POOL},
@@ -30,6 +31,7 @@ pub fn update_config(
     game_cw721_addrs: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
     game_duration: Option<u64>,
     game_extend: Option<u64>,
+    game_end_threshold: Option<u64>,
     min_pot_initial_allocation: Option<Uint128>,
     decay_factor: Option<Uint128>, // i.e. 95 as 95%
 ) -> Result<Response, ContractError> {
@@ -73,6 +75,9 @@ pub fn update_config(
             return Err(ContractError::InvalidInput {});
         }
         game_config.game_extend = game_extend;
+    }
+    if let Some(game_end_threshold) = game_end_threshold {
+        game_config.game_end_threshold = game_end_threshold;
     }
     if let Some(min_pot_initial_allocation) = min_pot_initial_allocation {
         game_config.min_pot_initial_allocation = min_pot_initial_allocation;
@@ -198,11 +203,13 @@ pub fn game_end(
     new_raffle_cw721_id: Option<String>,
     new_raffle_cw721_addr: Option<String>,
 ) -> Result<Response, ContractError> {
-    validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
     validate_game_end_time(deps.storage, &env)?;
+    validate_is_contract_admin_game_end(deps.storage, &deps.querier, &env, &info.sender)?;
 
     // Ensure both or neither options are provided
     if new_raffle_cw721_id.is_some() != new_raffle_cw721_addr.is_some() {
+        // TODO: Decide if we want the prizes to be part of whitelisted cw721_addrs in GameConfig,
+        // or if the whitelist should jsut be the ones that gives minBid discount eligibility
         return Err(ContractError::InvalidRaffleNft {});
     }
 
@@ -210,10 +217,13 @@ pub fn game_end(
     let winning_pots = get_winning_pots(deps.storage)?;
     let total_losing_tokens = calculate_total_losing_tokens(deps.storage, &winning_pots)?;
 
+    let mut msgs: Vec<CosmosMsg> = vec![];
+
     // Process raffle winner and prepare distribution messages
     let (
-        mut msgs,
-        raffle_submsgs,
+        raffle_msgs,    // bank sends
+        raffle_submsgs, // nft transfer
+        raffle_response_attributes,
         new_raffle_denom_amount,
         updated_new_raffle_cw721_id,
         updated_new_raffle_cw721_addr,
@@ -225,17 +235,17 @@ pub fn game_end(
         new_raffle_cw721_id,
         new_raffle_cw721_addr,
     )?;
+    msgs.extend(raffle_msgs.clone());
 
     // Add messages for redistributing tokens from losing to winning pots
-    msgs.extend(get_distribution_send_msgs(
-        &deps.as_ref(),
-        &winning_pots,
-        total_losing_tokens,
-    )?);
+    let (send_msgs, treasury_outgoing_tokens) =
+        get_distribution_send_msgs(&deps.as_ref(), &winning_pots, total_losing_tokens)?;
+    msgs.extend(send_msgs.clone());
 
     // Iterate again the msgs generated to know how much tokens effectively we send,
     // as total_losing_tokens contains also next game funds we want to preserve.
-    let total_outgoing_tokens = msgs
+    // TODO: Make this an helper function
+    let total_outgoing_raffle: Uint128 = raffle_msgs
         .iter()
         .filter_map(|msg| {
             if let CosmosMsg::Bank(BankMsg::Send { amount, .. }) = msg {
@@ -247,9 +257,22 @@ pub fn game_end(
         .flatten()
         .map(|coin| coin.amount)
         .sum();
+    let total_outgoing_distribution: Uint128 = send_msgs
+        .iter()
+        .filter_map(|msg| {
+            if let CosmosMsg::Bank(BankMsg::Send { amount, .. }) = msg {
+                Some(amount)
+            } else {
+                None
+            }
+        })
+        .flatten()
+        .map(|coin| coin.amount)
+        .sum();
+    let total_outgoing_tokens = total_outgoing_raffle.checked_add(total_outgoing_distribution)?;
 
     // Reset and prepare for the next game
-    let (old_round_count, _new_round_count) = prepare_next_game(
+    let (old_round_count, _new_round_count, old_extend_count) = prepare_next_game(
         deps,
         &env,
         total_outgoing_tokens,
@@ -265,11 +288,14 @@ pub fn game_end(
             attr("method", "execute"),
             attr("action", "game_end"),
             attr("round_count", old_round_count.to_string()),
+            attr("extend_count", old_extend_count.to_string()),
             attr("winning_pots", format!("{:?}", winning_pots)),
-            //attr("treasury_outgoing_tokens", todo!()),
-            //attr("winner_outgoing_tokens", todo!()),
-            //attr("raffle_outgoing_nft", todo!()),
-            //attr("raffle_outgoing_tokens", todo!()),
-            //attr("next_round_tokens", todo!()),
-        ]))
+            attr(
+                "winning_outgoing_tokens",
+                total_outgoing_distribution.checked_sub(treasury_outgoing_tokens)?, // this is just about legacy distribution
+            ),
+            attr("treasury_outgoing_tokens", treasury_outgoing_tokens),
+        ])
+        .add_attributes(raffle_response_attributes) // this contains the raffle event attributes including the treasury denom fee split, which is not included above
+        .add_attribute("total_outgoing_tokens", total_outgoing_tokens)) // this is the total of distribution + raffle + treasury
 }

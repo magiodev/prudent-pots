@@ -65,7 +65,9 @@ mod tests {
         let winning_pots = vec![2];
         let total_losing_tokens = Uint128::new(200 + 1181 + 200 + 200); // Total losing tokens excluding the winning pot
         let messages =
-            get_distribution_send_msgs(&deps.as_ref(), &winning_pots, total_losing_tokens).unwrap();
+            get_distribution_send_msgs(&deps.as_ref(), &winning_pots, total_losing_tokens)
+                .unwrap()
+                .0;
 
         // Assertions
         let config = GAME_CONFIG.load(deps.as_ref().storage).unwrap();

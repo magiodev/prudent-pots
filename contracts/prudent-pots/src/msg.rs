@@ -21,6 +21,7 @@ pub enum ExecuteMsg {
         game_cw721_addrs: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
         game_duration: Option<u64>,
         game_extend: Option<u64>,
+        game_end_threshold: Option<u64>,
         min_pot_initial_allocation: Option<Uint128>,
         decay_factor: Option<Uint128>,
     },
@@ -139,4 +140,6 @@ pub struct RaffleDenomSplitResponse {
 }
 
 #[cw_serde]
-pub struct MigrateMsg {}
+pub struct MigrateMsg {
+    pub new_game_config: GameConfig,
+}

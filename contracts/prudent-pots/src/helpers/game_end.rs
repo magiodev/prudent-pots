@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    coins, to_json_binary, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, Storage, SubMsg, Uint128,
-    WasmMsg,
+    attr, coins, to_json_binary, Attribute, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, Storage,
+    SubMsg, Uint128, WasmMsg,
 };
 
 use crate::{
@@ -22,9 +22,9 @@ pub fn prepare_next_game(
     raffle_cw721_token_id: Option<String>,
     raffle_cw721_addr: Option<String>,
     raffle_denom_amount: Option<Uint128>,
-) -> Result<(u64, u64), ContractError> {
+) -> Result<(u64, u64, u32), ContractError> {
     let config = GAME_CONFIG.load(deps.storage)?;
-    let game_state = GAME_STATE.may_load(deps.storage)?.unwrap_or_default();
+    let game_state = GAME_STATE.may_load(deps.storage)?.unwrap_or_default(); // may load due instantiate invoke
 
     // Start the next game 1 second in the future
     let game_duration = config.game_duration;
@@ -51,8 +51,9 @@ pub fn prepare_next_game(
     };
     GAME_STATE.save(deps.storage, &new_game_state)?;
 
-    // Reset player allocations for the next game
+    // Reset player allocations for the next game, and first bidder
     PLAYER_ALLOCATIONS.clear(deps.storage);
+    FIRST_BIDDER.clear(deps.storage);
 
     // Start initial tokens allocation workflow by querying the contract balance
     let net_contract_balance = deps
@@ -90,7 +91,11 @@ pub fn prepare_next_game(
         },
     )?;
 
-    Ok((game_state.round_count, new_game_state.round_count))
+    Ok((
+        game_state.round_count,
+        new_game_state.round_count,
+        game_state.extend_count,
+    ))
 }
 
 /// Compute the raffle winner based on the total tokens allocated among the winning pots.
@@ -165,6 +170,7 @@ pub fn process_raffle_winner(
     (
         Vec<CosmosMsg>,
         Vec<SubMsg>,
+        Vec<Attribute>,
         Uint128,
         Option<String>,
         Option<String>,
@@ -174,8 +180,12 @@ pub fn process_raffle_winner(
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let raffle = RAFFLE.load(deps.storage)?;
 
+    // TODO: Early return here if there is no raffle
+    // if raffle.nft_id && addr is none and denom_prize is_zero() return all default values.
+
     let mut msgs = Vec::new();
     let mut submsgs = Vec::new();
+    let mut raffle_response_attributes = vec![];
 
     // this is common for yes_raffle and no_raffle scenarios
     let mut new_raffle_denom_amount =
@@ -185,28 +195,40 @@ pub fn process_raffle_winner(
 
     match raffle_winner {
         Some(recipient) => {
-            if let Some(cw721_id) = &raffle.cw721_token_id {
+            if let Some(token_id) = &raffle.cw721_token_id {
+                let cw721_addr = raffle.cw721_addr.unwrap();
                 let transfer_nft_msg = SubMsg::reply_always(
                     WasmMsg::Execute {
-                        contract_addr: raffle.cw721_addr.unwrap(), // TODO: Better handle this unwrap
+                        contract_addr: cw721_addr.to_string(),
                         msg: to_json_binary(&cw721::Cw721ExecuteMsg::TransferNft {
-                            recipient: recipient.clone(),
-                            token_id: cw721_id.clone(),
+                            recipient: recipient.to_string(),
+                            token_id: token_id.to_string(),
                         })?,
                         funds: vec![],
                     },
                     ReplyMsg::GameEnd as u64,
                 );
                 submsgs.push(transfer_nft_msg);
+                // Append attributes
+                raffle_response_attributes.extend(vec![
+                    attr("raffle_winner", recipient.to_string()),
+                    attr("raffle_outgoing_nft_addr", cw721_addr),
+                    attr("raffle_outgoing_nft_id", token_id),
+                ]);
             }
 
             let (prize_to_distribute, prize_to_treasury) = get_raffle_denom_prize_amounts(deps)?;
             if !prize_to_distribute.is_zero() {
                 let send_msg = CosmosMsg::Bank(BankMsg::Send {
-                    to_address: recipient,
+                    to_address: recipient.to_string(),
                     amount: coins(prize_to_distribute.u128(), game_config.game_denom.clone()),
                 });
                 msgs.push(send_msg);
+                // Append attributes
+                raffle_response_attributes.extend(vec![attr(
+                    "raffle_outgoing_tokens_winner",
+                    recipient.to_string(),
+                )]);
             }
             if !prize_to_treasury.is_zero() {
                 let send_msg = CosmosMsg::Bank(BankMsg::Send {
@@ -214,6 +236,11 @@ pub fn process_raffle_winner(
                     amount: coins(prize_to_treasury.u128(), game_config.game_denom.clone()),
                 });
                 msgs.push(send_msg);
+                // Append attributes
+                raffle_response_attributes.extend(vec![attr(
+                    "raffle_outgoing_tokens_treasury",
+                    game_config.fee_address.to_string(),
+                )]);
             }
         }
         None => {
@@ -264,6 +291,7 @@ pub fn process_raffle_winner(
     Ok((
         msgs,
         submsgs,
+        raffle_response_attributes,
         new_raffle_denom_amount,
         new_raffle_cw721_id,
         new_raffle_cw721_addr,
@@ -295,7 +323,7 @@ pub fn get_distribution_send_msgs(
     deps: &Deps,
     winning_pots: &[u8],
     total_losing_tokens: Uint128,
-) -> Result<Vec<CosmosMsg>, ContractError> {
+) -> Result<(Vec<CosmosMsg>, Uint128), ContractError> {
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let total_distribution_amount = total_losing_tokens.multiply_ratio(1u128, 2u128);
 
@@ -357,7 +385,10 @@ pub fn get_distribution_send_msgs(
         }));
     }
 
-    Ok(messages)
+    Ok((
+        messages,
+        total_fee.checked_add(reallocation_fee_pool)?, // treasury_outgoing_tokens
+    ))
 }
 
 // Helper to calculate the total tokens in losing pots and winning pots without allocations

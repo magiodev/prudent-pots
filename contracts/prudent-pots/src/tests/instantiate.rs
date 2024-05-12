@@ -19,6 +19,7 @@ pub mod tests {
         let config = GameConfig {
             game_duration: 3600,
             game_extend: 600,
+            game_end_threshold: 600,
             fee: 2,
             fee_reallocation: 5,
             fee_address: Addr::unchecked("fee_address"),

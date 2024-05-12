@@ -74,6 +74,7 @@ pub fn execute(
             game_cw721_addrs,
             game_duration,
             game_extend,
+            game_end_threshold,
             min_pot_initial_allocation,
             decay_factor,
         } => update_config(
@@ -87,6 +88,7 @@ pub fn execute(
             game_cw721_addrs,
             game_duration,
             game_extend,
+            game_end_threshold,
             min_pot_initial_allocation,
             decay_factor,
         ),
@@ -137,6 +139,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    // Update GameConfig state with new struct
+    GAME_CONFIG.save(deps.storage, &msg.new_game_config)?;
+
+    // TODO
+
     Ok(Response::new().add_attribute("migrate", "successful"))
 }
