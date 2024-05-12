@@ -9,37 +9,40 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("InvalidFunds")]
+    #[error("Transaction contains invalid funds amount.")]
     InvalidFunds {},
 
-    #[error("InvalidInput")]
+    #[error("Input provided is invalid.")]
     InvalidInput {},
 
-    #[error("InvalidPot")]
+    #[error("Invalid pot detected.")]
     InvalidPot {},
 
-    #[error("AlreadyAllocated")]
+    #[error("This pot has already been allocated some funds.")]
     AlreadyAllocated {},
 
-    #[error("NoFunds")]
+    #[error("Insufficient funds to complete the transaction.")]
     InsufficientFunds {},
 
-    #[error("GameAlreadyEnded")]
+    #[error("The reallocations limit has been reached for your address.")]
+    ReallocationsLimitReached {},
+
+    #[error("This action cannot be performed as the game has already ended.")]
     GameAlreadyEnded {},
 
-    #[error("GameStillActive")]
+    #[error("The game is still active and cannot be ended or reset at this time.")]
     GameStillActive {},
 
-    #[error("PotLimitReached: A pot cannot contain more tokens than the sum of the others.")]
+    #[error("Pot limit exceeded: Cannot allocate more tokens to a pot than the collective sum of others.")]
     PotLimitReached {},
 
-    #[error("PreviousRaffleNftIsUnwon")]
+    #[error("The previous raffle NFT remains unwon.")]
     PreviousRaffleNftIsUnwon {},
 
-    #[error("InvalidRaffleNft")]
+    #[error("Raffle NFT specified is invalid.")]
     InvalidRaffleNft {},
 
-    #[error("Cw721TokenNotReceived")]
+    #[error("Expected a CW721 token transfer but none was received.")]
     Cw721TokenNotReceived {},
 
     #[error("{0}")]
@@ -48,10 +51,10 @@ pub enum ContractError {
     #[error("{0}")]
     DivideByZeroError(#[from] DivideByZeroError),
 
-    #[error("BidOutOfRange. Min: {min:?}, Max: {max:?}")]
+    #[error("Bid amount out of range. Min: {min:?}, Max: {max:?}")]
     BidOutOfRange { min: Uint128, max: Uint128 },
 
-    #[error("NotEnoughFundsForNextRound")]
+    #[error("Insufficient funds available for initiating the next round.")]
     NotEnoughFundsForNextRound {},
 
     #[error("Unknown Reply ID")]

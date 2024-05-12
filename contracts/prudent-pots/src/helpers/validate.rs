@@ -86,7 +86,7 @@ pub fn validate_increase_player_reallocations(
 
     // Check if the player has reached the reallocation limit.
     if current_reallocations >= game_config.reallocations_limit {
-        return Err(ContractError::InvalidInput {});
+        return Err(ContractError::ReallocationsLimitReached {});
     }
 
     // Safely increase the reallocation count, handling potential overflow.
