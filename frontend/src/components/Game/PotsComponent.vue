@@ -2,6 +2,10 @@
   <div class="pots-component position-relative">
     <div class="row justify-content-center">
       <PotItemComponent :pot="pot" v-for="pot in pots" :key="pot.id" @endReallocation="onReallocateTokens"/>
+
+      <div v-if="userAddress" class=" mt-3">
+        <p class="text-center">You have reallocated funds {{playerReallocations}} out of the {{gameConfig.reallocations_limit}} times allowed.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -21,7 +25,7 @@ export default {
   components: {PotItemComponent},
 
   computed: {
-    ...mapGetters(['pots']),
+    ...mapGetters(['pots', "playerReallocations", "userAddress", "gameConfig"]),
   },
 
   methods: {
