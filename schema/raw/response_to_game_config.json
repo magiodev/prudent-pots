@@ -28,7 +28,8 @@
         "game_duration",
         "game_end_threshold",
         "game_extend",
-        "min_pot_initial_allocation"
+        "min_pot_initial_allocation",
+        "reallocations_limit"
       ],
       "properties": {
         "decay_factor": {
@@ -73,6 +74,11 @@
         },
         "min_pot_initial_allocation": {
           "$ref": "#/definitions/Uint128"
+        },
+        "reallocations_limit": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
         }
       },
       "additionalProperties": false
