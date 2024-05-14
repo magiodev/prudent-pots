@@ -53,14 +53,18 @@
       <tr>
         <td>Winning pots</td>
         <td>
-          {{ winningPots.length ? winningPots.map(potId => getPotName(potId)).join(', ') : 'There are no winning pots for this round. All the tokens will be reserved for the next game.'
+          {{ winningPots.length
+            ? winningPots.map(potId => getPotName(potId)).join(', ')
+            : 'There are no winning pots for this round. All the tokens will be reserved for the next game.'
           }}
         </td>
       </tr>
       <tr>
         <td>Losing pots</td>
         <td>
-          {{ winningPots.length < 5 ? pots.filter(pot => !winningPots.includes(pot.pot_id)).map(pot => getPotName(pot.pot_id)).join(', ') : 'There are no losing pots for this round. All the tokens will be distributed to the current round winners.'
+          {{ winningPots.length < 5
+            ? pots.filter(pot => !winningPots.includes(pot.pot_id)).map(pot => getPotName(pot.pot_id)).join(', ')
+            : 'There are no losing pots for this round. All the tokens will be distributed to the current round winners.'
           }}
         </td>
       </tr>
@@ -130,8 +134,14 @@
         <tr>
           <td>{{ timeLeftSeconds ? 'Current ' : '' }}Winner</td>
           <td>
-            {{ raffleWinner ? `${raffleWinner.substring(0, 15)}...` : 'No raffle winner in this round. Balances will be kept by the contract for the next round.'
-            }}{{ raffleWinner && timeLeftSeconds ? ', but the round is still ongoing and it could change.' : '' }}
+            {{ raffleWinner
+              ? `${raffleWinner.substring(0, 15)}...`
+              : 'No raffle winner in this round. Balances will be kept by the contract for the next round.'
+            }}
+            {{ raffleWinner && timeLeftSeconds
+              ? ', but the round is still ongoing and it could change.'
+              : ''
+            }}
           </td>
         </tr>
         <tr v-if="Number(raffle.denom_amount)">
@@ -253,16 +263,8 @@ export default {
         });
 
         if (stats.winningPots > 0) {
-          const winningPots = this.pots.filter(pot => this.winningPots.includes(pot.pot_id));
-          const effectiveWinningTotal = winningPots.reduce((sum, pot) => {
-            const initialFunds = this.initialFundsPerPot;
-            return sum + (parseInt(pot.amount) - initialFunds); // Subtracting initial funds from each pot's total amount
-          }, 0);
-
-          stats.redistributionShare = redistributionAmount * (stats.winningPots / effectiveWinningTotal) * this.winningPots.length;
-          winningPots.forEach(pot => {
-            stats.redistributionShare += this.getPotInitialFundsShareByPlayer(pot.pot_id, address);
-          });
+          stats.redistributionShare += this.getPotInitialFundsShareByPlayer(address);
+          stats.redistributionShare += this.getLosingFundsShareByPlayer(address, redistributionAmount);
           stats.sharesInPercentage = (stats.redistributionShare / (redistributionAmount + this.initialFundsPerPot * this.winningPots.length) * 100).toFixed(2);
 
           const fee = stats.redistributionShare * feePercentage;
@@ -284,32 +286,50 @@ export default {
       return pots.reduce((total, {amount}) => total + parseInt(amount), 0);
     },
 
-    getPotInitialFundsShareByPlayer(potId, playerAddress) {
-      const initialFunds = this.initialFundsPerPot;
-      const playerBet = this.allPlayersAllocations
-        .find(item => item[0] === playerAddress)[1]
-        .find(a => a.pot_id === potId)?.amount || "0"
+    getPotInitialFundsShareByPlayer(playerAddress) {
+      const winningPots = this.pots.filter(pot => this.winningPots.includes(pot.pot_id));
 
-      const totalBetsInPot = this.calculateTotalInPots(
-        this.allPlayersAllocations.flatMap(([, alloc]) =>
-          alloc.filter(a => a.pot_id === potId)
-        )
-      );
-      return (parseInt(playerBet) / totalBetsInPot) * initialFunds;
+      let result = 0
+      winningPots.forEach(pot => {
+        const initialFunds = this.initialFundsPerPot;
+        const playerBet = this.allPlayersAllocations
+          .find(item => item[0] === playerAddress)[1]
+          .find(a => a.pot_id === pot.pot_id)?.amount || "0"
+
+        const totalBetsInPot = this.calculateTotalInPots(
+          this.allPlayersAllocations.flatMap(([, alloc]) =>
+            alloc.filter(a => a.pot_id === pot.pot_id)
+          )
+        );
+        result += (parseInt(playerBet) / totalBetsInPot) * initialFunds;
+      });
+
+      return result
     },
 
-    getLosingFundsShareByPlayer(potId, playerAddress, losingFunds) {
-      // TODO: This should be (totalWinningTokensFromPlayer / (totalAmountInWinningPots - initialWinningPotsFunds)) * 100
-      const playerBet = this.allPlayersAllocations
-        .find(item => item[0] === playerAddress)[1]
-        .find(a => a.pot_id === potId)?.amount || "0"
+    getLosingFundsShareByPlayer(playerAddress, redistributionAmount) {
+      const winningPots = this.pots.filter(pot => this.winningPots.includes(pot.pot_id));
 
-      const totalBetsInPot = this.calculateTotalInPots(
-        this.allPlayersAllocations.flatMap(([, alloc]) =>
-          alloc.filter(a => a.pot_id === potId)
-        )
-      );
-      return (parseInt(playerBet) / totalBetsInPot) * losingFunds;
+      const effectiveWinningTotal = winningPots.reduce((sum, pot) => {
+        const initialFunds = this.initialFundsPerPot;
+        return sum + (parseInt(pot.amount) - initialFunds); // Subtracting initial funds from each pot's total amount
+      }, 0);
+
+      let totalWinningTokensFromPlayer = 0
+      winningPots.forEach(pot => {
+        const playerBet = this.allPlayersAllocations
+          .find(item => item[0] === playerAddress)[1]
+          .find(a => a.pot_id === pot.pot_id)?.amount || "0"
+
+        const totalBetsInPot = this.calculateTotalInPots(
+          this.allPlayersAllocations.flatMap(([, alloc]) =>
+            alloc.filter(a => a.pot_id === pot.pot_id)
+          )
+        );
+        totalWinningTokensFromPlayer += (parseInt(playerBet) / totalBetsInPot) * redistributionAmount;
+      });
+
+      return (totalWinningTokensFromPlayer / effectiveWinningTotal) * 100
     }
   }
 }
