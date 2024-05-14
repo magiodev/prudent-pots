@@ -54,8 +54,8 @@
         <td>Winning pots</td>
         <td>
           {{ winningPots.length
-            ? winningPots.map(potId => getPotName(potId)).join(', ')
-            : 'There are no winning pots for this round. All the tokens will be reserved for the next game.'
+          ? winningPots.map(potId => getPotName(potId)).join(', ')
+          : 'There are no winning pots for this round. All the tokens will be reserved for the next game.'
           }}
         </td>
       </tr>
@@ -63,8 +63,8 @@
         <td>Losing pots</td>
         <td>
           {{ winningPots.length < 5
-            ? pots.filter(pot => !winningPots.includes(pot.pot_id)).map(pot => getPotName(pot.pot_id)).join(', ')
-            : 'There are no losing pots for this round. All the tokens will be distributed to the current round winners.'
+          ? pots.filter(pot => !winningPots.includes(pot.pot_id)).map(pot => getPotName(pot.pot_id)).join(', ')
+          : 'There are no losing pots for this round. All the tokens will be distributed to the current round winners.'
           }}
         </td>
       </tr>
@@ -98,7 +98,7 @@
       </tr>
       <tr>
         <td>Total bets</td>
-        <td>{{ allPlayersAllocations.length }} players: {{ displayAmount(totalBetsAllPlayers(), 2) }}
+        <td>{{ allPlayersAllocations.length }} players: {{ displayAmount(totalBetsAllPlayers, 2) }}
           <CoinComponent/>
         </td>
       </tr>
@@ -135,12 +135,12 @@
           <td>{{ timeLeftSeconds ? 'Current ' : '' }}Winner</td>
           <td>
             {{ raffleWinner
-              ? `${raffleWinner.substring(0, 15)}...`
-              : 'No raffle winner in this round. Balances will be kept by the contract for the next round.'
+            ? `${raffleWinner.substring(0, 15)}...`
+            : 'No raffle winner in this round. Balances will be kept by the contract for the next round.'
             }}
             {{ raffleWinner && timeLeftSeconds
-              ? ', but the round is still ongoing and it could change.'
-              : ''
+            ? ', but the round is still ongoing and it could change.'
+            : ''
             }}
           </td>
         </tr>
@@ -165,7 +165,6 @@
     </template>
     <p v-else class="text-center text-pp-color-4 small">There are no raffle prizes assigned to this round.</p>
   </div>
-
 </template>
 
 <script>
@@ -230,7 +229,6 @@ export default {
           alloc.filter(a => a.pot_id === whateverPot.pot_id)
         )
       );
-      console.log(`Initial funds per pot is: ${Math.max(0, parseInt(whateverPot.amount) - totalPotAllocations)}`)
       return Math.max(0, parseInt(whateverPot.amount) - totalPotAllocations);
     },
 
@@ -315,21 +313,15 @@ export default {
         return sum + (parseInt(pot.amount) - initialFunds); // Subtracting initial funds from each pot's total amount
       }, 0);
 
-      let totalWinningTokensFromPlayer = 0
+      let totalBetsFromPlayerOnWinningPots = 0
       winningPots.forEach(pot => {
         const playerBet = this.allPlayersAllocations
           .find(item => item[0] === playerAddress)[1]
           .find(a => a.pot_id === pot.pot_id)?.amount || "0"
-
-        const totalBetsInPot = this.calculateTotalInPots(
-          this.allPlayersAllocations.flatMap(([, alloc]) =>
-            alloc.filter(a => a.pot_id === pot.pot_id)
-          )
-        );
-        totalWinningTokensFromPlayer += (parseInt(playerBet) / totalBetsInPot) * redistributionAmount;
+        totalBetsFromPlayerOnWinningPots += parseInt(playerBet)
       });
 
-      return (totalWinningTokensFromPlayer / effectiveWinningTotal) * 100
+      return (totalBetsFromPlayerOnWinningPots / effectiveWinningTotal) * redistributionAmount
     }
   }
 }
