@@ -16,7 +16,7 @@
             </span>
 
             <span class="me-1">
-              <UserAddressComponent :cut="10" :address="getTxEvents(tx.events)[0].player"/>
+              <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].player"/>
             </span>
 
             <span class="me-1" v-if="getTxEvents(tx.events)[0].action">
@@ -50,7 +50,7 @@
             </span>
 
             <span class="me-1">
-              <UserAddressComponent :cut="10" :address="getTxEvents(tx.events)[0].player"/>
+              <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].player"/>
             </span>
 
             <span class="me-1">
