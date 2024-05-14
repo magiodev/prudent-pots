@@ -278,7 +278,7 @@ export default createStore({
       );
       // TODO: This could be avoided in favor of allPlayersAllocation.find(address => this.user) (pseudo code)
       // Filter out allocations where the amount is "0"
-      const filteredAllocations = allocationsResponse.allocations.allocations.filter(allocation => allocation.amount !== "0");
+      const filteredAllocations = allocationsResponse.allocations.filter(allocation => allocation.amount !== "0");
       commit("setPlayerAllocations", filteredAllocations);
 
       // Player Reallocations
