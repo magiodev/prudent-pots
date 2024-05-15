@@ -11,8 +11,7 @@
           <th scope="col">Winning</th>
           <th scope="col">Losing</th>
           <th scope="col">Share of Prize
-            ({{ displayAmount(totalPrizeOnlyLosingDistribution + (initialFundsPerPot * this.winningPots.length), 2)
-            }})
+            ({{ displayAmount(totalPrizeOnlyLosingDistribution + totalWinningInitialFundsWithAllocations, 2) }})
           </th>
           <th scope="col">Receives</th>
         </tr>
@@ -210,6 +209,17 @@ export default {
         : totalLosing; // if not pot wins
     },
 
+    totalWinningInitialFundsWithAllocations() {
+      let count = 0
+      this.winningPots.forEach(potId => {
+        const totalInPot = this.calculateTotalInPots([this.pots.find(p => p.pot_id === potId)]) - this.initialFundsPerPot
+        console.log(potId, totalInPot)
+        if (totalInPot > 0) count++
+      })
+      console.log(count)
+      return (this.initialFundsPerPot * count)
+    },
+
     totalBetsAllPlayers() {
       return this.allPlayersAllocations.reduce((totalSum, [, allocationsObj]) => {
         // Accessing allocations array and summing the amounts
@@ -262,7 +272,7 @@ export default {
         if (stats.winningPots > 0) {
           stats.redistributionShare += this.getPotInitialFundsShareByPlayer(address);
           stats.redistributionShare += this.getLosingFundsShareByPlayer(address, redistributionAmount);
-          stats.sharesInPercentage = (stats.redistributionShare / (redistributionAmount + this.initialFundsPerPot * this.winningPots.length) * 100).toFixed(2);
+          stats.sharesInPercentage = (stats.redistributionShare / (redistributionAmount + this.totalWinningInitialFundsWithAllocations) * 100).toFixed(2);
 
           const fee = stats.redistributionShare * feePercentage;
           stats.winningFee = fee;
@@ -298,7 +308,10 @@ export default {
             alloc.filter(a => a.pot_id === pot.pot_id)
           )
         );
-        result += (parseInt(playerBet) / totalBetsInPot) * initialFunds;
+
+        result += totalBetsInPot > 0
+          ? (parseInt(playerBet) / totalBetsInPot) * initialFunds
+          : 0;
       });
 
       return result
