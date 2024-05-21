@@ -51,15 +51,16 @@ const mxGame = {
     // TODO: fetchUser()
 
     async fetchOnce() {
+      await this.initUser();
+
+      await this.fetchGameConfig();
+      await this.fetchGameState();
+
       // Init signer and querier
-      // TODO: This should be separated. Or a user coming with locked wallet will get stuck on Loading.
-      await this.initUser(); // TODO: Remove querier from here and create initSigner and initQuerier.
       if (this.userAddress) {
         await this.fetchPlayerData();
         await this.fetchCw721Tokens()
       }
-      await this.fetchGameConfig();
-      await this.fetchGameState();
     },
 
     async fetchInterval(gameEnd = false) {
