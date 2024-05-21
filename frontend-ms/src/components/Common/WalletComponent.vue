@@ -9,7 +9,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import mxGame from "@/mixin/game";
+import mxGame from "../../../../frontend-common/mixin/game";
 
 export default {
   name: "WalletComponent",

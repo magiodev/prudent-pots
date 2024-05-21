@@ -12,7 +12,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import mxGame from "@/mixin/game";
+import mxGame from "../../../../frontend-common/mixin/game";
 import imageTimer from "@/assets/timer-item.gif"
 
 export default {

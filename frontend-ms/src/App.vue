@@ -17,7 +17,7 @@ import NavbarComponent from "@/components/Layout/NavbarComponent.vue";
 import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 import SidebarComponent from "@/components/Layout/SidebarComponent.vue";
 import FooterComponent from "@/components/Layout/FooterComponent.vue";
-import mxGame from "@/mixin/game";
+import mxGame from "../../frontend-common/mixin/game";
 import {mapGetters} from "vuex";
 
 export default {
