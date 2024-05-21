@@ -3,7 +3,7 @@ import {AminoTypes} from "@cosmjs/stargate";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {Registry} from "@cosmjs/proto-signing";
 import {cosmosAminoConverters, cosmosProtoRegistry, cosmwasmAminoConverters, cosmwasmProtoRegistry} from "osmojs";
-import mxChain from "@/mixin/chain";
+import mxChain from "../mixin/chain";
 import axios from "axios";
 
 const mxChainUtils = {
@@ -215,6 +215,9 @@ export default createStore({
 
   actions: {
     async initUser({commit}) {
+      // TODO:
+      //  This should be separated. Or a user coming with locked wallet will get stuck on Loading.
+      //  Remove querier from here and create initSigner and initQuerier.
       const chainId = process.env.VUE_APP_CHAIN_ID;
 
       if (!window.keplr) {
@@ -263,7 +266,7 @@ export default createStore({
       // Balance
       const balance = await state.user.querier.queryClient.bank.balance(
         state.user.address,
-        process.env.VUE_APP_GAME_DENOM
+        state.gameConfig.game_denom
       );
       commit("setUserBalance", mxChainUtils.methods.displayAmount(Number(balance.amount)));
 

@@ -22,7 +22,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import mxChain from "@/mixin/chain";
+import mxChain from "../../../../frontend-common/mixin/chain";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
 
 export default {

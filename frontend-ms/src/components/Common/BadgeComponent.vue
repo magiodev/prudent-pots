@@ -17,7 +17,7 @@
 import CoinComponent from "@/components/Common/CoinComponent.vue";
 import imageLeft from "@/assets/badge/badge-left.png"
 import imageRight from "@/assets/badge/badge-right.png"
-import mxChain from "@/mixin/chain";
+import mxChain from "../../../../frontend-common/mixin/chain";
 
 export default {
   name: "BadgeComponent",

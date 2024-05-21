@@ -116,8 +116,8 @@
 
 <script>
 import {mapGetters} from 'vuex';
-import mxPot from "@/mixin/pot";
-import mxChain from "@/mixin/chain";
+import mxPot from "../../../../frontend-common/mixin/pot";
+import mxChain from "../../../../frontend-common/mixin/chain";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
 import UserAddressComponent from "@/components/Common/UserAddressComponent.vue";
 

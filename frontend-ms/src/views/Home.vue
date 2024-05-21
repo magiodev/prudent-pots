@@ -31,7 +31,7 @@ import PotsComponent from "@/components/Game/PotsComponent.vue";
 import BidComponent from "@/components/Game/BidComponent.vue";
 import TimerComponent from "@/components/Common/TimerComponent.vue";
 import {mapGetters} from "vuex";
-import mxGame from "@/mixin/game";
+import mxGame from "../../../frontend-common/mixin/game";
 import StatsComponent from "@/components/Common/StatsComponent.vue";
 import RaffleComponent from "@/components/Common/RaffleComponent.vue";
 

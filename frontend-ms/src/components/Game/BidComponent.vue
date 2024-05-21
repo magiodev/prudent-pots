@@ -74,16 +74,16 @@
 
 <script>
 import {mapActions, mapGetters} from "vuex";
-import mxChain from "@/mixin/chain";
-import mxToast from "@/mixin/toast";
-import mxPot from "@/mixin/pot";
+import mxChain from "../../../../frontend-common/mixin/chain";
+import mxToast from "../../../../frontend-common/mixin/toast";
+import mxPot from "../../../../frontend-common/mixin/pot";
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
-import mxGame from "@/mixin/game";
+import mxGame from "../../../../frontend-common/mixin/game";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
-import imageWait from "../../assets/stickers/wait.gif";
-import imageCook from "../../assets/stickers/cook.gif";
-import imageBurn from "../../assets/stickers/burn.gif";
-import imageFrightened from "../../assets/stickers/frightened.gif";
+import imageWait from "@/assets/stickers/wait.gif";
+import imageCook from "@/assets/stickers/cook.gif";
+import imageBurn from "@/assets/stickers/burn.gif";
+import imageFrightened from "@/assets/stickers/frightened.gif";
 import PlayersAllocations from "@/components/Game/PlayersAllocations.vue";
 import WalletComponent from "@/components/Common/WalletComponent.vue";
 

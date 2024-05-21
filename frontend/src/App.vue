@@ -17,13 +17,14 @@ import NavbarComponent from "@/components/Layout/NavbarComponent.vue";
 import LoadingComponent from "@/components/Common/LoadingComponent.vue";
 import SidebarComponent from "@/components/Layout/SidebarComponent.vue";
 import FooterComponent from "@/components/Layout/FooterComponent.vue";
-import mxGame from "@/mixin/game";
+import mxGame from "../../frontend-common/mixin/game";
 import {mapGetters} from "vuex";
+import mxChain from "../../frontend-common/mixin/chain";
 
 export default {
   name: "App",
 
-  mixins: [mxGame],
+  mixins: [mxGame, mxChain],
 
   components: {SidebarComponent, FooterComponent, LoadingComponent, NavbarComponent},
 
@@ -39,6 +40,7 @@ export default {
   },
 
   async created() {
+    await this.suggestChain()
     await this.fetchOnce();
     await this.fetchInterval()
     // we ensure that till this moment rest of UI is kept idle

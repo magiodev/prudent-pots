@@ -1,4 +1,4 @@
-import mxToast from "@/mixin/toast";
+import mxToast from "./toast";
 import {mapGetters} from "vuex";
 import {toUtf8} from "@cosmjs/encoding";
 
@@ -10,6 +10,10 @@ const mxChain = {
   },
 
   methods: {
+    async suggestChain() {
+      await window.keplr.experimentalSuggestChain(JSON.parse(process.env.VUE_APP_CHAIN_INFO));
+    },
+
     async allocateTokens(potId, amount) {
       /** @type {import("@cosmjs/proto-signing").EncodeObject} */
       const msg = {
@@ -87,7 +91,7 @@ const mxChain = {
       return this._submitTx(msg)
     },
 
-    async endGame(tokenId, denomAmount) {
+    async endGame(tokenContract, tokenId, denomAmount) {
       /** @type {import("@cosmjs/proto-signing").EncodeObject} */
       let msg = {
         typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
@@ -96,6 +100,7 @@ const mxChain = {
           contract: process.env.VUE_APP_CONTRACT,
           msg: toUtf8(JSON.stringify({
             game_end: {
+              raffle_cw721_token_addr: tokenContract || null,
               raffle_cw721_token_id: tokenId || null
             }
           })),
@@ -106,7 +111,7 @@ const mxChain = {
       // Only if there is any raffle denom amount.
       if (denomAmount) {
         msg.value.funds.push({
-          denom: process.env.VUE_APP_GAME_DENOM,
+          denom: this.gameConfig.game_denom,
           amount: denomAmount.toString()
         })
       }
@@ -131,16 +136,7 @@ const mxChain = {
     // This has implemented as: https://hackmd.io/@3DOBr1TJQ3mQAFDEO0BXgg/S1N09wpQp
     _calculateFee(gasWanted) {
       const gas = Math.ceil(gasWanted * 1.3);
-      // let baseFee;
-      //
-      // try {
-      //   const baseFeeResponse = await axios.get(process.env.MERKLE_SUBMIT_OSMOSIS_BASE_FEE!);
-      //   baseFee = Number(baseFeeResponse.data?.base_fee);
-      // } catch (e) {
-      //   console.log(e);
-      //   baseFee = 0.0025; // Fallback base fee if the request fails
-      // }
-      const baseFee = 0.0025
+      const baseFee = Number(process.env.VUE_APP_BASE_FEE)
 
       // baseFee * 3 doesn't seem to be necessary after v23 upgrade, but leaving that here for the moment
       const amount = Math.ceil(baseFee * gas).toString();

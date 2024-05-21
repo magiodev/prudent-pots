@@ -32,7 +32,7 @@
 <script>
 import {mapGetters} from "vuex";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
-import mxChain from "@/mixin/chain";
+import mxChain from "../../../../frontend-common/mixin/chain";
 
 export default {
   name: "StatsComponent",
