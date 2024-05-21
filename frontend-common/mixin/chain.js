@@ -136,7 +136,7 @@ const mxChain = {
     // This has implemented as: https://hackmd.io/@3DOBr1TJQ3mQAFDEO0BXgg/S1N09wpQp
     _calculateFee(gasWanted) {
       const gas = Math.ceil(gasWanted * 1.3);
-      const baseFee = 0.0025
+      const baseFee = Number(process.env.VUE_APP_BASE_FEE)
 
       // baseFee * 3 doesn't seem to be necessary after v23 upgrade, but leaving that here for the moment
       const amount = Math.ceil(baseFee * gas).toString();
