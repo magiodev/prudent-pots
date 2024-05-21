@@ -28,9 +28,9 @@
 <script>
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
 import {mapActions, mapGetters} from "vuex";
-import mxChain from "@/mixin/chain";
-import mxToast from "@/mixin/toast";
-import mxGame from "@/mixin/game";
+import mxChain from "../../../../frontend-common/mixin/chain";
+import mxToast from "../../../../frontend-common/mixin/toast";
+import mxGame from "../../../../frontend-common/mixin/game";
 
 export default {
   name: "EndComponent",

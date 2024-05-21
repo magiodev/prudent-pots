@@ -1,4 +1,4 @@
-import mxToast from "@/mixin/toast";
+import mxToast from "./toast";
 import {mapGetters} from "vuex";
 import {toUtf8} from "@cosmjs/encoding";
 

@@ -168,10 +168,10 @@
 
 <script>
 import {mapGetters} from 'vuex';
-import mxGame from "@/mixin/game";
-import mxPot from "@/mixin/pot";
+import mxGame from "../../../../frontend-common/mixin/game";
+import mxPot from "../../../../frontend-common/mixin/pot";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
-import mxChain from "@/mixin/chain";
+import mxChain from "../../../../frontend-common/mixin/chain";
 
 export default {
   name: "PlayersAllocations",

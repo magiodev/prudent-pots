@@ -3,7 +3,7 @@ import {AminoTypes} from "@cosmjs/stargate";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {Registry} from "@cosmjs/proto-signing";
 import {cosmosAminoConverters, cosmosProtoRegistry, cosmwasmAminoConverters, cosmwasmProtoRegistry} from "osmojs";
-import mxChain from "@/mixin/chain";
+import mxChain from "../mixin/chain";
 import axios from "axios";
 
 const mxChainUtils = {

@@ -13,9 +13,9 @@
 <script>
 import {mapActions, mapGetters} from "vuex";
 import PotItemComponent from "@/components/Game/PotItemComponent.vue";
-import mxToast from "@/mixin/toast";
-import mxChain from "@/mixin/chain";
-import mxGame from "@/mixin/game";
+import mxToast from "../../../../frontend-common/mixin/toast";
+import mxChain from "../../../../frontend-common/mixin/chain";
+import mxGame from "../../../../frontend-common/mixin/game";
 
 export default {
   name: "PotsComponent",

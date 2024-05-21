@@ -55,14 +55,14 @@
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
-import mxPot from "@/mixin/pot";
+import mxPot from "../../../../frontend-common/mixin/pot";
 import draggable from "vuedraggable";
 import imagePot from "@/assets/pot.gif"
 import imagePotHighlight from "@/assets/pot-highlight.png"
 import CoinComponent from "@/components/Common/CoinComponent.vue";
 import PotItemIconComponent from "@/components/Game/PotItemIconComponent.vue";
 import {Popover} from "bootstrap";
-import mxChain from "@/mixin/chain";
+import mxChain from "../../../../frontend-common/mixin/chain";
 
 export default {
   name: "PotItemComponent",
