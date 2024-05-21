@@ -9,8 +9,12 @@
       <input id="denomAmount" type="number" class="form-control" v-model="denomAmount">
 
       <!-- Input for raffleCw721TokenIds as a comma-separated string -->
-      <label for="tokenIds" class="form-label">Enter Token IDs (comma-separated):</label>
-      <input id="tokenIds" class="form-control" v-model="tokenId" placeholder="e.g., 1,2,3">
+      <label for="tokenContract" class="form-label">Token Contract:</label>
+      <input id="tokenContract" class="form-control" v-model="tokenContract" placeholder="e.g., addy1xyz">
+
+      <!-- Input for raffleCw721TokenIds as a comma-separated string -->
+      <label for="tokenId" class="form-label">Token ID:</label>
+      <input id="tokenId" class="form-control" v-model="tokenId" placeholder="e.g., 1234">
     </div>
 
     <ButtonComponent
@@ -41,6 +45,7 @@ export default {
   data() {
     return {
       isBusy: false,
+      tokenContract: null,
       tokenId: null,
       denomAmount: 0
     };
@@ -52,7 +57,7 @@ export default {
     async onEndGame() {
       this.isBusy = true
       try {
-        const tx = await this.endGame(this.tokenId, this.denomAmount)
+        const tx = await this.endGame(this.tokenContract, this.tokenId, this.denomAmount)
         this.toast.success(`Tx successful. ${tx.transactionHash}`)
         await this.fetchInterval()
         await this.fetchPlayerData()

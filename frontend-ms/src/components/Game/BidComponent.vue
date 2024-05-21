@@ -80,10 +80,10 @@ import mxPot from "@/mixin/pot";
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
 import mxGame from "@/mixin/game";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
-import imageWait from "../../assets/stickers/wait.gif";
-import imageCook from "../../assets/stickers/cook.gif";
-import imageBurn from "../../assets/stickers/burn.gif";
-import imageFrightened from "../../assets/stickers/frightened.gif";
+import imageWait from "@/assets/stickers/wait.gif";
+import imageCook from "@/assets/stickers/cook.gif";
+import imageBurn from "@/assets/stickers/burn.gif";
+import imageFrightened from "@/assets/stickers/frightened.gif";
 import PlayersAllocations from "@/components/Game/PlayersAllocations.vue";
 import WalletComponent from "@/components/Common/WalletComponent.vue";
 

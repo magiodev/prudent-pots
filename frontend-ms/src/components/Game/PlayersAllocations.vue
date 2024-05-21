@@ -213,17 +213,15 @@ export default {
       let count = 0
       this.winningPots.forEach(potId => {
         const totalInPot = this.calculateTotalInPots([this.pots.find(p => p.pot_id === potId)]) - this.initialFundsPerPot
-        console.log(potId, totalInPot)
         if (totalInPot > 0) count++
       })
-      console.log(count)
       return (this.initialFundsPerPot * count)
     },
 
     totalBetsAllPlayers() {
       return this.allPlayersAllocations.reduce((totalSum, [, allocationsObj]) => {
         // Accessing allocations array and summing the amounts
-        const playerTotal = allocationsObj.allocations.reduce((sum, allocation) => {
+        const playerTotal = allocationsObj.reduce((sum, allocation) => {
           return sum + parseInt(allocation.amount); // Convert the amount string to number
         }, 0);
         return totalSum + playerTotal;

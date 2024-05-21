@@ -55,11 +55,9 @@ const mxGame = {
       // TODO: This should be separated. Or a user coming with locked wallet will get stuck on Loading.
       await this.initUser(); // TODO: Remove querier from here and create initSigner and initQuerier.
       if (this.userAddress) {
-        console.log("Init user successful. Fetching balance and allocations.")
         await this.fetchPlayerData();
         await this.fetchCw721Tokens()
       }
-      console.log("Fetching general information.")
       await this.fetchGameConfig();
       await this.fetchGameState();
     },

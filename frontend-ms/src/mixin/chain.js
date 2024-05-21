@@ -88,7 +88,7 @@ const mxChain = {
       return this._submitTx(msg)
     },
 
-    async endGame(tokenId, denomAmount) {
+    async endGame(tokenContract, tokenId, denomAmount) {
       /** @type {import("@cosmjs/proto-signing").EncodeObject} */
       let msg = {
         typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
@@ -97,6 +97,7 @@ const mxChain = {
           contract: process.env.VUE_APP_CONTRACT,
           msg: toUtf8(JSON.stringify({
             game_end: {
+              raffle_cw721_token_addr: tokenContract || null,
               raffle_cw721_token_id: tokenId || null
             }
           })),
@@ -138,7 +139,6 @@ const mxChain = {
         const baseFeeResponse = await axios.get(process.env.VUE_APP_OSMOSIS_BASE_FEE_LCD);
         baseFee = Number(baseFeeResponse.data?.base_fee);
       } catch (e) {
-        console.log(e);
         baseFee = +process.env.VUE_APP_BASE_FEE; // Fallback base fee if the request fails
       }
 

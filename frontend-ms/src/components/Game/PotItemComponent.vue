@@ -61,8 +61,8 @@ import imagePot1 from "@/assets/pot-1.gif"
 import imagePot2 from "@/assets/pot-2.gif"
 import imagePot3 from "@/assets/pot-3.gif"
 import imagePot4 from "@/assets/pot-4.gif"
-import imagePot5 from "../../assets/pot-5.gif"
-import imagePotHighlight from "../../assets/pot-highlight.png"
+import imagePot5 from "@/assets/pot-5.gif"
+import imagePotHighlight from "@/assets/pot-highlight.png"
 import CoinComponent from "@/components/Common/CoinComponent.vue";
 import PotItemIconComponent from "@/components/Game/PotItemIconComponent.vue";
 import {Popover} from "bootstrap";

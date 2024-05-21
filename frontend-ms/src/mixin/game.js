@@ -55,19 +55,14 @@ const mxGame = {
       // TODO: This should be separated. Or a user coming with locked wallet will get stuck on Loading.
       await this.initUser(); // TODO: Remove querier from here and create initSigner and initQuerier.
       if (this.userAddress) {
-        console.log("Init user successful. Fetching balance and allocations.")
         await this.fetchPlayerData();
         await this.fetchCw721Tokens()
-        console.log("Init user done.")
       }
-      console.log("Fetching general information.")
       await this.fetchGameConfig();
       await this.fetchGameState();
-      console.log("Fetching general done.")
     },
 
     async fetchInterval(gameEnd = false) {
-      console.log('fetchInterval start')
       await this.fetchAllPlayersAllocations()
       await this.fetchPots();
       await this.fetchWinningPots();
@@ -79,7 +74,6 @@ const mxGame = {
       await this.fetchRaffleWinner()
       // TODO: await this.fetchRaffleDenomSplit()
       await this.fetchGameActivity()
-      console.log('fetchInterval done')
     },
 
     updateCurrentTime() {

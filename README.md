@@ -5,7 +5,7 @@ pot has unique rules determining the winning conditions. Players must strategica
 considering the actions of other players and the specific rules of each pot. The game emphasizes strategic thinking,
 forecasting, and adaptability.
 
-<img src="./frontend/src/assets/logo.png">
+<img src="pp/src/assets/logo.png">
 
 ## Game Rules and Concept
 

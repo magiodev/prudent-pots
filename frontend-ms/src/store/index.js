@@ -304,7 +304,6 @@ export default createStore({
         process.env.VUE_APP_CONTRACT,
         {game_config: {}}
       );
-      console.log("fetchGameConfig done.")
       commit("setGameConfig", data.config);
     },
 
