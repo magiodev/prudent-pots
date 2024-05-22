@@ -11,7 +11,7 @@ const mxChain = {
 
   methods: {
     async suggestChain() {
-      await window.keplr.experimentalSuggestChain(JSON.parse(process.env.VUE_APP_CHAIN_INFO));
+      await window.keplr?.experimentalSuggestChain(JSON.parse(process.env.VUE_APP_CHAIN_INFO));
     },
 
     async allocateTokens(potId, amount) {
