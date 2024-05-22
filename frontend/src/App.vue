@@ -40,7 +40,11 @@ export default {
   },
 
   async created() {
-    await this.suggestChain()
+    try {
+      await this.suggestChain()
+    } catch (e) {
+      //console.error(e)
+    }
     await this.fetchOnce();
     await this.fetchInterval()
     // we ensure that till this moment rest of UI is kept idle

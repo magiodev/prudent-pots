@@ -1,18 +1,18 @@
 <template>
   <div class="raffle-component row text-center" v-if="raffle?.nft?.id || Number(raffle.denom_amount)">
-    <div class="title col-12 py-2">
+    <div class="title col-12 pt-3">
       <h3 class="mb-0">Raffle Prizes!</h3>
     </div>
 
     <div class="col-4 offset-2 col-md-3 offset-md-3 raffle-item py-2">
-      <div class="pp-card p-2">
+      <div class="pp-card p-2 h-100">
         <h5 v-if="raffle?.nft?.id" class="text-pp-color-4">{NFT_NAME} #{{ raffle.nft.id }}</h5>
         <img v-if="raffle?.nft?.imageUrl" class="nft-image mb-0" :src="raffle.nft.imageUrl" alt="{NFT_NAME}"/>
       </div>
     </div>
 
     <div class="col-4 col-md-3 raffle-item py-2">
-      <div class="pp-card p-2">
+      <div class="pp-card p-2 h-100">
         <h5 v-if="raffle.denom_amount" class="text-pp-color-4">$DENOM</h5>
         <span class="text-pp-color-4">{{ displayAmount(raffle.denom_amount, 2) }}</span> <CoinComponent/>
       </div>

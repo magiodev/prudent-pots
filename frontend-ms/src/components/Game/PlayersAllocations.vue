@@ -56,7 +56,7 @@
           </td>
         </tr>
         <tr>
-          <td>Denom Prize</td>
+          <td>$OSMO Prize</td>
           <td>
             {{ displayAmount(raffle.denom_amount, 2) }}
             <CoinComponent/>
