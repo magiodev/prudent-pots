@@ -246,6 +246,7 @@ pub fn game_end(
     let (send_msgs, treasury_outgoing_tokens) =
         get_distribution_send_msgs(&deps.as_ref(), &winning_pots, total_losing_tokens)?;
     msgs.extend(send_msgs.clone());
+    REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Iterate again the msgs generated to know how much tokens effectively we send,
     // as total_losing_tokens contains also next game funds we want to preserve.

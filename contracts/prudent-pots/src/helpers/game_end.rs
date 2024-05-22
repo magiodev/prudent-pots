@@ -330,6 +330,8 @@ pub fn get_distribution_send_msgs(
 
     let mut pot_contributions: Vec<Uint128> = vec![Uint128::zero(); 5]; // Assumes 5 pots
     let mut total_winning_tokens = Uint128::zero();
+    let mut messages: Vec<CosmosMsg> = Vec::new();
+    let mut total_fee = Uint128::zero();
 
     // Calculate total token amounts for each winning pot and store them
     for &pot_id in winning_pots {
@@ -339,9 +341,6 @@ pub fn get_distribution_send_msgs(
             total_winning_tokens += pot_state.amount;
         }
     }
-
-    let mut messages: Vec<CosmosMsg> = Vec::new();
-    let mut total_fee = Uint128::zero();
 
     // Distribute tokens to winning pots based on their contribution to the total
     for &pot_id in winning_pots {
@@ -366,7 +365,7 @@ pub fn get_distribution_send_msgs(
         )?;
     }
 
-    // Send reallocation_fee_pool amount to treasury, we will reset it later on to avoid passing DepsMut state here.
+    // Send reallocation_fee_pool amount to treasury.
     let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.storage)?;
     if !reallocation_fee_pool.is_zero() {
         messages.push(CosmosMsg::Bank(BankMsg::Send {
