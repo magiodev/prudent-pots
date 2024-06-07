@@ -15,7 +15,8 @@
 
     <div class="pot-item position-relative mb-3" @click="onPotClick(pot.pot_id)">
       <img class="pot-highlight-image w-100 position-absolute"
-           :class="utils.selectedPot === pot.pot_id ? 'd-block' : ''" :src="imagePotHighlight" alt="Pot Item"/>
+           :class="utils.selectedPot === pot.pot_id ? 'd-block highlight' : ''" :src="imagePotHighlight"
+           alt="Pot Item"/>
       <img class="pot-image w-100 position-relative" :src="currentPotImage" alt="Pot Item"/>
     </div>
 
@@ -25,20 +26,20 @@
 
     <div class="allocations card p-1" :data-pot-id="pot.pot_id">
       <draggable
-        v-model="allPotsAllocations"
-        group="allocations"
-        @start="onDragStart"
-        @end="onDragEnd"
-        item-key="key"
-        class="draggable-container"
+          v-model="allPotsAllocations"
+          group="allocations"
+          @start="onDragStart"
+          @end="onDragEnd"
+          item-key="key"
+          class="draggable-container"
       >
         <template #item="{ element }">
           <div class="draggable-item bg-primary" v-if="Number(element.amount)">
             <div class="draggable-item-text">
               {{
                 !drag
-                  ? displayAmount(element.amount)
-                  : displayAmount(element.amount * (1 - gameConfig.fee_reallocation / 100))
+                    ? displayAmount(element.amount)
+                    : displayAmount(element.amount * (1 - gameConfig.fee_reallocation / 100))
               }}
               <CoinComponent class="d-inline"/>
             </div>
@@ -51,7 +52,6 @@
     </div>
   </div>
 </template>
-
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
@@ -98,11 +98,11 @@ export default {
       // Including only the allocation for this specific pot
       const allocationForThisPot = this.playerAllocations.find(a => a.pot_id === this.pot.pot_id);
       return allocationForThisPot
-        ? [{
-          key: `allocation-${this.pot.pot_id}`,
-          amount: allocationForThisPot.amount,
-        }]
-        : [];
+          ? [{
+            key: `allocation-${this.pot.pot_id}`,
+            amount: allocationForThisPot.amount,
+          }]
+          : [];
     },
 
     currentPotImage() {
@@ -164,8 +164,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.pot-highlight-image.highlight {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
 .pot-item:hover {
-  .pot-highlight-image {
+  .pot-highlight-image:not(.highlight) {
     opacity: 1;
     transform: scale(1.1);
   }

@@ -104,7 +104,7 @@
                 <CoinComponent/>
               </li>
               <li v-if=getTxEvents(tx.events)[0].token_id>
-                MS #{{ getTxEvents(tx.events)[0].token_id }}
+                 #{{ getTxEvents(tx.events)[0].token_id }}
               </li>
             </ul>
           </div>
