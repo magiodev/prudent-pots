@@ -270,18 +270,9 @@ export default createStore({
       );
       commit("setUserBalance", mxChainUtils.methods.displayAmount(Number(balance.amount)));
 
-      // Player Allocations
-      const allocationsResponse = await state.user.querier.queryContractSmart(
-        process.env.VUE_APP_CONTRACT,
-        {
-          player_allocations: {
-            address: state.user.address
-          }
-        }
-      );
-      // TODO: This could be avoided in favor of allPlayersAllocation.find(address => this.user) (pseudo code)
+      // Player Allocations using allPLayersAllocations
       // Filter out allocations where the amount is "0"
-      const filteredAllocations = allocationsResponse.allocations.filter(allocation => allocation.amount !== "0");
+      const filteredAllocations = state.allPlayersAllocations.find(a => a[0] === state.user.address)[1].filter(allocation => allocation.amount !== "0");
       commit("setPlayerAllocations", filteredAllocations);
 
       // Player Reallocations

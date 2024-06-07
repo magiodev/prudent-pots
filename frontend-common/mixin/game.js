@@ -55,6 +55,7 @@ const mxGame = {
 
       await this.fetchGameConfig();
       await this.fetchGameState();
+      await this.fetchAllPlayersAllocations()
 
       // Init signer and querier
       if (this.userAddress) {
