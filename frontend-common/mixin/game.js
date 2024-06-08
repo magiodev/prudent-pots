@@ -48,13 +48,12 @@ const mxGame = {
       "fetchRaffleDenomSplit"
     ]),
 
-    // TODO: fetchUser()
-
     async fetchOnce() {
       await this.initUser();
 
       await this.fetchGameConfig();
       await this.fetchGameState();
+      await this.fetchAllPlayersAllocations() // this is also included in the fetchInterval, we do it twice only the first App render
 
       // Init signer and querier
       if (this.userAddress) {
@@ -74,7 +73,12 @@ const mxGame = {
       await this.fetchRaffle()
       await this.fetchRaffleWinner()
       // TODO: await this.fetchRaffleDenomSplit()
-      await this.fetchGameActivity()
+      // try catch to ignore game activity errors
+      try {
+        this.fetchGameActivity()
+      } catch (e) {
+        console.log(e)
+      }
     },
 
     updateCurrentTime() {

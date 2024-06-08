@@ -15,7 +15,8 @@
 
     <div class="pot-item position-relative mb-3" @click="onPotClick(pot.pot_id)">
       <img class="pot-highlight-image w-100 position-absolute"
-           :class="utils.selectedPot === pot.pot_id ? 'd-block' : ''" :src="imagePotHighlight" alt="Pot Item"/>
+           :class="utils.selectedPot === pot.pot_id ? 'd-block highlight' : ''" :src="imagePotHighlight"
+           alt="Pot Item"/>
       <img class="pot-image w-100 position-relative" :src="currentPotImage" alt="Pot Item"/>
     </div>
 
@@ -25,20 +26,20 @@
 
     <div class="allocations card p-1" :data-pot-id="pot.pot_id">
       <draggable
-        v-model="allPotsAllocations"
-        group="allocations"
-        @start="onDragStart"
-        @end="onDragEnd"
-        item-key="key"
-        class="draggable-container"
+          v-model="allPotsAllocations"
+          group="allocations"
+          @start="onDragStart"
+          @end="onDragEnd"
+          item-key="key"
+          class="draggable-container"
       >
         <template #item="{ element }">
-          <div class="draggable-item bg-primary" v-if="Number(element.amount)">
+          <div :class="['draggable-item', drag && 'dragged']" v-if="Number(element.amount)">
             <div class="draggable-item-text">
               {{
                 !drag
-                  ? displayAmount(element.amount)
-                  : displayAmount(element.amount * (1 - gameConfig.fee_reallocation / 100))
+                    ? displayAmount(element.amount)
+                    : displayAmount(element.amount * (1 - gameConfig.fee_reallocation / 100))
               }}
               <CoinComponent class="d-inline"/>
             </div>
@@ -51,7 +52,6 @@
     </div>
   </div>
 </template>
-
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
@@ -98,11 +98,11 @@ export default {
       // Including only the allocation for this specific pot
       const allocationForThisPot = this.playerAllocations.find(a => a.pot_id === this.pot.pot_id);
       return allocationForThisPot
-        ? [{
-          key: `allocation-${this.pot.pot_id}`,
-          amount: allocationForThisPot.amount,
-        }]
-        : [];
+          ? [{
+            key: `allocation-${this.pot.pot_id}`,
+            amount: allocationForThisPot.amount,
+          }]
+          : [];
     },
 
     currentPotImage() {
@@ -145,27 +145,44 @@ export default {
     },
 
     onDragStart() {
-      this.drag = true
+      this.drag = true;
+      const fromPotId = this.pot.pot_id;
+
+      const originalAmount = this.allPotsAllocations[0]?.amount || 0;
+      const newAmount = originalAmount * (1 - this.gameConfig.fee_reallocation / 100);
+      this.$emit('dragStateChange', { dragging: true, fromPotId, originalAmount, newAmount });
     },
 
     onDragEnd(event) {
+      this.drag = false;
+
       const fromPotId = this.pot.pot_id;
 
       // Retrieve the pot_id from the new container after dragging ends
       const toPotElement = event.to.closest('.allocations');
       const toPotId = toPotElement ? Number(toPotElement.dataset.potId) : null;
-      if (!toPotId) throw new Error("Something went wrong.")
-      this.drag = false
+      if (!toPotId) throw new Error("Something went wrong.");
 
-      this.$emit('endReallocation', {fromPotId, toPotId});
+      const originalAmount = this.allPotsAllocations[0]?.amount || 0;
+      const newAmount = originalAmount * (1 - this.gameConfig.fee_reallocation / 100);
+
+      this.$emit('dragStateChange', { dragging: false, fromPotId, originalAmount, newAmount }); // just for ui feedback to user
+      this.$emit('endReallocation', { fromPotId, toPotId }); // to cast tx
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
+@import "@/assets/style";
+
+.pot-highlight-image.highlight {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
 .pot-item:hover {
-  .pot-highlight-image {
+  .pot-highlight-image:not(.highlight) {
     opacity: 1;
     transform: scale(1.1);
   }
@@ -187,6 +204,7 @@ export default {
   min-height: 2em;
 
   .draggable-item {
+    background-color: $pp-color-5;
     min-height: 2em;
 
     .draggable-item-text {

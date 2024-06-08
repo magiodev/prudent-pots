@@ -1,10 +1,23 @@
 <template>
   <div class="pots-component position-relative">
     <div class="row justify-content-center">
-      <PotItemComponent :pot="pot" v-for="pot in pots" :key="pot.id" @endReallocation="onReallocateTokens"/>
+      <PotItemComponent
+          :pot="pot"
+          v-for="pot in pots"
+          :key="pot.id"
+          @endReallocation="onReallocateTokens"
+          @dragStateChange="onDragStateChange"
+      />
 
-      <div v-if="userAddress" class=" mt-3">
-        <p class="text-center">You have reallocated funds {{playerReallocations}} out of the {{gameConfig.reallocations_limit}} times allowed.</p>
+      <div v-if="userAddress" class="mt-3 text-center">
+        <p v-if="dragging">
+          You are reallocating {{ displayAmount(dragInfo.originalAmount)}} <CoinComponent/> <u>from the {{ getPotName(dragInfo.fromPotId) }} Pot</u><br>
+          A fee of {{ gameConfig.fee }}% will be applied, so <u>you will move {{ displayAmount(dragInfo.newAmount) }} <CoinComponent/></u>
+        </p>
+        <p v-else>
+          Allocations can be dragged and dropped between pots<br>
+          You have reallocated <u>{{ playerReallocations }} out of {{ gameConfig.reallocations_limit }}</u> times allowed
+        </p>
       </div>
     </div>
   </div>
@@ -16,13 +29,26 @@ import PotItemComponent from "@/components/Game/PotItemComponent.vue";
 import mxToast from "../../../../frontend-common/mixin/toast";
 import mxChain from "../../../../frontend-common/mixin/chain";
 import mxGame from "../../../../frontend-common/mixin/game";
+import CoinComponent from "@/components/Common/CoinComponent.vue";
+import mxPot from "../../../../frontend-common/mixin/pot";
 
 export default {
   name: "PotsComponent",
 
-  mixins: [mxChain, mxToast, mxGame],
+  mixins: [mxChain, mxToast, mxGame, mxPot],
 
-  components: {PotItemComponent},
+  components: {CoinComponent, PotItemComponent},
+
+  data() {
+    return {
+      dragging: false,
+      dragInfo: {
+        fromPotId: null,
+        originalAmount: 0,
+        newAmount: 0,
+      }
+    }
+  },
 
   computed: {
     ...mapGetters(['pots', "playerReallocations", "userAddress", "gameConfig"]),
@@ -46,6 +72,11 @@ export default {
         this.toast.error(`${this.cleanErrorMessage(e.message)}`)
       }
       this.isBusy = false
+    },
+
+    onDragStateChange(dragState) {
+      this.dragging = dragState.dragging;
+      this.dragInfo = { ...this.dragInfo, ...dragState };
     }
   }
 };
