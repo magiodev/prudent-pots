@@ -52,7 +52,7 @@
         <tr>
           <td>NFT Prize</td>
           <td>
-            {{ raffle?.nft?.id ? ` #${raffle.nft.id}` : 'There is raffle NFT for this round.' }}
+            {{ raffle?.nft?.id ? `MS #${raffle.nft.id}` : 'There is raffle NFT for this round.' }}
           </td>
         </tr>
         <tr>
