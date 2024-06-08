@@ -8,6 +8,10 @@ const mxToast = {
   },
 
   methods: {
+    getToast() {
+      return this.toast
+    },
+
     cleanErrorMessage(errorMessage) {
       const startPattern = "message index: 0: ";
       const endPattern = ": execute wasm contract failed";

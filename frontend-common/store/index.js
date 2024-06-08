@@ -3,8 +3,8 @@ import {AminoTypes} from "@cosmjs/stargate";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {Registry} from "@cosmjs/proto-signing";
 import {cosmosAminoConverters, cosmosProtoRegistry, cosmwasmAminoConverters, cosmwasmProtoRegistry} from "osmojs";
-import mxChain from "../mixin/chain";
 import axios from "axios";
+import mxChain from "../mixin/chain";
 
 const mxChainUtils = {
   methods: mxChain.methods
@@ -21,7 +21,7 @@ export default createStore({
       address: null,
       balance: null,
       cw721balance: [],
-      allocations: [],
+      // allocations: [],
       reallocations: null
     },
 
@@ -53,9 +53,9 @@ export default createStore({
       return state.user.signer;
     },
 
-    userQuerier(state) {
-      return state.user.querier;
-    },
+    // userQuerier(state) {
+    //   return state.user.querier;
+    // },
 
     userAddress(state) {
       return state.user.address;
@@ -70,7 +70,9 @@ export default createStore({
     },
 
     playerAllocations(state) {
-      return state.user.allocations
+      // This is not a state per say, we want to match the addy by userAddy in the mega list
+      const foundAllocations = state.allPlayersAllocations.find(a => a[0] === state.user.address)
+      return foundAllocations ? foundAllocations[1].filter(allocation => allocation.amount !== "0") : []
     },
 
     playerReallocations(state) {
@@ -151,10 +153,6 @@ export default createStore({
       state.user.cw721balance = balance;
     },
 
-    setPlayerAllocations(state, allocations) {
-      state.user.allocations = allocations;
-    },
-
     setPlayerReallocations(state, reallocations) {
       state.user.reallocations = reallocations;
     },
@@ -215,13 +213,10 @@ export default createStore({
 
   actions: {
     async initUser({commit}) {
-      // TODO:
-      //  This should be separated. Or a user coming with locked wallet will get stuck on Loading.
-      //  Remove querier from here and create initSigner and initQuerier.
       const chainId = process.env.VUE_APP_CHAIN_ID;
 
       if (!window.keplr) {
-        alert("Please install keplr extension");
+        alert("Please install keplr extension")
       } else {
         await window.keplr.enable(chainId);
 
@@ -269,11 +264,6 @@ export default createStore({
         state.gameConfig.game_denom
       );
       commit("setUserBalance", mxChainUtils.methods.displayAmount(Number(balance.amount)));
-
-      // Player Allocations using allPLayersAllocations
-      // Filter out allocations where the amount is "0"
-      const filteredAllocations = state.allPlayersAllocations.find(a => a[0] === state.user.address)[1].filter(allocation => allocation.amount !== "0");
-      commit("setPlayerAllocations", filteredAllocations);
 
       // Player Reallocations
       const reallocationsResponse = await state.user.querier.queryContractSmart(
