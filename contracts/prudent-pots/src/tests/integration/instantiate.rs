@@ -5,7 +5,7 @@
 //     tests::integration::fixtures::{default_with_balances, DENOM_GAME},
 // };
 
-// TODO: Those cases are not very consistent now that we are not isntantiating with raffle.
+// TODO_FUTURE: Those cases are not very consistent now that we are not isntantiating with raffle.
 
 // #[test]
 // fn test_instantiate_simple_works() {

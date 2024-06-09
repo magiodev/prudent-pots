@@ -103,7 +103,6 @@ pub fn default_with_balances(
     };
     let cw721_addr = instantiate_cw721(&mut app, cw721_id, cw721_msg);
 
-    // TODO: Move this to another optional subsequent fixture we execute. we can avoid using 1 second and just increase time by GAME_DURATION then
     // Instantiate Prudent Pots contract with 5 tokens (1 per pot). Conditionally based on Raffle option field.
     let pp_id = app.store_code(pp_contract());
     let pp_addr: Addr;

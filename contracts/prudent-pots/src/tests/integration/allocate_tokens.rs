@@ -34,7 +34,7 @@ fn test_allocate_tokens_works() {
     assert_eq!(pots_state, expected_pots_state);
 }
 
-// TODO: Test NFT allocation bid discount for Raffle NFT contract hodlers
+// TODO_FUTURE: Test NFT allocation bid discount for Raffle NFT contract hodlers
 
 #[test]
 fn test_allocate_tokens_fails() {

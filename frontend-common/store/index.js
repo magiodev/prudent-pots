@@ -28,6 +28,7 @@ export default createStore({
     gameConfig: null,
     gameState: null,
     gameActivity: null,
+    gameActivitySelectedRound: null,
 
     pots: [],
     winningPots: [],
@@ -89,6 +90,10 @@ export default createStore({
 
     gameActivity(state) {
       return state.gameActivity;
+    },
+
+    gameActivitySelectedRound(state) {
+      return state.gameActivitySelectedRound;
     },
 
     allPlayersAllocations(state) {
@@ -169,6 +174,10 @@ export default createStore({
 
     setGameActivity(state, gameActivity) {
       state.gameActivity = gameActivity;
+    },
+
+    setGameActivitySelectedRound(state, selectedRound) {
+      state.gameActivitySelectedRound = selectedRound;
     },
 
     setAllPlayersAllocations(state, allPlayersAllocations) {
@@ -312,9 +321,10 @@ export default createStore({
 
       let groupedByRoundCount = {};
 
+      // Fetch all rounds, that's why round_count is commented out
       const data = await state.user.querier.searchTx([
         {key: "wasm._contract_address", value: process.env.VUE_APP_CONTRACT},
-        {key: "wasm.round_count", value: state.gameState.round_count} // TODO: enhance
+        {key: "wasm.round_count", value: state.gameActivitySelectedRound.toString()}
       ]);
 
       data.forEach(item => {
@@ -431,7 +441,7 @@ export default createStore({
         const parts = metadata.name.split('#');
         const id = parts.length > 1 ? parts[1] : null;
 
-        // TODO: create env var
+        // TODO_FUTURE: create env var
         const imageUrl = `https://mintdao-ipfs.b-cdn.net/ipfs/${metadata.image.replace('ipfs://', '')}`
 
         data.raffle.nft = {id, metadata, imageUrl}
@@ -467,8 +477,6 @@ export default createStore({
     },
 
     // CW721
-
-    // TODO: fetchCw721Approved
 
     async fetchCw721Tokens({state, commit}) {
       if (!state.user.querier) {

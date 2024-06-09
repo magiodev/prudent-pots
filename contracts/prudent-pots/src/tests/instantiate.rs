@@ -76,4 +76,4 @@ pub mod tests {
     }
 }
 
-// TODO: setup_game_raffle_works
+// TODO_FUTURE: setup_game_raffle_works

@@ -213,8 +213,6 @@ pub fn game_end(
 
     // Ensure both or neither options are provided
     if new_raffle_cw721_id.is_some() != new_raffle_cw721_addr.is_some() {
-        // TODO: Decide if we want the prizes to be part of whitelisted cw721_addrs in GameConfig,
-        // or if the whitelist should jsut be the ones that gives minBid discount eligibility
         return Err(ContractError::InvalidRaffleNft {});
     }
 
@@ -250,7 +248,6 @@ pub fn game_end(
 
     // Iterate again the msgs generated to know how much tokens effectively we send,
     // as total_losing_tokens contains also next game funds we want to preserve.
-    // TODO: Make this an helper function
     let total_outgoing_raffle: Uint128 = raffle_msgs
         .iter()
         .filter_map(|msg| {

@@ -2,7 +2,7 @@
   <div class="game-activity-component position-relative">
     <h3>Game Activity</h3>
     <div class="rounds overflow-y-scroll">
-      <div class="pp-card round mb-3 p-3" v-for="group in gameActivity" :key="group.round_count">
+      <div class="pp-card round mb-3 p-3" v-for="group in paginatedRounds" :key="group.round_count">
         <h5>Round #{{ group.round_count }}</h5>
 
         <div class="round-content small" v-for="(tx, index) in [...group.transactions].reverse()" :key="index">
@@ -95,27 +95,77 @@
               </a>
             </span>
 
-            <ul>
+            <ul class="list-unstyled">
               <li>
-                Winning Pots: {{ formattedPotNames(JSON.parse(getTxEvents(tx.events)[0].winning_pots)) }}
+                <strong>Winning Pots:</strong> {{
+                  formattedPotNames(JSON.parse(getTxEvents(tx.events)[0].winning_pots))
+                }}
               </li>
+
               <li>
-                Outgoing Tokens: {{ displayAmount(getTxEvents(tx.events)[0].total_outgoing_tokens, 2) }}
+                <strong>Winning Distribution:</strong>
+                {{ displayAmount(getTxEvents(tx.events)[0].winning_outgoing_tokens, 2) }}
                 <CoinComponent/>
               </li>
-              <li v-if=getTxEvents(tx.events)[0].token_id>
-                {NFT_NAME} #{{ getTxEvents(tx.events)[0].token_id }}
+              <li>
+                <strong>Winning Treasury Fee:</strong>
+                {{ displayAmount(getTxEvents(tx.events)[0].treasury_outgoing_tokens, 2) }}
+                <CoinComponent/>
               </li>
+              <li>
+                <strong>Total Outgoing Tokens:</strong>
+                {{ displayAmount(getTxEvents(tx.events)[0].total_outgoing_tokens, 2) }}
+                <CoinComponent/>
+              </li>
+<!--              <li>-->
+<!--                <strong>Raffle Winner:</strong>-->
+<!--                <UserAddressComponent v-if="getTxEvents(tx.events)[0].raffle_winner" :cut="15"-->
+<!--                                      :address="getTxEvents(tx.events)[0].raffle_winner"/>-->
+<!--                <span v-else>No Winner</span>-->
+<!--              </li>-->
+<!--              <ul>-->
+<!--                <li>-->
+<!--                  <strong>Prize to Winner:</strong>-->
+<!--                  {{ displayAmount(getTxEvents(tx.events)[0].raffle_outgoing_tokens_winner, 2) }}-->
+<!--                  <CoinComponent/>-->
+<!--                </li>-->
+<!--                <li>-->
+<!--                  <strong>Prize to Treasury:</strong>-->
+<!--                  {{ displayAmount(getTxEvents(tx.events)[0].raffle_outgoing_tokens_treasury, 2) }}-->
+<!--                  <CoinComponent/>-->
+<!--                </li>-->
+<!--                <li v-if="getTxEvents(tx.events)[0].raffle_outgoing_nft_id">-->
+<!--                  <strong>Prize NFT:</strong> MS #{{ getTxEvents(tx.events)[0].raffle_outgoing_nft_id }}-->
+<!--                </li>-->
+<!--              </ul>-->
             </ul>
           </div>
         </div>
       </div>
     </div>
+
+    <nav aria-label="Page navigation example" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: currentPage === this.totalPages }">
+          <button class="page-link" @click="changePage(currentPage + 1)" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </button>
+        </li>
+        <li class="page-item" v-for="page in visiblePages" :key="page" :class="{ active: currentPage === page }">
+          <button class="page-link" @click="changePage(page)">{{ page }}</button>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <button class="page-link" @click="changePage(currentPage - 1)" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
 <script>
-import {mapGetters} from 'vuex';
+import {mapActions, mapGetters, mapMutations} from 'vuex';
 import mxPot from "../../../../frontend-common/mixin/pot";
 import mxChain from "../../../../frontend-common/mixin/chain";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
@@ -128,17 +178,55 @@ export default {
   mixins: [mxPot, mxChain],
 
   computed: {
-    ...mapGetters(['gameActivity'])
+    ...mapGetters(['gameActivity', 'gameState']),
+
+    totalPages() {
+      return Math.ceil(this.gameState.round_count / this.itemsPerPage);
+    },
+
+    paginatedRounds() {
+      return this.gameActivity;
+    },
+
+    pages() {
+      // Generate pages in reverse order
+      return Array.from({length: this.totalPages}, (_, i) => this.totalPages - i);
+    },
+
+    visiblePages() {
+      const totalPages = this.totalPages;
+      const currentPage = this.currentPage;
+      const maxVisiblePages = 5;
+
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = startPage + maxVisiblePages - 1;
+
+      if (endPage > totalPages) {
+        endPage = totalPages;
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      startPage = Math.max(0, totalPages - endPage);
+      endPage = Math.min(totalPages, startPage + maxVisiblePages);
+
+      return this.pages.slice(startPage, endPage);
+    }
+
   },
 
   data() {
     return {
       explorerBaseUrl: process.env.VUE_APP_EXPLORER_BASE_URL,
-      chainId: process.env.VUE_APP_CHAIN_ID
-    }
+      chainId: process.env.VUE_APP_CHAIN_ID,
+      currentPage: null,
+      itemsPerPage: 1
+    };
   },
 
   methods: {
+    ...mapActions(['fetchGameActivity']),
+    ...mapMutations(['setGameActivitySelectedRound']),
+
     getActionName(action) {
       switch (action) {
         case "allocate_tokens":
@@ -162,12 +250,10 @@ export default {
             return acc;
           }, {});
 
-          // Filter attributes based on the action
           switch (attributes.action) {
             case 'allocate_tokens':
             case 'reallocate_tokens':
             case 'game_end':
-            case 'transfer_nft': // TODO: Doesnt appear
               relevantDetails.push(attributes);
               break;
             default:
@@ -177,15 +263,29 @@ export default {
       });
 
       return relevantDetails.length > 0 ? relevantDetails : "No relevant transaction data";
+    },
+
+    async changePage(page) {
+      if (page > 0 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.setGameActivitySelectedRound(page)
+        await this.fetchGameActivity(page);
+      }
     }
+  },
+
+  async created() {
+    this.currentPage = this.gameState.round_count;
+    await this.fetchGameActivity(this.currentPage);
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
 @import "@/assets/style.scss";
 
 .rounds {
+  max-height: 80vh;
   /* Hide scrollbar for IE, Edge and Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
