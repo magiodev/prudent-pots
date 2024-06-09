@@ -1,4 +1,4 @@
-import {mapActions, mapGetters} from "vuex";
+import {mapActions, mapGetters, mapMutations} from "vuex";
 
 const mxGame = {
   data() {
@@ -8,7 +8,7 @@ const mxGame = {
   },
 
   computed: {
-    ...mapGetters(['userAddress', 'gameState']),
+    ...mapGetters(['userAddress', 'gameState', "gameActivitySelectedRound"]),
 
     timeLeftSeconds() {
       if (!this.gameState) return null;
@@ -47,12 +47,14 @@ const mxGame = {
       "fetchRaffleWinner",
       "fetchRaffleDenomSplit"
     ]),
+    ...mapMutations(['setGameActivitySelectedRound']),
 
     async fetchOnce() {
       await this.initUser();
 
       await this.fetchGameConfig();
       await this.fetchGameState();
+      this.setGameActivitySelectedRound(this.gameState.round_count) // set the current round for the paginated gameActivity fetch
       await this.fetchAllPlayersAllocations() // this is also included in the fetchInterval, we do it twice only the first App render
 
       // Init signer and querier
@@ -72,10 +74,9 @@ const mxGame = {
       // Raffle
       await this.fetchRaffle()
       await this.fetchRaffleWinner()
-      // TODO: await this.fetchRaffleDenomSplit()
       // try catch to ignore game activity errors
       try {
-        this.fetchGameActivity()
+        await this.fetchGameActivity(this.gameActivitySelectedRound)
       } catch (e) {
         console.log(e)
       }

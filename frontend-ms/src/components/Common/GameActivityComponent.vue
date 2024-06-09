@@ -2,7 +2,7 @@
   <div class="game-activity-component position-relative">
     <h3>Game Activity</h3>
     <div class="rounds overflow-y-scroll">
-      <div class="pp-card round mb-3 p-3" v-for="group in gameActivity" :key="group.round_count">
+      <div class="pp-card round mb-3 p-3" v-for="group in paginatedRounds" :key="group.round_count">
         <h5>Round #{{ group.round_count }}</h5>
 
         <div class="round-content small" v-for="(tx, index) in [...group.transactions].reverse()" :key="index">
@@ -16,7 +16,7 @@
             </span>
 
             <span class="me-1">
-              <UserAddressComponent :cut="10" :address="getTxEvents(tx.events)[0].player"/>
+              <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].player"/>
             </span>
 
             <span class="me-1" v-if="getTxEvents(tx.events)[0].action">
@@ -50,7 +50,7 @@
             </span>
 
             <span class="me-1">
-              <UserAddressComponent :cut="10" :address="getTxEvents(tx.events)[0].player"/>
+              <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].player"/>
             </span>
 
             <span class="me-1">
@@ -111,11 +111,29 @@
         </div>
       </div>
     </div>
+
+    <nav aria-label="Page navigation example" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: currentPage === this.totalPages }">
+          <button class="page-link" @click="changePage(currentPage + 1)" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </button>
+        </li>
+        <li class="page-item" v-for="page in pages" :key="page" :class="{ active: currentPage === page }">
+          <button class="page-link" @click="changePage(page)">{{ page }}</button>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <button class="page-link" @click="changePage(currentPage - 1)" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
 <script>
-import {mapGetters} from 'vuex';
+import {mapActions, mapGetters, mapMutations} from 'vuex';
 import mxPot from "../../../../frontend-common/mixin/pot";
 import mxChain from "../../../../frontend-common/mixin/chain";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
@@ -128,17 +146,35 @@ export default {
   mixins: [mxPot, mxChain],
 
   computed: {
-    ...mapGetters(['gameActivity'])
+    ...mapGetters(['gameActivity', 'gameState']),
+
+    totalPages() {
+      return Math.ceil(this.gameState.round_count / this.itemsPerPage);
+    },
+
+    paginatedRounds() {
+      return this.gameActivity;
+    },
+
+    pages() {
+      // Generate pages in reverse order
+      return Array.from({length: this.totalPages}, (_, i) => this.totalPages - i);
+    }
   },
 
   data() {
     return {
       explorerBaseUrl: process.env.VUE_APP_EXPLORER_BASE_URL,
-      chainId: process.env.VUE_APP_CHAIN_ID
-    }
+      chainId: process.env.VUE_APP_CHAIN_ID,
+      currentPage: null,
+      itemsPerPage: 1
+    };
   },
 
   methods: {
+    ...mapActions(['fetchGameActivity']),
+    ...mapMutations(['setGameActivitySelectedRound']),
+
     getActionName(action) {
       switch (action) {
         case "allocate_tokens":
@@ -162,12 +198,11 @@ export default {
             return acc;
           }, {});
 
-          // Filter attributes based on the action
           switch (attributes.action) {
             case 'allocate_tokens':
             case 'reallocate_tokens':
             case 'game_end':
-            case 'transfer_nft': // TODO: Doesnt appear
+            case 'transfer_nft':
               relevantDetails.push(attributes);
               break;
             default:
@@ -177,9 +212,22 @@ export default {
       });
 
       return relevantDetails.length > 0 ? relevantDetails : "No relevant transaction data";
+    },
+
+    async changePage(page) {
+      if (page > 0 && page <= this.totalPages) {
+        this.currentPage = page;
+        this.setGameActivitySelectedRound(page)
+        await this.fetchGameActivity(page);
+      }
     }
+  },
+
+  async created() {
+    this.currentPage = this.gameState.round_count;
+    await this.fetchGameActivity(this.currentPage);
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
