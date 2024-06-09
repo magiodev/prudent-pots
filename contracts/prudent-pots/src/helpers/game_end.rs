@@ -14,6 +14,15 @@ use crate::{
 
 use super::validate::{validate_funds, validate_pot_initial_amount};
 
+pub struct ProcessRaffleWinnerResponse {
+    pub msgs: Vec<CosmosMsg>,
+    pub submsgs: Vec<SubMsg>,
+    pub attributes: Vec<Attribute>,
+    pub new_raffle_denom_amount: Uint128,
+    pub new_raffle_cw721_id: Option<String>,
+    pub new_raffle_cw721_addr: Option<String>,
+}
+
 // Helper to prepare for the next game
 pub fn prepare_next_game(
     deps: DepsMut,
@@ -102,7 +111,7 @@ pub fn prepare_next_game(
 /// Compute the raffle winner based on the total tokens allocated among the winning pots.
 pub fn get_raffle_winner(
     storage: &dyn Storage,
-    winning_pots: &Vec<u8>,
+    winning_pots: &[u8],
 ) -> Result<Option<String>, ContractError> {
     let mut max_total = Uint128::zero();
     let mut winner: Option<String> = None;
@@ -122,31 +131,37 @@ pub fn get_raffle_winner(
             .sum();
 
         // Update the totals and check for the highest
-        if total_in_winning_pots > max_total {
-            max_total = total_in_winning_pots;
-            winner = Some(addr.to_string());
-        } else if total_in_winning_pots == max_total {
-            // In case of a tie, find the earliest bidder among the winning pots
-            let mut earliest_bid_time = u64::MAX;
-            let mut current_winner = winner;
+        match total_in_winning_pots.cmp(&max_total) {
+            std::cmp::Ordering::Greater => {
+                max_total = total_in_winning_pots;
+                winner = Some(addr.to_string());
+            }
+            std::cmp::Ordering::Equal => {
+                // In case of a tie, find the earliest bidder among the winning pots
+                let mut earliest_bid_time = u64::MAX;
+                let mut current_winner = winner;
 
-            for &pot_id in winning_pots.iter() {
-                // if there is any first bidder
-                if let Ok(fb) = FIRST_BIDDER.load(storage, pot_id) {
-                    // if the current user is first better, and its earlier than the previously iterated one among wining pots
-                    if fb.time < earliest_bid_time && fb.bidder == addr {
-                        // so the new earliest is the current one
-                        earliest_bid_time = fb.time;
-                        current_winner = Some(fb.bidder); // we have a new winner
-                    } else if fb.time == earliest_bid_time && fb.bidder == addr {
-                        // otherwise if its equal, meaning we have another tie situation,
-                        // set it to None and DO NOT distribute the raffle this round!
-                        current_winner = None
+                for &pot_id in winning_pots.iter() {
+                    // if there is any first bidder
+                    if let Ok(fb) = FIRST_BIDDER.load(storage, pot_id) {
+                        // if the current user is first better, and its earlier than the previously iterated one among wining pots
+                        if fb.time < earliest_bid_time && fb.bidder == addr {
+                            // so the new earliest is the current one
+                            earliest_bid_time = fb.time;
+                            current_winner = Some(fb.bidder); // we have a new winner
+                        } else if fb.time == earliest_bid_time && fb.bidder == addr {
+                            // otherwise if its equal, meaning we have another tie situation,
+                            // set it to None and DO NOT distribute the raffle this round!
+                            current_winner = None
+                        }
                     }
                 }
-            }
 
-            winner = current_winner;
+                winner = current_winner;
+            }
+            std::cmp::Ordering::Less => {
+                // Do nothing if the total_in_winning_pots is less than max_total
+            }
         }
     }
 
@@ -162,21 +177,11 @@ pub fn get_raffle_winner(
 pub fn process_raffle_winner(
     deps: &Deps,
     env: &Env,
-    funds: &Vec<Coin>,
-    winning_pots: &Vec<u8>,
+    funds: &[Coin],
+    winning_pots: &[u8],
     mut new_raffle_cw721_id: Option<String>,
     mut new_raffle_cw721_addr: Option<String>,
-) -> Result<
-    (
-        Vec<CosmosMsg>,
-        Vec<SubMsg>,
-        Vec<Attribute>,
-        Uint128,
-        Option<String>,
-        Option<String>,
-    ),
-    ContractError,
-> {
+) -> Result<ProcessRaffleWinnerResponse, ContractError> {
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let raffle = RAFFLE.load(deps.storage)?;
 
@@ -191,7 +196,7 @@ pub fn process_raffle_winner(
     let mut new_raffle_denom_amount =
         validate_funds(funds, &game_config.game_denom).unwrap_or_default();
 
-    let raffle_winner = get_raffle_winner(deps.storage, &winning_pots)?;
+    let raffle_winner = get_raffle_winner(deps.storage, winning_pots)?;
 
     match raffle_winner {
         Some(recipient) => {
@@ -287,14 +292,14 @@ pub fn process_raffle_winner(
         submsgs.push(transfer_nft_msg);
     }
 
-    Ok((
+    Ok(ProcessRaffleWinnerResponse {
         msgs,
         submsgs,
-        raffle_response_attributes,
+        attributes: raffle_response_attributes,
         new_raffle_denom_amount,
         new_raffle_cw721_id,
         new_raffle_cw721_addr,
-    ))
+    })
 }
 
 /// Helper to calculate the prize amount for raffle distribution based on game extensions.

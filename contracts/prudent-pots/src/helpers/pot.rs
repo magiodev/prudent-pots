@@ -42,7 +42,7 @@ pub fn update_player_allocation(
         storage,
         player.to_string(),
         |existing_allocations| -> Result<_, ContractError> {
-            let mut allocs = existing_allocations.unwrap_or_else(Vec::new);
+            let mut allocs = existing_allocations.unwrap_or_default();
             if let Some(allocation) = allocs.iter_mut().find(|a| a.pot_id == pot_id) {
                 allocation.amount = if increase {
                     allocation.amount.checked_add(amount)?
@@ -208,8 +208,8 @@ pub fn is_winning_pot(storage: &dyn Storage, pot_id: u8) -> Result<bool, Contrac
 }
 
 // Check if a value is the median in a vector of token counts
-fn is_median(token_counts: &Vec<Uint128>, value: Uint128) -> bool {
-    let mut sorted_counts = token_counts.clone();
+fn is_median(token_counts: &[Uint128], value: Uint128) -> bool {
+    let mut sorted_counts = token_counts.to_owned();
     sorted_counts.sort_unstable();
     let mid = sorted_counts.len() / 2;
 
@@ -246,12 +246,6 @@ fn get_min_tokens(storage: &dyn Storage) -> Result<Uint128, ContractError> {
 
 pub fn get_winning_pots(storage: &dyn Storage) -> Result<Vec<u8>, ContractError> {
     Ok((1..=5)
-        .filter_map(|pot_id| {
-            if is_winning_pot(storage, pot_id).unwrap_or(false) {
-                Some(pot_id)
-            } else {
-                None
-            }
-        })
+        .filter(|&pot_id| is_winning_pot(storage, pot_id).unwrap_or(false))
         .collect::<Vec<u8>>())
 }

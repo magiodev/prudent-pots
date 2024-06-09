@@ -194,7 +194,7 @@ pub fn validate_game_end_time(storage: &dyn Storage, env: &Env) -> Result<(), Co
 }
 
 // Helper to validate and sum the funds in the specified denomination
-pub fn validate_funds(funds: &Vec<Coin>, expected_denom: &str) -> Result<Uint128, ContractError> {
+pub fn validate_funds(funds: &[Coin], expected_denom: &str) -> Result<Uint128, ContractError> {
     let total_amount = funds.iter().fold(Uint128::zero(), |acc, coin| {
         if coin.denom == expected_denom {
             acc.checked_add(coin.amount).unwrap()
