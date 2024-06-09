@@ -27,7 +27,7 @@ const mxPot = {
 
     formattedPotNames(potIds) {
       if (Array.isArray(potIds)) {
-        return potIds.map(potId => this.getPotName(potId)).join(', ');
+        return potIds.length ? potIds.map(potId => this.getPotName(potId)).join(', ') : "No winning pots";
       }
       return this.getPotName(potIds);
     }

@@ -119,7 +119,9 @@
               </li>
               <li>
                 <strong>Raffle Winner:</strong>
-                <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].raffle_winner"/>
+                <UserAddressComponent v-if="getTxEvents(tx.events)[0].raffle_winner" :cut="15"
+                                      :address="getTxEvents(tx.events)[0].raffle_winner"/>
+                <span v-else>No Winner</span>
               </li>
               <ul>
                 <li>
