@@ -2,7 +2,7 @@ use cosmwasm_std::testing::mock_info;
 use cosmwasm_std::{coin, coins, Addr, BlockInfo, Coin, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, BankKeeper, Contract, ContractWrapper, Executor};
 
-use crate::msg::{ExecuteMsg, GameConfigResponse, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, GameConfigResponse, InstantiateMsg, QueryMsg, UpdateGameConfig};
 use crate::state::{GameConfig, Raffle};
 use crate::tests::integration::helpers::{game_end, mint_nfts, update_config};
 
@@ -151,17 +151,19 @@ pub fn default_with_balances(
                 &mut app,
                 &pp_addr,
                 &ExecuteMsg::UpdateConfig {
-                    fee: None,
-                    fee_reallocation: None,
-                    fee_address: None,
-                    game_denom: None,
-                    game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)], // set the same to avoid updating
-                    game_duration: Some(GAME_DURATION),
-                    game_extend: None,
-                    game_end_threshold: None,
-                    min_pot_initial_allocation: None,
-                    decay_factor: None,
-                    reallocations_limit: None,
+                    config: UpdateGameConfig {
+                        fee: None,
+                        fee_reallocation: None,
+                        fee_address: None,
+                        game_denom: None,
+                        game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)], // set the same to avoid updating
+                        game_duration: Some(GAME_DURATION),
+                        game_extend: None,
+                        game_end_threshold: None,
+                        min_pot_initial_allocation: None,
+                        decay_factor: None,
+                        reallocations_limit: None,
+                    },
                 },
             )
             .unwrap();

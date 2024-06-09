@@ -12,19 +12,24 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
+pub struct UpdateGameConfig {
+    pub fee: Option<u64>,
+    pub fee_reallocation: Option<u64>,
+    pub fee_address: Option<Addr>,
+    pub game_denom: Option<String>,
+    pub game_cw721_addrs: Vec<Addr>,
+    pub game_duration: Option<u64>,
+    pub game_extend: Option<u64>,
+    pub game_end_threshold: Option<u64>,
+    pub min_pot_initial_allocation: Option<Uint128>,
+    pub decay_factor: Option<Uint128>,
+    pub reallocations_limit: Option<u64>,
+}
+
+#[cw_serde]
 pub enum ExecuteMsg {
     UpdateConfig {
-        fee: Option<u64>,
-        fee_reallocation: Option<u64>,
-        fee_address: Option<Addr>,
-        game_denom: Option<String>,
-        game_cw721_addrs: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
-        game_duration: Option<u64>,
-        game_extend: Option<u64>,
-        game_end_threshold: Option<u64>,
-        min_pot_initial_allocation: Option<Uint128>,
-        decay_factor: Option<Uint128>,
-        reallocations_limit: Option<u64>,
+        config: UpdateGameConfig,
     },
     AllocateTokens {
         pot_id: u8,

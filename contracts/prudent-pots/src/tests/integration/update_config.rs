@@ -1,6 +1,6 @@
 use cosmwasm_std::{coin, Addr, Uint128};
 
-use crate::msg::{ExecuteMsg, GameConfigResponse, QueryMsg};
+use crate::msg::{ExecuteMsg, GameConfigResponse, QueryMsg, UpdateGameConfig};
 use crate::state::GameConfig;
 use crate::tests::integration::fixtures::{default_with_balances, DENOM_GAME, GAME_DURATION};
 use crate::tests::integration::helpers::update_config;
@@ -15,17 +15,19 @@ fn test_update_config_works() {
         &mut app,
         &pp_addr,
         &ExecuteMsg::UpdateConfig {
-            fee: Some(10),
-            fee_reallocation: Some(10),
-            fee_address: Some(Addr::unchecked("new_address")),
-            game_denom: Some("new_denom".to_string()),
-            game_cw721_addrs: vec![Addr::unchecked("test")],
-            game_duration: Some(GAME_DURATION * 2),
-            game_extend: Some(600 * 3),
-            game_end_threshold: Some(600 * 3),
-            min_pot_initial_allocation: Some(Uint128::new(1_000_000u128)),
-            decay_factor: Some(Uint128::new(50u128)),
-            reallocations_limit: Some(10),
+            config: UpdateGameConfig {
+                fee: Some(10),
+                fee_reallocation: Some(10),
+                fee_address: Some(Addr::unchecked("new_address")),
+                game_denom: Some("new_denom".to_string()),
+                game_cw721_addrs: vec![Addr::unchecked("test")],
+                game_duration: Some(GAME_DURATION * 2),
+                game_extend: Some(600 * 3),
+                game_end_threshold: Some(600 * 3),
+                min_pot_initial_allocation: Some(Uint128::new(1_000_000u128)),
+                decay_factor: Some(Uint128::new(50u128)),
+                reallocations_limit: Some(10),
+            },
         },
     )
     .unwrap();

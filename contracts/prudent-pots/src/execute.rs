@@ -1,4 +1,4 @@
-use cosmwasm_std::{attr, Addr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
+use cosmwasm_std::{attr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
 
 use crate::{
     helpers::{
@@ -17,6 +17,7 @@ use crate::{
             validate_pot_limit_not_exceeded,
         },
     },
+    msg::UpdateGameConfig,
     state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, REALLOCATION_FEE_POOL},
     ContractError,
 };
@@ -25,72 +26,62 @@ pub fn update_config(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    fee: Option<u64>,
-    fee_reallocation: Option<u64>,
-    fee_address: Option<Addr>,
-    game_denom: Option<String>,
-    game_cw721_addrs: Vec<Addr>, // this is the cw721 collection addy we use as optional raffle prize
-    game_duration: Option<u64>,
-    game_extend: Option<u64>,
-    game_end_threshold: Option<u64>,
-    min_pot_initial_allocation: Option<Uint128>,
-    decay_factor: Option<Uint128>, // i.e. 95 as 95%
-    reallocations_limit: Option<u64>,
+    update_config: UpdateGameConfig,
 ) -> Result<Response, ContractError> {
     validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
 
     let mut game_config = GAME_CONFIG.load(deps.storage)?;
 
-    if let Some(fee) = fee {
+    if let Some(fee) = update_config.fee {
         if fee > 10 {
             return Err(ContractError::InvalidInput {});
         }
         game_config.fee = fee;
     }
-    if let Some(fee_reallocation) = fee_reallocation {
+    if let Some(fee_reallocation) = update_config.fee_reallocation {
         if fee_reallocation > 50 {
             return Err(ContractError::InvalidInput {});
         }
         game_config.fee_reallocation = fee_reallocation;
     }
-    if let Some(fee_address) = fee_address {
+    if let Some(fee_address) = update_config.fee_address {
         game_config.fee_address = deps.api.addr_validate(fee_address.as_str())?;
     }
-    if let Some(game_denom) = game_denom {
+    if let Some(game_denom) = update_config.game_denom {
         game_config.game_denom = game_denom;
     }
     if !game_config
         .game_cw721_addrs
         .iter()
-        .eq(game_cw721_addrs.iter())
+        .eq(update_config.game_cw721_addrs.iter())
     {
-        for address in &game_cw721_addrs {
+        for address in &update_config.game_cw721_addrs {
             deps.api.addr_validate(address.as_str())?;
         }
-        game_config.game_cw721_addrs = game_cw721_addrs;
+        game_config.game_cw721_addrs = update_config.game_cw721_addrs;
     }
-    if let Some(game_duration) = game_duration {
+    if let Some(game_duration) = update_config.game_duration {
         game_config.game_duration = game_duration;
     }
-    if let Some(game_extend) = game_extend {
+    if let Some(game_extend) = update_config.game_extend {
         if game_extend > game_config.game_duration {
             return Err(ContractError::InvalidInput {});
         }
         game_config.game_extend = game_extend;
     }
-    if let Some(game_end_threshold) = game_end_threshold {
+    if let Some(game_end_threshold) = update_config.game_end_threshold {
         game_config.game_end_threshold = game_end_threshold;
     }
-    if let Some(min_pot_initial_allocation) = min_pot_initial_allocation {
+    if let Some(min_pot_initial_allocation) = update_config.min_pot_initial_allocation {
         game_config.min_pot_initial_allocation = min_pot_initial_allocation;
     }
-    if let Some(decay_factor) = decay_factor {
+    if let Some(decay_factor) = update_config.decay_factor {
         if decay_factor.lt(&Uint128::new(50u128)) || decay_factor.gt(&Uint128::new(99u128)) {
             return Err(ContractError::InvalidInput {});
         }
         game_config.decay_factor = decay_factor;
     }
-    if let Some(reallocations_limit) = reallocations_limit {
+    if let Some(reallocations_limit) = update_config.reallocations_limit {
         game_config.reallocations_limit = reallocations_limit;
     }
     GAME_CONFIG.save(deps.storage, &game_config)?;
@@ -223,14 +214,7 @@ pub fn game_end(
     let mut msgs: Vec<CosmosMsg> = vec![];
 
     // Process raffle winner and prepare distribution messages
-    let (
-        raffle_msgs,    // bank sends
-        raffle_submsgs, // nft transfer
-        raffle_response_attributes,
-        new_raffle_denom_amount,
-        updated_new_raffle_cw721_id,
-        updated_new_raffle_cw721_addr,
-    ) = process_raffle_winner(
+    let process_raffle_winner_resp = process_raffle_winner(
         &deps.as_ref(),
         &env,
         &info.funds,
@@ -238,7 +222,7 @@ pub fn game_end(
         new_raffle_cw721_id,
         new_raffle_cw721_addr,
     )?;
-    msgs.extend(raffle_msgs.clone());
+    msgs.extend(process_raffle_winner_resp.msgs.clone());
 
     // Add messages for redistributing tokens from losing to winning pots
     let (send_msgs, treasury_outgoing_tokens) =
@@ -248,7 +232,8 @@ pub fn game_end(
 
     // Iterate again the msgs generated to know how much tokens effectively we send,
     // as total_losing_tokens contains also next game funds we want to preserve.
-    let total_outgoing_raffle: Uint128 = raffle_msgs
+    let total_outgoing_raffle: Uint128 = process_raffle_winner_resp
+        .msgs
         .iter()
         .filter_map(|msg| {
             if let CosmosMsg::Bank(BankMsg::Send { amount, .. }) = msg {
@@ -279,14 +264,14 @@ pub fn game_end(
         deps,
         &env,
         total_outgoing_tokens,
-        updated_new_raffle_cw721_id,
-        updated_new_raffle_cw721_addr,
-        Some(new_raffle_denom_amount),
+        process_raffle_winner_resp.new_raffle_cw721_id,
+        process_raffle_winner_resp.new_raffle_cw721_addr,
+        Some(process_raffle_winner_resp.new_raffle_denom_amount),
     )?;
 
     Ok(Response::new()
         .add_messages(msgs)
-        .add_submessages(raffle_submsgs)
+        .add_submessages(process_raffle_winner_resp.submsgs)
         .add_attributes(vec![
             attr("method", "execute"),
             attr("action", "game_end"),
@@ -299,6 +284,6 @@ pub fn game_end(
             ),
             attr("treasury_outgoing_tokens", treasury_outgoing_tokens),
         ])
-        .add_attributes(raffle_response_attributes) // this contains the raffle event attributes including the treasury denom fee split, which is not included above
+        .add_attributes(process_raffle_winner_resp.attributes) // this contains the raffle event attributes including the treasury denom fee split, which is not included above
         .add_attribute("total_outgoing_tokens", total_outgoing_tokens)) // this is the total of distribution + raffle + treasury
 }
