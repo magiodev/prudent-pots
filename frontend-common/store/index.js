@@ -441,7 +441,7 @@ export default createStore({
         const parts = metadata.name.split('#');
         const id = parts.length > 1 ? parts[1] : null;
 
-        // TODO: create env var
+        // TODO_FUTURE: create env var
         const imageUrl = `https://mintdao-ipfs.b-cdn.net/ipfs/${metadata.image.replace('ipfs://', '')}`
 
         data.raffle.nft = {id, metadata, imageUrl}
@@ -477,8 +477,6 @@ export default createStore({
     },
 
     // CW721
-
-    // TODO: fetchCw721Approved
 
     async fetchCw721Tokens({state, commit}) {
       if (!state.user.querier) {

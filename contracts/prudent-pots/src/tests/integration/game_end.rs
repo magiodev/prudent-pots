@@ -106,7 +106,7 @@ fn test_game_end_one_winner_simple_works() {
     assert_approx_eq!(contract_balance.amount, pots_state_total_amount, "0.000001");
 }
 
-// TODO: fn test_game_end_multiple_winners_simple_works
+// TODO_FUTURE: fn test_game_end_multiple_winners_simple_works
 
 // We instantiate the contract with 5_000_000 "udenom"
 // We do not play the first round.
@@ -427,6 +427,6 @@ fn test_game_end_one_winner_raffle_both_works() {
     );
 }
 
-// TODO: fn test_game_end_multiple_winners_raffle_both_works
+// TODO_FUTURE: fn test_game_end_multiple_winners_raffle_both_works
 
-// TODO: fn test_game_end_multiple_winners_raffle_both_tie_works
+// TODO_FUTURE: fn test_game_end_multiple_winners_raffle_both_tie_works

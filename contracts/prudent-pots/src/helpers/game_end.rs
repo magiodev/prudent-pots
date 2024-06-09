@@ -107,7 +107,7 @@ pub fn get_raffle_winner(
     let mut max_total = Uint128::zero();
     let mut winner: Option<String> = None;
 
-    // TODO: Early return if there is not raffle.denom_amount nor raffle.cw721_id
+    // TODO_FUTURE: Early return if there is not raffle.denom_amount nor raffle.cw721_id
 
     // Traverse all player allocations
     let all_allocations =
@@ -128,7 +128,6 @@ pub fn get_raffle_winner(
         } else if total_in_winning_pots == max_total {
             // In case of a tie, find the earliest bidder among the winning pots
             let mut earliest_bid_time = u64::MAX;
-            // TODO: handle unwrap safely, but I think this should never happen
             let mut current_winner = winner;
 
             for &pot_id in winning_pots.iter() {
@@ -181,7 +180,7 @@ pub fn process_raffle_winner(
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let raffle = RAFFLE.load(deps.storage)?;
 
-    // TODO: Early return here if there is no raffle
+    // TODO_FUTURE: Early return here if there is no raffle
     // if raffle.nft_id && addr is none and denom_prize is_zero() return all default values.
 
     let mut msgs = Vec::new();
@@ -225,24 +224,25 @@ pub fn process_raffle_winner(
                     amount: coins(prize_to_distribute.u128(), game_config.game_denom.clone()),
                 });
                 msgs.push(send_msg);
-                // Append attributes
-                raffle_response_attributes.extend(vec![attr(
-                    "raffle_outgoing_tokens_winner",
-                    recipient.to_string(),
-                )]);
             }
+            // Append attributes
+            raffle_response_attributes.extend(vec![attr(
+                "raffle_outgoing_tokens_winner",
+                prize_to_distribute,
+            )]);
+
             if !prize_to_treasury.is_zero() {
                 let send_msg = CosmosMsg::Bank(BankMsg::Send {
                     to_address: game_config.fee_address.to_string(),
                     amount: coins(prize_to_treasury.u128(), game_config.game_denom.clone()),
                 });
                 msgs.push(send_msg);
-                // Append attributes
-                raffle_response_attributes.extend(vec![attr(
-                    "raffle_outgoing_tokens_treasury",
-                    game_config.fee_address.to_string(),
-                )]);
             }
+            // Append attributes
+            raffle_response_attributes.extend(vec![attr(
+                "raffle_outgoing_tokens_treasury",
+                prize_to_treasury,
+            )]);
         }
         None => {
             // Scenarios are:
@@ -270,8 +270,6 @@ pub fn process_raffle_winner(
     }
 
     // Send the new NFTs for the next raffle prize if any to process
-    // TODO: Check if new_raffle_cw721_id is different from the old one and ensure the address is valid
-    // if new_raffle_cw721_id != raffle.cw721_token_id || new_raffle_cw721_addr != raffle.cw721_addr {}
     if let (Some(cw721_id), Some(cw721_addr)) =
         (new_raffle_cw721_id.clone(), new_raffle_cw721_addr.clone())
     {

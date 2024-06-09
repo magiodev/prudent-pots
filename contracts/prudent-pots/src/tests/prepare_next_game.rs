@@ -46,9 +46,9 @@ mod tests {
         // let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.as_mut().storage).unwrap();
         // assert_eq!(reallocation_fee_pool, Uint128::zero());
 
-        // TODO: PlayerAllocations reset assertion
+        // TODO_FUTURE: PlayerAllocations reset assertion
 
-        // TODO: total_outgoing_tokens assertion variant!
+        // TODO_FUTURE: total_outgoing_tokens assertion variant!
 
         // Verify pots have been allocated with initial funds, plus user's allocation and include the reallocation fee pool
         for pot_id in 1..=5 {
@@ -57,5 +57,5 @@ mod tests {
         }
     }
 
-    // TODO: prepare_next_game_raffle_works
+    // TODO_FUTURE: prepare_next_game_raffle_works
 }

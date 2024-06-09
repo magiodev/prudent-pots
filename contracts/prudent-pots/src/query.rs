@@ -33,8 +33,6 @@ pub fn query_bid_range(deps: Deps, address: Option<String>) -> StdResult<BidRang
     Ok(BidRangeResponse { min_bid, max_bid })
 }
 
-// TODO: query_bid_range_by_user so we avoid getting nft balance on frontend and we do on the contract.
-
 pub fn query_pot_state(deps: Deps, pot_id: u8) -> StdResult<PotStateResponse> {
     let pot = POT_STATES.load(deps.storage, pot_id)?;
     Ok(PotStateResponse { pot })
@@ -118,7 +116,6 @@ pub fn query_raffle_winner(deps: Deps) -> StdResult<RaffleWinnerResponse> {
     Ok(RaffleWinnerResponse { raffle_winner })
 }
 
-// TODO: This is returning Error: rpc error: code = Unknown desc = Error parsing into type prudent_pots::msg::QueryMsg: Invalid type: query wasm contract failed: unknown request
 pub fn query_raffle_denom_split(deps: Deps) -> StdResult<RaffleDenomSplitResponse> {
     let (prize_to_distribute, prize_to_treasury) = get_raffle_denom_prize_amounts(&deps).unwrap();
 

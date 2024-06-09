@@ -54,7 +54,6 @@ export default {
 .banner {
   position: relative;
   overflow: hidden; // Ensures the image doesn't show outside the banner
-  // TODO: background: url("@/assets/skins/mp/banner-move.gif") no-repeat;
   background-size: auto 100%; // Adjust the width freely, but fit the height
   animation: slide 90s infinite alternate ease-in-out; // Adjust the timing as needed
 }

@@ -95,17 +95,47 @@
               </a>
             </span>
 
-            <ul>
+            <ul class="list-unstyled">
               <li>
-                Winning Pots: {{ formattedPotNames(JSON.parse(getTxEvents(tx.events)[0].winning_pots)) }}
+                <strong>Winning Pots:</strong> {{
+                  formattedPotNames(JSON.parse(getTxEvents(tx.events)[0].winning_pots))
+                }}
               </li>
+
               <li>
-                Outgoing Tokens: {{ displayAmount(getTxEvents(tx.events)[0].total_outgoing_tokens, 2) }}
+                <strong>Winning Distribution:</strong>
+                {{ displayAmount(getTxEvents(tx.events)[0].winning_outgoing_tokens, 2) }}
                 <CoinComponent/>
               </li>
-              <li v-if=getTxEvents(tx.events)[0].token_id>
-                MS #{{ getTxEvents(tx.events)[0].token_id }}
+              <li>
+                <strong>Winning Treasury Fee:</strong>
+                {{ displayAmount(getTxEvents(tx.events)[0].treasury_outgoing_tokens, 2) }}
+                <CoinComponent/>
               </li>
+              <li>
+                <strong>Total Outgoing Tokens:</strong>
+                {{ displayAmount(getTxEvents(tx.events)[0].total_outgoing_tokens, 2) }}
+                <CoinComponent/>
+              </li>
+              <li>
+                <strong>Raffle Winner:</strong>
+                <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].raffle_winner"/>
+              </li>
+              <ul>
+                <li>
+                  <strong>Prize to Winner:</strong>
+                  {{ displayAmount(getTxEvents(tx.events)[0].raffle_outgoing_tokens_winner, 2) }}
+                  <CoinComponent/>
+                </li>
+                <li>
+                  <strong>Prize to Treasury:</strong>
+                  {{ displayAmount(getTxEvents(tx.events)[0].raffle_outgoing_tokens_treasury, 2) }}
+                  <CoinComponent/>
+                </li>
+                <li v-if="getTxEvents(tx.events)[0].raffle_outgoing_nft_id">
+                  <strong>Prize NFT:</strong> MS #{{ getTxEvents(tx.events)[0].raffle_outgoing_nft_id }}
+                </li>
+              </ul>
             </ul>
           </div>
         </div>
@@ -119,7 +149,7 @@
             <span aria-hidden="true">&laquo;</span>
           </button>
         </li>
-        <li class="page-item" v-for="page in pages" :key="page" :class="{ active: currentPage === page }">
+        <li class="page-item" v-for="page in visiblePages" :key="page" :class="{ active: currentPage === page }">
           <button class="page-link" @click="changePage(page)">{{ page }}</button>
         </li>
         <li class="page-item" :class="{ disabled: currentPage === 1 }">
@@ -159,7 +189,27 @@ export default {
     pages() {
       // Generate pages in reverse order
       return Array.from({length: this.totalPages}, (_, i) => this.totalPages - i);
+    },
+
+    visiblePages() {
+      const totalPages = this.totalPages;
+      const currentPage = this.currentPage;
+      const maxVisiblePages = 5;
+
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = startPage + maxVisiblePages - 1;
+
+      if (endPage > totalPages) {
+        endPage = totalPages;
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      startPage = Math.max(0, totalPages - endPage);
+      endPage = Math.min(totalPages, startPage + maxVisiblePages);
+
+      return this.pages.slice(startPage, endPage);
     }
+
   },
 
   data() {
@@ -202,7 +252,6 @@ export default {
             case 'allocate_tokens':
             case 'reallocate_tokens':
             case 'game_end':
-            case 'transfer_nft':
               relevantDetails.push(attributes);
               break;
             default:

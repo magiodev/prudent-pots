@@ -167,7 +167,6 @@ export default {
             case 'allocate_tokens':
             case 'reallocate_tokens':
             case 'game_end':
-            case 'transfer_nft': // TODO: Doesnt appear
               relevantDetails.push(attributes);
               break;
             default:
