@@ -16,21 +16,21 @@
             </span>
 
             <span class="me-1">
-              <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].player"/>
+              <UserAddressComponent :cut="10" :address="getTxEvents(tx.events)[0].player"/>
             </span>
 
             <span class="me-1" v-if="getTxEvents(tx.events)[0].action">
               {{ getActionName(getTxEvents(tx.events)[0].action) }}
             </span>
 
-            <!-- Only: allocate_tokens -->
-            <span class="me-1" v-if="getTxEvents(tx.events)[0].pot_id">
-              to {{ getPotName(getTxEvents(tx.events)[0].pot_id) }}:
-            </span>
-
             <!-- Common -->
             <span class="me-1" v-if="getTxEvents(tx.events)[0].amount">
               {{ displayAmount(getTxEvents(tx.events)[0].amount, 2) }} <CoinComponent/>
+            </span>
+
+            <!-- Only: allocate_tokens -->
+            <span class="me-1" v-if="getTxEvents(tx.events)[0].pot_id">
+              to {{ getPotName(getTxEvents(tx.events)[0].pot_id) }}:
             </span>
 
             <!-- Common -->
@@ -50,17 +50,11 @@
             </span>
 
             <span class="me-1">
-              <UserAddressComponent :cut="15" :address="getTxEvents(tx.events)[0].player"/>
+              <UserAddressComponent :cut="10" :address="getTxEvents(tx.events)[0].player"/>
             </span>
 
             <span class="me-1">
               {{ getActionName(getTxEvents(tx.events)[0].action) }}
-            </span>
-
-            <!-- Only: reallocate_tokens -->
-            <span class="me-1">
-              from {{ getPotName(getTxEvents(tx.events)[0].from_pot_id) }} <b-icon-arrow-right></b-icon-arrow-right>
-              {{ getPotName(getTxEvents(tx.events)[0].to_pot_id) }}:
             </span>
 
             <!-- Common -->
@@ -70,6 +64,12 @@
             <!-- Only: reallocate_tokens -->
             <span class="me-1">
               paying {{ displayAmount(getTxEvents(tx.events)[0].fee, 4) }} fee
+            </span>
+
+            <!-- Only: reallocate_tokens -->
+            <span class="me-1">
+              from {{ getPotName(getTxEvents(tx.events)[0].from_pot_id) }} <b-icon-arrow-right></b-icon-arrow-right>
+              {{ getPotName(getTxEvents(tx.events)[0].to_pot_id) }}:
             </span>
 
             <!-- Common -->
@@ -119,7 +119,7 @@
               </li>
               <li>
                 <strong>Raffle Winner:</strong>
-                <UserAddressComponent v-if="getTxEvents(tx.events)[0].raffle_winner" :cut="15"
+                <UserAddressComponent v-if="getTxEvents(tx.events)[0].raffle_winner" :cut="10"
                                       :address="getTxEvents(tx.events)[0].raffle_winner"/>
                 <span v-else>No Winner</span>
               </li>
@@ -294,5 +294,14 @@ export default {
 /* Hide scrollbar for Chrome, Safari and Opera */
 .rounds::-webkit-scrollbar {
   display: none;
+}
+
+.page-link {
+  color: black;
+}
+.active>.page-link, .page-link.active {
+  background-color: $pp-color-5;
+  border-color: $pp-color-5;
+  color: black;
 }
 </style>

@@ -41,6 +41,15 @@ export default {
 
 <style scoped lang="scss">
 @import "@/assets/style.scss";
+.navbar-toggler {
+  border-color: $pp-color-5; // Change the border color if needed
+
+  .navbar-toggler-icon {
+    background-image: url('data:image/svg+xml;charset=UTF8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="%2388E54A" viewBox="0 0 30 30"><path stroke="%2388E54A" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"/></svg>');
+  }
+}
+
+
 
 .navbar {
   .container {
@@ -62,6 +71,4 @@ export default {
     }
   }
 }
-
-
 </style>

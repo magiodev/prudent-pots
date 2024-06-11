@@ -18,7 +18,7 @@
         </thead>
         <tbody>
         <tr v-for="(stats, address) in statistics.playerStatistics" :key="address">
-          <td>{{ address.substring(0, 15) }}...</td>
+          <td><UserAddressComponent :cut="10" :address="address"/></td>
           <td>{{ displayAmount(stats.totalBet, 2) }}
             <CoinComponent/>
           </td>
@@ -171,10 +171,11 @@ import mxGame from "../../../../frontend-common/mixin/game";
 import mxPot from "../../../../frontend-common/mixin/pot";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
 import mxChain from "../../../../frontend-common/mixin/chain";
+import UserAddressComponent from "@/components/Common/UserAddressComponent.vue";
 
 export default {
   name: "PlayersAllocations",
-  components: {CoinComponent},
+  components: {UserAddressComponent, CoinComponent},
 
   mixins: [mxGame, mxPot, mxChain],
 
