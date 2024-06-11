@@ -42,6 +42,9 @@ export default {
 .raffle-component {
 
   .raffle-item {
+    h5 {
+      font-family: "Reddit Mono", monospace;
+    }
     .nft-image {
       border-radius: 1em;
       border: 1px solid $pp-color-4;

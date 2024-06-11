@@ -11,7 +11,7 @@
           <!-- Only: allocates_tokens -->
           <div class="allocate-tokens" v-if="getTxEvents(tx.events)[0].action === 'allocate_tokens'">
             <!-- Reversed index -->
-            <span class="badge bg-pp-color-4 text-black me-1">
+            <span class="badge bg-pp-color-5 text-black me-1">
               #{{ group.transactions.length - index }}
             </span>
 

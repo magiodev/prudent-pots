@@ -34,6 +34,7 @@ export default {
 
 <style lang="scss" scoped>
 .timer-component {
+
   .timer-card {
     position: absolute;
     top: 38%;
@@ -41,9 +42,13 @@ export default {
     transform: translate(-50%, -50%);
     width: 47.5%;
 
+    h2 {
+      font-family: "Reddit Mono", monospace;
+    }
+
     @media(min-width: 576px) {
       h2 {
-        font-size: 2.5em;
+        font-size: 2em;
         vertical-align: bottom;
       }
     }
