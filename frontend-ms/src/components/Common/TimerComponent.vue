@@ -46,6 +46,12 @@ export default {
       font-family: "Reddit Mono", monospace;
     }
 
+    @media(max-width: 420px) {
+      h2 {
+        font-size: 1em;
+      }
+    }
+
     @media(min-width: 576px) {
       h2 {
         font-size: 2em;

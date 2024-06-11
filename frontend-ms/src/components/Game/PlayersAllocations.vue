@@ -1,48 +1,4 @@
 <template>
-  <div class="col players-allocations mb-3">
-    <h3 class="text-center">User Allocations</h3>
-
-    <div class="overflow-x-scroll" v-if="Object.entries(sortedPlayerStatistics).length">
-      <table class="table always-left mb-0 small">
-        <thead>
-        <tr>
-          <th scope="col">Player</th>
-          <th scope="col">Total</th>
-          <th scope="col">Winning</th>
-          <th scope="col">Losing</th>
-          <th scope="col">Share of Prize
-            ({{ displayAmount(totalPrizeOnlyLosingDistribution + totalWinningInitialFundsWithAllocations, 2) }})
-          </th>
-          <th scope="col">Receives</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(stats, address) in sortedPlayerStatistics" :key="address">
-          <td><UserAddressComponent :cut="10" :address="address"/></td>
-          <td>{{ displayAmount(stats.totalBet, 2) }}
-            <CoinComponent/>
-          </td>
-          <td>{{ displayAmount(stats.winningPots, 2) }}
-            <CoinComponent/>
-          </td>
-          <td>{{ displayAmount(stats.losingPots, 2) }}
-            <CoinComponent/>
-          </td>
-          <td>{{ displayAmount(stats.redistributionShare, 2) }}
-            <CoinComponent/>
-            ({{ stats.sharesInPercentage }}%)
-            <!--{{ displayAmount(stats.winningFee) }} fee. <CoinComponent/> -->
-          </td>
-          <td>{{ displayAmount(stats.winningPots + stats.redistributionShare, 2) }}
-            <CoinComponent/>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-    <p v-else class="text-center text-pp-color-4 small">There are no bets in this round yet.</p>
-  </div>
-
   <div class="col raffle text-white mb-3">
     <h3 class="text-center">Raffle</h3>
 
@@ -65,19 +21,17 @@
         <tr>
           <td>{{ timeLeftSeconds ? 'Current ' : '' }}Winner</td>
           <td>
-            {{ raffleWinner
-            ? `${raffleWinner.substring(0, 15)}...`
-            : 'No raffle winner in this round. Balances will be kept by the contract for the next round.'
-            }}
+            <span v-if="raffleWinner"><UserAddressComponent cut="10" :address="raffleWinner"/></span>
+            <span v-else>No raffle winner in this round. Prizes will be kept for the next round.</span>
             {{ raffleWinner && timeLeftSeconds
-            ? ', but the round is still ongoing and it could change.'
-            : ''
+              ? 'but the round is still ongoing and that could change!'
+              : ''
             }}
           </td>
         </tr>
         <tr v-if="Number(raffle.denom_amount)">
           <td>Treasury Split</td>
-          <td>Raffle $ prize will be split, as {{ gameState.extend_count }} time extends:
+          <td>$OSMO prize will be split as {{ gameState.extend_count }} time extends:
             <ul class="list-unstyled">
               <li v-if="raffleWinner">Winner: {{ displayAmount(raffleDenomSplit.distributedPrize, 2) }}
                 <CoinComponent/>
@@ -95,6 +49,46 @@
       </table>
     </template>
     <p v-else class="text-center text-pp-color-4 small">There are no raffle prizes assigned to this round.</p>
+  </div>
+
+  <div class="col players-allocations mb-3">
+    <h3 class="text-center">User Allocations</h3>
+
+    <div class="overflow-x-scroll" v-if="Object.entries(sortedPlayerStatistics).length">
+      <table class="table always-left mb-0 small">
+        <thead>
+        <tr>
+          <th scope="col">Player</th>
+          <th scope="col">Total</th>
+          <th scope="col">Winning</th>
+          <th scope="col">Losing</th>
+          <th scope="col">Share of Prize
+            ({{ displayAmount(totalPrizeOnlyLosingDistribution + totalWinningInitialFundsWithAllocations, 2) }})
+          </th>
+          <th scope="col">Receives</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(stats, address) in sortedPlayerStatistics" :key="address">
+          <td><UserAddressComponent :cut="10" :address="address"/></td>
+          <td>{{ displayAmount(stats.totalBet, 2) }}
+          </td>
+          <td>{{ displayAmount(stats.winningPots, 2) }}
+          </td>
+          <td>{{ displayAmount(stats.losingPots, 2) }}
+          </td>
+          <td>{{ displayAmount(stats.redistributionShare, 2) }}
+            ({{ stats.sharesInPercentage }}%)
+            <!--{{ displayAmount(stats.winningFee) }} fee. <CoinComponent/> -->
+          </td>
+          <td class="text-end">{{ displayAmount(stats.winningPots + stats.redistributionShare, 2) }}
+            <CoinComponent/>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p v-else class="text-center text-pp-color-4 small">There are no bets in this round yet.</p>
   </div>
 
   <div class="col general-stats text-center text-white" v-if="!timeLeftSeconds">
