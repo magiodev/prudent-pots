@@ -11,13 +11,13 @@
 
       <div class="col-md-4">
         <ul class="nav list-unstyled d-flex justify-content-center justify-content-md-end">
-          <li class="ms-3">
+          <li class="me-3">
             <a href="https://github.com/magiodev/prudent-pots" target="_blank" rel="noopener noreferrer">
               <b-icon-github class="text-white"></b-icon-github>
             </a>
           </li>
-          <li class="ms-3">
-            <a href="https://twitter.com/magiodev/status/1781957200446922947" target="_blank" rel="noopener noreferrer">
+          <li>
+            <a href="https://x.com/magiodev/status/1800558963278201023" target="_blank" rel="noopener noreferrer">
               <b-icon-twitter class="text-white"></b-icon-twitter>
             </a>
           </li>
