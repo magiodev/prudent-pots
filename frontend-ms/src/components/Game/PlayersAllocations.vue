@@ -2,7 +2,7 @@
   <div class="col players-allocations mb-3">
     <h3 class="text-center">User Allocations</h3>
 
-    <div class="overflow-x-scroll" v-if="Object.entries(statistics.playerStatistics).length">
+    <div class="overflow-x-scroll" v-if="Object.entries(sortedPlayerStatistics).length">
       <table class="table always-left mb-0 small">
         <thead>
         <tr>
@@ -17,7 +17,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="(stats, address) in statistics.playerStatistics" :key="address">
+        <tr v-for="(stats, address) in sortedPlayerStatistics" :key="address">
           <td><UserAddressComponent :cut="10" :address="address"/></td>
           <td>{{ displayAmount(stats.totalBet, 2) }}
             <CoinComponent/>
@@ -284,6 +284,15 @@ export default {
       });
 
       return {playerStatistics, totalFees, totalRedistributed};
+    },
+
+    sortedPlayerStatistics() {
+      return Object.entries(this.statistics.playerStatistics)
+          .sort(([, a], [, b]) => b.redistributionShare - a.redistributionShare)
+          .reduce((obj, [key, value]) => {
+            obj[key] = value;
+            return obj;
+          }, {});
     }
   },
 
