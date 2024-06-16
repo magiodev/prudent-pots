@@ -511,6 +511,27 @@ fn test_game_end_future_works() {
     // Game end, expect it to succeed, restart it in the future
     let info = mock_info(ADMIN_ADDRESS, &vec![]);
     let next_game_start = app.block_info().time.plus_seconds(GAME_EXTEND).seconds();
+    // try with wrong (in the past) next_game_start
+    game_end(
+        &mut app,
+        &pp_addr,
+        &info,
+        None,
+        None,
+        Some(next_game_start - (GAME_EXTEND + 1)),
+    )
+    .unwrap_err();
+    // try with wrong (in the present) next_game_start
+    game_end(
+        &mut app,
+        &pp_addr,
+        &info,
+        None,
+        None,
+        Some(next_game_start - GAME_EXTEND),
+    )
+    .unwrap_err();
+    // make it succeed
     game_end(&mut app, &pp_addr, &info, None, None, Some(next_game_start)).unwrap();
 
     // Game end, we expect it to fail as the game didnt start yet
