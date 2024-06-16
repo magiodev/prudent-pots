@@ -44,7 +44,7 @@ fn test_allocate_tokens_fails() {
         assert_eq!(*min, Uint128::new(1000000u128));
         assert_eq!(*max, Uint128::new(2000000u128));
     } else {
-        panic!("Expected ContractError::BidOutOfRange");
+        assert!(false, "Expected ContractError::BidOutOfRange");
     }
 
     // Query states to ensure no changes in the pot state after the failed allocation
@@ -123,7 +123,7 @@ fn test_allocate_tokens_min_bet_works() {
         assert_eq!(*min, Uint128::new(1050000u128));
         assert_eq!(*max, Uint128::new(2800000u128));
     } else {
-        panic!("Expected ContractError::BidOutOfRange");
+        assert!(false, "Expected ContractError::BidOutOfRange");
     }
 
     // Query states
@@ -151,7 +151,7 @@ fn test_allocate_tokens_min_bet_works() {
         assert_eq!(*min, Uint128::new(1250000u128));
         assert_eq!(*max, Uint128::new(2800000u128));
     } else {
-        panic!("Expected ContractError::BidOutOfRange");
+        assert!(false, "Expected ContractError::BidOutOfRange");
     }
     // Sending the minimum bet amount to pot 3. We expect to be able send the minimum bet as now the minimum bet is not average tokens based.
     let info = mock_info("user1", &coins(1_250_000, DENOM_GAME));
@@ -181,7 +181,7 @@ fn test_allocate_tokens_min_bet_works() {
         assert_eq!(*min, Uint128::new(1500000u128));
         assert_eq!(*max, Uint128::new(3300000u128));
     } else {
-        panic!("Expected ContractError::BidOutOfRange");
+        assert!(false, "Expected ContractError::BidOutOfRange");
     }
     // Sending the minimum bet amount to pot 3. We expect to be able send the minimum bet as now the minimum bet is not average tokens based.
     let info = mock_info("user1", &coins(1_500_000, DENOM_GAME));

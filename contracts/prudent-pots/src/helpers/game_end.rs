@@ -311,7 +311,7 @@ pub fn get_raffle_denom_prize_amounts(deps: &Deps) -> Result<(Uint128, Uint128),
     // Apply the decay factor iteratively based on extend_count
     let mut prize_percentage = Decimal::percent(100); // Starting from 100%
     for _ in 0..game_state.extend_count {
-        prize_percentage = prize_percentage * (Decimal::one() - game_config.decay_factor);
+        prize_percentage *= Decimal::one() - game_config.decay_factor;
     }
 
     // Calculate the distributed prize and remaining prize we will send back tot reasury
