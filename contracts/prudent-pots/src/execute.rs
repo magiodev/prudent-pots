@@ -83,7 +83,6 @@ pub fn update_config(
         game_config.min_pot_initial_allocation = min_pot_initial_allocation;
     }
     if let Some(decay_factor) = update_config.decay_factor {
-        println!("decay_factor: {:?}", decay_factor);
         if decay_factor.lt(&Decimal::from_str("0.01")?)
             || decay_factor.gt(&Decimal::from_str("0.99")?)
         {

@@ -111,7 +111,6 @@ pub fn calculate_min_bid(
 
     // Calculate the base multiplier based on the adjusted decay factor
     let base_multiplier = Decimal::one().checked_add(adjusted_decay_factor)?;
-    println!("base_multiplier: {:?}", base_multiplier);
 
     // Calculate min_bid as an integer multiplication of the initial allocation and the multiplier
     let min_bid = game_config.min_pot_initial_allocation * base_multiplier;
