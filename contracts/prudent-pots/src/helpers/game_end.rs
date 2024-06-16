@@ -314,14 +314,11 @@ pub fn get_raffle_denom_prize_amounts(deps: &Deps) -> Result<(Uint128, Uint128),
         prize_percentage = prize_percentage * (Decimal::one() - game_config.decay_factor);
     }
 
-    // Calculate the distributed prize
-    let distributed_prize =
-        prize_percentage * Decimal::from_ratio(raffle.denom_amount, Uint128::from(1u128));
-    let distributed_prize_uint128 = distributed_prize.atomics().into();
+    // Calculate the distributed prize and remaining prize we will send back tot reasury
+    let distributed_prize = raffle.denom_amount * prize_percentage;
+    let remaining_prize = raffle.denom_amount.checked_sub(distributed_prize)?;
 
-    let remaining_prize = raffle.denom_amount.checked_sub(distributed_prize_uint128)?;
-
-    Ok((distributed_prize_uint128, remaining_prize))
+    Ok((distributed_prize, remaining_prize))
 }
 
 pub fn get_distribution_send_msgs(

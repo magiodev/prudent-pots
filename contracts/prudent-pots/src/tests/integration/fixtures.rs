@@ -10,6 +10,7 @@ use crate::tests::integration::helpers::{game_end, mint_nfts, update_config};
 
 pub const DENOM_GAME: &str = "udenom";
 pub const GAME_DURATION: u64 = 3600;
+pub const GAME_EXTEND: u64 = 600;
 
 pub const ADMIN_ADDRESS: &str = "admin_address";
 pub const ADMIN_BALANCE: u128 = 1_000_000_000_000u128;
@@ -121,8 +122,8 @@ pub fn default_with_balances(
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)],
                     game_duration: 1, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
                     game_duration_epoch: 600u64, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
-                    game_extend: 600u64,
-                    game_end_threshold: 600u64,
+                    game_extend: GAME_EXTEND,
+                    game_end_threshold: GAME_EXTEND,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
                     decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,

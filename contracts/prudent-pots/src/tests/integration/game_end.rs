@@ -9,7 +9,7 @@ use crate::{
     },
     state::{Raffle, TokenAllocation},
     tests::integration::{
-        fixtures::{default_with_balances, ADMIN_ADDRESS, DENOM_GAME},
+        fixtures::{default_with_balances, ADMIN_ADDRESS, DENOM_GAME, GAME_EXTEND},
         helpers::{game_end, reallocate_tokens},
     },
 };
@@ -80,8 +80,8 @@ fn test_game_end_one_winner_simple_works() {
     assert_eq!(winning_pots.pots.len(), 1); // only one winner
     assert_eq!(winning_pots.pots[0], 5); // pot id 5
 
-    // Increase time by GAME_DURATION + 1 second to make the game expire
-    increase_app_time(&mut app, GAME_DURATION + 1);
+    // Increase time by GAME_DURATION second to make the game expire
+    increase_app_time(&mut app, GAME_DURATION);
 
     // Game end and new raffles
     let info = mock_info(ADMIN_ADDRESS, &vec![]);
@@ -204,7 +204,7 @@ fn test_game_end_one_winner_raffle_both_works() {
     let user5_balance_before = app.wrap().query_balance("user5", DENOM_GAME).unwrap();
 
     // Extend the game once, this should cause the contract to reduce the raffle winner prize, and start splitting it with treasury
-    increase_app_time(&mut app, GAME_DURATION);
+    increase_app_time(&mut app, GAME_DURATION - 1);
 
     // Reallocate to make pot 5 winner and extend once the game time due to late-game action
     let info = mock_info("user5", &vec![]);
@@ -263,8 +263,8 @@ fn test_game_end_one_winner_raffle_both_works() {
         Uint128::new(5_000_000u128)
     );
 
-    // Increase time by GAME_DURATION + 1 second to make the game expire
-    increase_app_time(&mut app, 601);
+    // Increase time by GAME_DURATION second to make the game expire
+    increase_app_time(&mut app, GAME_EXTEND);
 
     let expected_sum = (Uint128::new(5_000_000) // raffle is adding 5_000_000 to the contract balance
         + info_1.funds[0].amount
