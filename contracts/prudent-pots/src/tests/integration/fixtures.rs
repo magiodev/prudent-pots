@@ -121,7 +121,7 @@ pub fn default_with_balances(
                     game_denom: DENOM_GAME.to_string(),
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)],
                     game_duration: 1, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
-                    game_duration_epoch: 600u64, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
+                    game_duration_epoch: GAME_EXTEND, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
                     game_extend: GAME_EXTEND,
                     game_end_threshold: GAME_EXTEND,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
@@ -172,7 +172,7 @@ pub fn default_with_balances(
                 },
             )
             .unwrap();
-            pp_msg.config.game_duration = 3600; // this is to make the below assert pass
+            pp_msg.config.game_duration = GAME_DURATION; // this is to make the below assert pass
 
             // Increase time to expire game
             increase_app_time(&mut app, 2);
@@ -200,9 +200,9 @@ pub fn default_with_balances(
                     game_denom: DENOM_GAME.to_string(),
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)],
                     game_duration: GAME_DURATION,
-                    game_duration_epoch: 600u64,
-                    game_extend: 600u64,
-                    game_end_threshold: 600u64,
+                    game_duration_epoch: GAME_EXTEND,
+                    game_extend: GAME_EXTEND,
+                    game_end_threshold: GAME_EXTEND,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
                     decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,

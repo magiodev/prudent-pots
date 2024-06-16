@@ -112,7 +112,6 @@ pub fn allocate_tokens(
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let game_state = GAME_STATE.load(deps.storage)?;
 
-    validate_and_extend_game_time(deps.storage, &env)?;
     let amount = validate_funds(&info.funds, &game_config.game_denom)?;
     validate_pot_limit_not_exceeded(deps.storage, pot_id, amount)?;
     validate_existing_allocation(deps.storage, &info.sender, pot_id)?;
@@ -132,6 +131,8 @@ pub fn allocate_tokens(
             max: max_bid,
         });
     }
+    // we do that here so the extend_count doesnt increase before we evaluate the min max bid amounts
+    validate_and_extend_game_time(deps.storage, &env)?;
 
     // Update the player's allocation and pot state
     update_player_allocation(deps.storage, &info.sender, pot_id, amount, true)?;
@@ -163,8 +164,8 @@ pub fn reallocate_tokens(
     if from_pot_id == to_pot_id {
         return Err(ContractError::InvalidPot {});
     }
-    validate_increase_player_reallocations(deps.storage, &info.sender)?;
     validate_and_extend_game_time(deps.storage, &env)?;
+    validate_increase_player_reallocations(deps.storage, &info.sender)?;
     validate_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
 
     // Load and check the player's allocations

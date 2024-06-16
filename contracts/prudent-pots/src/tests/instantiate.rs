@@ -11,7 +11,7 @@ pub mod tests {
 
     // Fixture methods
 
-    pub fn setup_game_no_raffle_works(
+    pub fn setup_game_works(
         mut deps: DepsMut,
         env: &Env,
         info: MessageInfo,
@@ -78,5 +78,3 @@ pub mod tests {
             .unwrap();
     }
 }
-
-// TODO_FUTURE: setup_game_raffle_works

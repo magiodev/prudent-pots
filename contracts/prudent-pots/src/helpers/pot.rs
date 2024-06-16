@@ -174,7 +174,6 @@ fn calculate_discounted_bid(
 
 // Helper to calculate the maximum bid based on the game's current state
 pub fn calculate_max_bid(deps: &Deps, original_min_bid: Uint128) -> Result<Uint128, ContractError> {
-    // TODO: What if nobody plays the game? The maxBid will be 0.2 forever and the minBid will be increasing, maybe too much?
     let average_tokens = calculate_average_tokens(deps.storage)?;
 
     // Set the maximum bid as double the average of tokens in the pots, whichever is higher

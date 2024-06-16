@@ -9,7 +9,7 @@ mod tests {
     use crate::{
         helpers::game_end::prepare_next_game,
         state::{GAME_STATE, POT_STATES, REALLOCATION_FEE_POOL},
-        tests::instantiate::tests::setup_game_no_raffle_works,
+        tests::instantiate::tests::setup_game_works,
     };
 
     #[test]
@@ -19,7 +19,7 @@ mod tests {
         let env = mock_env();
         // Instantiating with 100 tokens, 20 each pot
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game_no_raffle_works(
+        setup_game_works(
             deps.as_mut(),
             &env,
             info,
