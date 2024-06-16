@@ -100,25 +100,24 @@ pub fn calculate_min_bid(
         .checked_div(game_config.game_duration_epoch)
         .unwrap();
 
-    // Calculate the base multiplier based on the current epoch count
-    let base_multiplier = Decimal::one().checked_add(
-        game_config
-            .decay_factor
-            .checked_mul(Decimal::from_ratio(current_epoch_count, 1u64))?,
-    )?; // e.g., 1.0 + (0.05 * 1) = 1.05
+    // Calculate the adjusted decay factor considering the extend count
+    let adjusted_decay_factor = game_config
+        .decay_factor
+        .checked_mul(Decimal::from_ratio(current_epoch_count, 1u64))?
+        .checked_mul(Decimal::from_ratio(
+            game_state.extend_count as u64 + 1,
+            1u64,
+        ))?;
 
-    // Calculate the final multiplier considering the extend count to price out quicker during the late-game
-    let multiply_factor = base_multiplier.checked_mul(Decimal::from_ratio(
-        game_state.extend_count as u64 + 1,
-        1u64,
-    ))?;
+    // Calculate the base multiplier based on the adjusted decay factor
+    let base_multiplier = Decimal::one().checked_add(adjusted_decay_factor)?;
+    println!("base_multiplier: {:?}", base_multiplier);
 
     // Calculate min_bid as an integer multiplication of the initial allocation and the multiplier
-    let min_bid = game_config.min_pot_initial_allocation * multiply_factor;
-
-    let mut cw721_count = 0;
+    let min_bid = game_config.min_pot_initial_allocation * base_multiplier;
 
     // Only proceed with querying cw721 tokens if an address is provided
+    let mut cw721_count = 0;
     if let Some(owner) = address {
         // Query multiple cw721 addresses and count the total number of tokens
         for addr in &game_config.game_cw721_addrs {
