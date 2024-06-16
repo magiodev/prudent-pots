@@ -27,6 +27,9 @@ pub enum ContractError {
     #[error("The reallocations limit has been reached for your address.")]
     ReallocationsLimitReached {},
 
+    #[error("This action cannot be performed as the game has not started yet.")]
+    GameNotStarted {},
+
     #[error("This action cannot be performed as the game has already ended.")]
     GameAlreadyEnded {},
 

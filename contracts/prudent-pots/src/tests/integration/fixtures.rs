@@ -68,7 +68,7 @@ pub fn default_with_balances(
     num_users: u8,
     initial_balance: Vec<Coin>,
     raffle: Option<Raffle>,
-    next_game_start: Option<u64>,
+    next_game_start_offset: Option<u64>,
 ) -> (App, Addr, Addr) {
     // Create a vector to hold the balances setup
     let mut balances = vec![(
@@ -179,6 +179,11 @@ pub fn default_with_balances(
             // Increase time to expire game
             increase_app_time(&mut app, 2);
 
+            let next_game_start_time = match next_game_start_offset {
+                Some(offset) => Some(app.block_info().time.plus_seconds(offset).seconds()),
+                None => None,
+            };
+
             // Game end to start the first real round (this would break the counter and so start from 1)
             // sending 100 extra $DENOM as raffle prize + 1 NFT
             game_end(
@@ -190,7 +195,7 @@ pub fn default_with_balances(
                 ),
                 raffle.cw721_token_id,        // raffle nft prize
                 Some(cw721_addr.to_string()), // overriding the None passed from outside as contract wasnt instantiated yet
-                next_game_start,
+                next_game_start_time,
             )
             .unwrap();
         }
@@ -210,7 +215,10 @@ pub fn default_with_balances(
                     decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,
                 },
-                next_game_start,
+                next_game_start: match next_game_start_offset {
+                    Some(offset) => Some(app.block_info().time.plus_seconds(offset).seconds()),
+                    None => None,
+                },
             };
             pp_addr = instantiate_pp(
                 &mut app,

@@ -12,6 +12,7 @@ use crate::{
         fixtures::{default_with_balances, ADMIN_ADDRESS, DENOM_GAME, GAME_EXTEND},
         helpers::{game_end, reallocate_tokens},
     },
+    ContractError,
 };
 
 use super::{
@@ -34,7 +35,7 @@ fn test_game_end_one_winner_simple_works() {
         .query_wasm_smart(&pp_addr, &QueryMsg::GameState {})
         .unwrap();
     assert_eq!(game_state.state.extend_count, 0);
-    assert_eq!(game_state.state.round_count, 1); // this is a side effect of raffle which can be set only on 2nd and next rounds
+    assert_eq!(game_state.state.round_count, 1);
 
     // Allocate tokens with 5 users, starting from a minBid of 1 $DENOM (so also 1 $DENOM per pot)
     let info_1 = mock_info("user1", &coins(2_000_000, DENOM_GAME));
@@ -436,3 +437,87 @@ fn test_game_end_one_winner_raffle_both_works() {
 // TODO_FUTURE: fn test_game_end_multiple_winners_raffle_both_works
 
 // TODO_FUTURE: fn test_game_end_multiple_winners_raffle_both_tie_works
+
+#[test]
+fn test_game_end_future_works() {
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        1,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        Some(GAME_EXTEND), // just make the game starting in the future
+    );
+
+    // Game state extend_count after
+    let game_state: GameStateResponse = app
+        .wrap()
+        .query_wasm_smart(&pp_addr, &QueryMsg::GameState {})
+        .unwrap();
+    assert_eq!(game_state.state.extend_count, 0);
+    assert_eq!(game_state.state.round_count, 1);
+
+    // Allocate tokens, we expect it to fail as the game didnt start yet
+    let info_1 = mock_info("user1", &coins(1_000_000, DENOM_GAME));
+    let res = allocate_tokens(&mut app, &pp_addr, &info_1, 1).unwrap_err();
+    assert!(matches!(
+        res.downcast_ref::<ContractError>(),
+        Some(ContractError::GameNotStarted {})
+    ));
+
+    // Game end, we expect it to fail as the game didnt start yet
+    let info = mock_info(ADMIN_ADDRESS, &vec![]);
+    let res = game_end(&mut app, &pp_addr, &info, None, None, None).unwrap_err();
+    assert!(matches!(
+        res.downcast_ref::<ContractError>(),
+        Some(ContractError::GameNotStarted {})
+    ));
+
+    // Increase time by GAME_EXTEND second to make the game start
+    increase_app_time(&mut app, GAME_EXTEND);
+
+    // Allocate tokens, we expect it to succeed as the game just started
+    let info_1 = mock_info("user1", &coins(1_000_000, DENOM_GAME));
+    allocate_tokens(&mut app, &pp_addr, &info_1, 1).unwrap();
+
+    // Game end, we expect it to fail as the game didnt finish yet
+    let info = mock_info(ADMIN_ADDRESS, &vec![]);
+    let res = game_end(&mut app, &pp_addr, &info, None, None, None).unwrap_err();
+    assert!(matches!(
+        res.downcast_ref::<ContractError>(),
+        Some(ContractError::GameStillActive {})
+    ));
+
+    // Increase time by GAME_DURATION second to make the game finish
+    increase_app_time(&mut app, GAME_DURATION);
+
+    // Allocate tokens, we expect it to fail as the game just finished
+    let info_1 = mock_info("user1", &coins(1_000_000, DENOM_GAME));
+    let res = allocate_tokens(&mut app, &pp_addr, &info_1, 1).unwrap_err();
+    assert!(matches!(
+        res.downcast_ref::<ContractError>(),
+        Some(ContractError::GameAlreadyEnded {})
+    ));
+
+    // Game end, expect it to succeed, restart it inmediately
+    let info = mock_info(ADMIN_ADDRESS, &vec![]);
+    game_end(&mut app, &pp_addr, &info, None, None, None).unwrap();
+
+    // Allocate tokens, we expect it to succeed as the game just started
+    let info_1 = mock_info("user1", &coins(1_000_000, DENOM_GAME));
+    allocate_tokens(&mut app, &pp_addr, &info_1, 1).unwrap();
+
+    // Increase time by GAME_DURATION second to make the game finish
+    increase_app_time(&mut app, GAME_DURATION);
+
+    // Game end, expect it to succeed, restart it in the future
+    let info = mock_info(ADMIN_ADDRESS, &vec![]);
+    let next_game_start = app.block_info().time.plus_seconds(GAME_EXTEND).seconds();
+    game_end(&mut app, &pp_addr, &info, None, None, Some(next_game_start)).unwrap();
+
+    // Game end, we expect it to fail as the game didnt start yet
+    let info = mock_info(ADMIN_ADDRESS, &vec![]);
+    let res = game_end(&mut app, &pp_addr, &info, None, None, None).unwrap_err();
+    assert!(matches!(
+        res.downcast_ref::<ContractError>(),
+        Some(ContractError::GameNotStarted {})
+    ));
+}
