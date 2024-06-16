@@ -158,15 +158,10 @@ fn calculate_discounted_bid(
     decay_factor: Decimal,
 ) -> Uint128 {
     for _ in 0..token_amount {
-        // Calculate the discount amount using Decimal
-        let discount_amount = decay_factor * Decimal::from_ratio(min_bid, Uint128::one());
-        // Convert the discount amount to Uint128
-        let discount_amount_uint128 = Uint128::from(discount_amount.atomics());
-
+        // Calculate the discount amount to subtract from the current min bid
+        let discount_amount = min_bid * decay_factor;
         // Subtract the discount amount from the current min bid amount
-        min_bid = min_bid
-            .checked_sub(discount_amount_uint128)
-            .unwrap_or(min_bid);
+        min_bid = min_bid.checked_sub(discount_amount).unwrap_or(min_bid);
     }
 
     min_bid
