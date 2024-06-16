@@ -15,10 +15,9 @@ use crate::{
             update_player_allocation, update_pot_state,
         },
         validate::{
-            validate_and_extend_game_time, validate_existing_allocation, validate_funds,
-            validate_game_end_time, validate_increase_player_reallocations,
-            validate_is_contract_admin, validate_is_contract_admin_game_end,
-            validate_pot_limit_not_exceeded,
+            extend_game_time, validate_existing_allocation, validate_funds, validate_game_end_time,
+            validate_game_time, validate_increase_player_reallocations, validate_is_contract_admin,
+            validate_is_contract_admin_game_end, validate_pot_limit_not_exceeded,
         },
     },
     msg::UpdateGameConfig,
@@ -112,6 +111,7 @@ pub fn allocate_tokens(
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let game_state = GAME_STATE.load(deps.storage)?;
 
+    validate_game_time(deps.storage, &env)?;
     let amount = validate_funds(&info.funds, &game_config.game_denom)?;
     validate_pot_limit_not_exceeded(deps.storage, pot_id, amount)?;
     validate_existing_allocation(deps.storage, &info.sender, pot_id)?;
@@ -132,7 +132,7 @@ pub fn allocate_tokens(
         });
     }
     // we do that here so the extend_count doesnt increase before we evaluate the min max bid amounts
-    validate_and_extend_game_time(deps.storage, &env)?;
+    extend_game_time(deps.storage, &env)?;
 
     // Update the player's allocation and pot state
     update_player_allocation(deps.storage, &info.sender, pot_id, amount, true)?;
@@ -164,7 +164,8 @@ pub fn reallocate_tokens(
     if from_pot_id == to_pot_id {
         return Err(ContractError::InvalidPot {});
     }
-    validate_and_extend_game_time(deps.storage, &env)?;
+    validate_game_time(deps.storage, &env)?;
+    extend_game_time(deps.storage, &env)?;
     validate_increase_player_reallocations(deps.storage, &info.sender)?;
     validate_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
 
