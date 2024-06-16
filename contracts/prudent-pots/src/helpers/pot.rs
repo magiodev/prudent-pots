@@ -175,7 +175,7 @@ pub fn calculate_max_bid(deps: &Deps, original_min_bid: Uint128) -> Result<Uint1
     let max_bid = average_tokens.checked_mul(Uint128::from(2u128))?;
 
     // if the max bid calculated by average amount among pots results in a lower value than the original min bid, return the original min bid times 2
-    if max_bid.lt(&original_min_bid) {
+    if max_bid.le(&original_min_bid) {
         return Ok(original_min_bid.checked_mul(Uint128::from(2u128))?);
     }
 
