@@ -132,11 +132,11 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
             game_denom: old_game_config.game_denom,
             game_cw721_addrs: old_game_config.game_cw721_addrs,
             game_duration: old_game_config.game_duration,
-            game_duration_epoch: msg.game_duration_epoch, // this is the only one from migrateMsg
+            game_duration_epoch: msg.game_duration_epoch, // this is from migrateMsg
             game_extend: old_game_config.game_extend,
             game_end_threshold: old_game_config.game_end_threshold,
             min_pot_initial_allocation: old_game_config.min_pot_initial_allocation,
-            decay_factor: old_game_config.decay_factor,
+            decay_factor: msg.decay_factor, // this is from migrateMsg
             reallocations_limit: old_game_config.reallocations_limit,
         },
     )?;

@@ -15,7 +15,7 @@ fn test_allocate_tokens_works() {
     let info = mock_info("user1", &coins(1_000_000, DENOM_GAME));
 
     // Allocate
-    let _res = allocate_tokens(&mut app, &pp_addr, &info, 1);
+    let _res = allocate_tokens(&mut app, &pp_addr, &info, 1).unwrap();
     // assert!(!res.events.is_empty());
 
     // Query states
@@ -45,19 +45,14 @@ fn test_allocate_tokens_fails() {
     let info = mock_info("user1", &coins(1, DENOM_GAME));
 
     // Attempt to allocate tokens
-    let res = allocate_tokens(&mut app, &pp_addr, &info, 1);
+    let res = allocate_tokens(&mut app, &pp_addr, &info, 1).unwrap_err();
 
     // Check if the result is an error and if it matches the expected error
-    match res {
-        Err(e) => match e.downcast_ref::<ContractError>() {
-            Some(ContractError::BidOutOfRange { min, max }) => {
-                assert_eq!(*min, Uint128::new(1000000u128));
-                assert_eq!(*max, Uint128::new(2000000u128));
-            }
-            Some(_) => panic!("Unexpected contract error type"),
-            None => panic!("Expected ContractError::BidOutOfRange"),
-        },
-        _ => panic!("Expected an error"),
+    if let Some(ContractError::BidOutOfRange { min, max }) = res.downcast_ref::<ContractError>() {
+        assert_eq!(*min, Uint128::new(1000000u128));
+        assert_eq!(*max, Uint128::new(2000000u128));
+    } else {
+        panic!("Expected ContractError::BidOutOfRange");
     }
 
     // Query states to ensure no changes in the pot state after the failed allocation

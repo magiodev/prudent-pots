@@ -39,8 +39,8 @@ mod tests {
 
         // Verify new GAME_STATE after running prepare next game
         let game_state = GAME_STATE.load(deps.as_mut().storage).unwrap();
-        assert_eq!(game_state.start_time, env.block.time.seconds() + 1);
-        assert_eq!(game_state.end_time, env.block.time.seconds() + 1 + 3600);
+        assert_eq!(game_state.start_time, env.block.time.seconds());
+        assert_eq!(game_state.end_time, env.block.time.seconds() + 3600);
 
         // @deprecated as now this is a game_end responsibility: Verify reallocation fee pool reset
         // let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.as_mut().storage).unwrap();

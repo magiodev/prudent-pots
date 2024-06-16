@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Deps, Env, Storage, Uint128};
+use cosmwasm_std::{Addr, Decimal, Deps, Env, Storage, Uint128};
 use cw721::TokensResponse;
 
 use crate::{
@@ -93,19 +93,32 @@ pub fn calculate_min_bid(
     let current_timestamp = env.block.time.seconds();
 
     // Calculate the current epoch based on the game's start time and duration
-    let current_epoch_count =
-        (current_timestamp - game_state.start_time) / game_config.game_duration_epoch;
+    let elapsed_time = current_timestamp
+        .checked_sub(game_state.start_time)
+        .unwrap();
+    let current_epoch_count = elapsed_time
+        .checked_div(game_config.game_duration_epoch)
+        .unwrap();
 
-    // This should always match tho or we will have a bug on the max_bid which is still calculated via the tokens average among pots.
-    // The starting bet cannot be higher than the min_pot_initial_allocation or a 0.1 initial allocatio will create a maxBid of 0.1 while the minBid is 1.
-    // If the minBid is 1, the maxBid should be 2, if the minBid is 0.1, the maxBid should be 0.2.
+    // Calculate the base multiplier based on the current epoch count
+    let base_multiplier = Decimal::one().checked_add(
+        game_config
+            .decay_factor
+            .checked_mul(Decimal::from_ratio(current_epoch_count, 1u64))?,
+    )?; // e.g., 1.0 + (0.05 * 1) = 1.05
 
-    // TODO: Apply the multiplier based on current_epoch_count, each current_epoch should bump by game_config.
-    let min_bid = game_config.min_pot_initial_allocation;
+    // Calculate the final multiplier considering the extend count to price out quicker during the late-game
+    let multiply_factor = base_multiplier.checked_mul(Decimal::from_ratio(
+        game_state.extend_count as u64 + 1,
+        1u64,
+    ))?;
+
+    // Calculate min_bid as an integer multiplication of the initial allocation and the multiplier
+    let min_bid = game_config.min_pot_initial_allocation * multiply_factor;
 
     let mut cw721_count = 0;
 
-    // Only proceed with querying cw721 tokens if a sender is provided
+    // Only proceed with querying cw721 tokens if an address is provided
     if let Some(owner) = address {
         // Query multiple cw721 addresses and count the total number of tokens
         for addr in &game_config.game_cw721_addrs {
@@ -144,15 +157,18 @@ fn calculate_average_tokens(storage: &dyn Storage) -> Result<Uint128, ContractEr
 fn calculate_discounted_bid(
     mut min_bid: Uint128,
     token_amount: usize,
-    decay_factor: Uint128,
+    decay_factor: Decimal,
 ) -> Uint128 {
-    let discount_percentage = Uint128::from(100u128) - decay_factor;
-
     for _ in 0..token_amount {
-        // Calculate the discount amount to subtract
-        let discount_amount = min_bid.multiply_ratio(discount_percentage, Uint128::from(100u128));
+        // Calculate the discount amount using Decimal
+        let discount_amount = decay_factor * Decimal::from_ratio(min_bid, Uint128::one());
+        // Convert the discount amount to Uint128
+        let discount_amount_uint128 = Uint128::from(discount_amount.atomics());
+
         // Subtract the discount amount from the current min bid amount
-        min_bid = min_bid.checked_sub(discount_amount).unwrap_or(min_bid);
+        min_bid = min_bid
+            .checked_sub(discount_amount_uint128)
+            .unwrap_or(min_bid);
     }
 
     min_bid

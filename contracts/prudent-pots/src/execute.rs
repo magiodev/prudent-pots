@@ -1,4 +1,8 @@
-use cosmwasm_std::{attr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
+use std::str::FromStr;
+
+use cosmwasm_std::{
+    attr, BankMsg, CosmosMsg, Decimal, DepsMut, Env, MessageInfo, Response, Uint128,
+};
 
 use crate::{
     helpers::{
@@ -79,7 +83,10 @@ pub fn update_config(
         game_config.min_pot_initial_allocation = min_pot_initial_allocation;
     }
     if let Some(decay_factor) = update_config.decay_factor {
-        if decay_factor.lt(&Uint128::new(50u128)) || decay_factor.gt(&Uint128::new(99u128)) {
+        println!("decay_factor: {:?}", decay_factor);
+        if decay_factor.lt(&Decimal::from_str("0.01")?)
+            || decay_factor.gt(&Decimal::from_str("0.99")?)
+        {
             return Err(ContractError::InvalidInput {});
         }
         game_config.decay_factor = decay_factor;

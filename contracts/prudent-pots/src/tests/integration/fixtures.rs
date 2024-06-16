@@ -1,5 +1,7 @@
+use std::str::FromStr;
+
 use cosmwasm_std::testing::mock_info;
-use cosmwasm_std::{coin, coins, Addr, BlockInfo, Coin, Empty, Uint128};
+use cosmwasm_std::{coin, coins, Addr, BlockInfo, Coin, Decimal, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, BankKeeper, Contract, ContractWrapper, Executor};
 
 use crate::msg::{ExecuteMsg, GameConfigResponse, InstantiateMsg, QueryMsg, UpdateGameConfig};
@@ -122,7 +124,7 @@ pub fn default_with_balances(
                     game_extend: 600u64,
                     game_end_threshold: 600u64,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
-                    decay_factor: Uint128::new(95u128),
+                    decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,
                 },
             };
@@ -201,7 +203,7 @@ pub fn default_with_balances(
                     game_extend: 600u64,
                     game_end_threshold: 600u64,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
-                    decay_factor: Uint128::new(95u128),
+                    decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,
                 },
             };

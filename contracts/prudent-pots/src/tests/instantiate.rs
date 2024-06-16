@@ -1,11 +1,13 @@
 #[cfg(test)]
 pub mod tests {
+    use std::str::FromStr;
+
     use crate::{
         contract::instantiate,
         msg::InstantiateMsg,
         state::{GameConfig, TokenAllocation, PLAYER_ALLOCATIONS, POT_STATES},
     };
-    use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, StdError, Storage, Uint128};
+    use cosmwasm_std::{Addr, Decimal, DepsMut, Env, MessageInfo, StdError, Storage, Uint128};
 
     // Fixture methods
 
@@ -27,7 +29,7 @@ pub mod tests {
             game_denom: "token".to_string(),
             game_cw721_addrs: vec![Addr::unchecked("nft")],
             min_pot_initial_allocation: Uint128::new(200u128),
-            decay_factor: Uint128::new(95u128),
+            decay_factor: Decimal::from_str("0.05").unwrap(),
             reallocations_limit: 10,
         };
 

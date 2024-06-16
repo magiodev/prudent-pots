@@ -1,4 +1,6 @@
-use cosmwasm_std::{coin, Addr, Uint128};
+use std::str::FromStr;
+
+use cosmwasm_std::{coin, Addr, Decimal, Uint128};
 
 use crate::msg::{ExecuteMsg, GameConfigResponse, QueryMsg, UpdateGameConfig};
 use crate::state::GameConfig;
@@ -26,7 +28,7 @@ fn test_update_config_works() {
                 game_extend: Some(600 * 3),
                 game_end_threshold: Some(600 * 3),
                 min_pot_initial_allocation: Some(Uint128::new(1_000_000u128)),
-                decay_factor: Some(Uint128::new(50u128)),
+                decay_factor: Some(Decimal::from_str("0.5").unwrap()),
                 reallocations_limit: Some(10),
             },
         },
@@ -53,7 +55,7 @@ fn test_update_config_works() {
             game_extend: 600 * 3,
             game_end_threshold: 600 * 3,
             min_pot_initial_allocation: Uint128::new(1_000_000u128),
-            decay_factor: Uint128::new(50u128),
+            decay_factor: Decimal::from_str("0.5").unwrap(),
             reallocations_limit: 10,
         },
     };

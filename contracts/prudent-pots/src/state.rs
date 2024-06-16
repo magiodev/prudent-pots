@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_storage_plus::{Item, Map};
 
 #[cw_serde]
@@ -13,7 +13,7 @@ pub struct OldGameConfig {
     pub game_extend: u64,
     pub game_end_threshold: u64,
     pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO
-    pub decay_factor: Uint128,               // i.e. 95 as 95% // TODO: this oculd be a Decimal(0.05)
+    pub decay_factor: Uint128,               // i.e. 95 as 95%
     pub reallocations_limit: u64,
 }
 
@@ -29,7 +29,7 @@ pub struct GameConfig {
     pub game_extend: u64,
     pub game_end_threshold: u64,
     pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO, which is also used as starting bet amount.
-    pub decay_factor: Uint128,               // i.e. 95 as 95%
+    pub decay_factor: Decimal,               // i.e. 0.05 as 5%
     pub reallocations_limit: u64,
 }
 

@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use num_enum::{FromPrimitive, IntoPrimitive};
 
 use crate::state::{GameConfig, GameState, Raffle, TokenAllocation};
@@ -21,7 +21,7 @@ pub struct UpdateGameConfig {
     pub game_extend: Option<u64>,
     pub game_end_threshold: Option<u64>,
     pub min_pot_initial_allocation: Option<Uint128>,
-    pub decay_factor: Option<Uint128>,
+    pub decay_factor: Option<Decimal>,
     pub reallocations_limit: Option<u64>,
 }
 
@@ -154,4 +154,5 @@ pub struct RaffleDenomSplitResponse {
 #[cw_serde]
 pub struct MigrateMsg {
     pub game_duration_epoch: u64,
+    pub decay_factor: Decimal,
 }

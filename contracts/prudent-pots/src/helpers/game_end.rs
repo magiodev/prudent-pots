@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    attr, coins, to_json_binary, Attribute, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, Storage,
-    SubMsg, Uint128, WasmMsg,
+    attr, coins, to_json_binary, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env,
+    Storage, SubMsg, Uint128, WasmMsg,
 };
 
 use crate::{
@@ -37,7 +37,7 @@ pub fn prepare_next_game(
 
     // Start the next game 1 second in the future
     let game_duration = config.game_duration;
-    let next_game_start = env.block.time.seconds() + 1;
+    let next_game_start = env.block.time.seconds();
     let next_game_end = next_game_start + game_duration;
 
     // Validate game start and end times
@@ -309,18 +309,19 @@ pub fn get_raffle_denom_prize_amounts(deps: &Deps) -> Result<(Uint128, Uint128),
     let raffle = RAFFLE.load(deps.storage)?;
 
     // Apply the decay factor iteratively based on extend_count
-    let mut prize_percentage = Uint128::from(100u128); // Starting from 100%
+    let mut prize_percentage = Decimal::percent(100); // Starting from 100%
     for _ in 0..game_state.extend_count {
-        prize_percentage =
-            prize_percentage.multiply_ratio(game_config.decay_factor, Uint128::from(100u128));
+        prize_percentage = prize_percentage * (Decimal::one() - game_config.decay_factor);
     }
 
-    let distributed_prize = raffle
-        .denom_amount
-        .multiply_ratio(prize_percentage, Uint128::from(100u128));
-    let remaining_prize = raffle.denom_amount.checked_sub(distributed_prize)?;
+    // Calculate the distributed prize
+    let distributed_prize =
+        prize_percentage * Decimal::from_ratio(raffle.denom_amount, Uint128::from(1u128));
+    let distributed_prize_uint128 = distributed_prize.atomics().into();
 
-    Ok((distributed_prize, remaining_prize))
+    let remaining_prize = raffle.denom_amount.checked_sub(distributed_prize_uint128)?;
+
+    Ok((distributed_prize_uint128, remaining_prize))
 }
 
 pub fn get_distribution_send_msgs(
