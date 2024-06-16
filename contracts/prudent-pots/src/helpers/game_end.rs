@@ -31,13 +31,15 @@ pub fn prepare_next_game(
     raffle_cw721_token_id: Option<String>,
     raffle_cw721_addr: Option<String>,
     raffle_denom_amount: Option<Uint128>,
+    next_game_start: Option<u64>, // this is intended as a unix timestamp in seconds that should replace the current timestamp, but should also be higher than the current timestamp
 ) -> Result<(u64, u64, u32), ContractError> {
     let config = GAME_CONFIG.load(deps.storage)?;
     let game_state = GAME_STATE.may_load(deps.storage)?.unwrap_or_default(); // may load due instantiate invoke
 
+    // TODO: finish the impl
     // Start the next game 1 second in the future
     let game_duration = config.game_duration;
-    let next_game_start = env.block.time.seconds();
+    let next_game_start = next_game_start.unwrap_or(env.block.time.seconds());
     let next_game_end = next_game_start + game_duration;
 
     // Validate game start and end times

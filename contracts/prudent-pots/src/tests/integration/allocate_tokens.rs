@@ -10,8 +10,12 @@ use crate::ContractError;
 
 #[test]
 fn test_allocate_tokens_works() {
-    let (mut app, pp_addr, _cw721_addr) =
-        default_with_balances(1, vec![coin(100_000_000u128, DENOM_GAME.to_string())], None);
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        1,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        None,
+    );
 
     // Sending enough funds
     let info = mock_info("user1", &coins(1_000_000, DENOM_GAME));
@@ -32,8 +36,12 @@ fn test_allocate_tokens_works() {
 
 #[test]
 fn test_allocate_tokens_fails() {
-    let (mut app, pp_addr, _cw721_addr) =
-        default_with_balances(1, vec![coin(100_000_000u128, DENOM_GAME.to_string())], None);
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        1,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        None,
+    );
 
     // Sending too little funds
     let info = mock_info("user1", &coins(1, DENOM_GAME));
@@ -63,8 +71,12 @@ fn test_allocate_tokens_fails() {
 
 #[test]
 fn test_allocate_tokens_min_bet_works() {
-    let (mut app, pp_addr, _cw721_addr) =
-        default_with_balances(1, vec![coin(100_000_000u128, DENOM_GAME.to_string())], None);
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        1,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        None,
+    );
 
     // Contract started with 5 $DENOM and a min_pot_initial_allocation of 1.0 $DENOM.
     // Subsequently the minimum bet starts by 1.0 $DENOM with a 0.0 multiplier as we are still in the epoch 0.

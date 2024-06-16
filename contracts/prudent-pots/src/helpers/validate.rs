@@ -160,8 +160,13 @@ pub fn validate_and_extend_game_time(
     let game_config = GAME_CONFIG.load(storage)?;
     let mut game_state = GAME_STATE.load(storage)?;
 
+    // Check if the game is not started yet
+    if env.block.time.seconds().lt(&game_state.start_time) {
+        return Err(ContractError::GameAlreadyEnded {});
+    }
+
     // Check if the game has already ended
-    if env.block.time.seconds() >= game_state.end_time {
+    if env.block.time.seconds().ge(&game_state.end_time) {
         return Err(ContractError::GameAlreadyEnded {});
     }
 
@@ -172,7 +177,7 @@ pub fn validate_and_extend_game_time(
         .unwrap();
 
     // Extend the game time if the remaining time is less than or equal to game_config.game_extend
-    if remaining_time <= game_config.game_extend {
+    if remaining_time.le(&game_config.game_extend) {
         game_state.end_time = env.block.time.seconds() + game_config.game_extend;
         game_state.extend_count = game_state.extend_count.checked_add(1).unwrap();
         GAME_STATE.save(storage, &game_state)?;

@@ -58,6 +58,7 @@ pub fn game_end(
     info: &MessageInfo,
     raffle_cw721_token_id: Option<String>,
     raffle_cw721_token_addr: Option<String>,
+    next_game_start: Option<u64>,
 ) -> Result<AppResponse, AnyError> {
     app.execute_contract(
         info.sender.clone(),
@@ -65,6 +66,7 @@ pub fn game_end(
         &ExecuteMsg::GameEnd {
             raffle_cw721_token_id,
             raffle_cw721_token_addr,
+            next_game_start,
         },
         &info.funds,
     )

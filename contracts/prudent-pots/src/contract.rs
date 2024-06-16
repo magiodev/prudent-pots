@@ -51,7 +51,15 @@ pub fn instantiate(
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Initialize game state and pots for the next game
-    prepare_next_game(deps, &env, Uint128::zero(), None, None, None)?;
+    prepare_next_game(
+        deps,
+        &env,
+        Uint128::zero(),
+        None,
+        None,
+        None,
+        msg.next_game_start,
+    )?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -76,12 +84,14 @@ pub fn execute(
         ExecuteMsg::GameEnd {
             raffle_cw721_token_id,
             raffle_cw721_token_addr,
+            next_game_start,
         } => game_end(
             deps,
             env,
             info,
             raffle_cw721_token_id,
             raffle_cw721_token_addr,
+            next_game_start,
         ),
     }
 }

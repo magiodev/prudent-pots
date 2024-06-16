@@ -21,8 +21,12 @@ use super::{
 
 #[test]
 fn test_game_end_one_winner_simple_works() {
-    let (mut app, pp_addr, _cw721_addr) =
-        default_with_balances(5, vec![coin(100_000_000u128, DENOM_GAME.to_string())], None);
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        5,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        None,
+    );
 
     // Game state extend_count after
     let game_state: GameStateResponse = app
@@ -85,7 +89,7 @@ fn test_game_end_one_winner_simple_works() {
 
     // Game end and new raffles
     let info = mock_info(ADMIN_ADDRESS, &vec![]);
-    game_end(&mut app, &pp_addr, &info, None, None).unwrap();
+    game_end(&mut app, &pp_addr, &info, None, None, None).unwrap();
 
     // Get user balance after game_end
     let user5_balance_after = app.wrap().query_balance("user5", DENOM_GAME).unwrap();
@@ -161,6 +165,7 @@ fn test_game_end_one_winner_raffle_both_works() {
             cw721_addr: None, // this will be overridden by the fixture after cw721 contract instantiation
             denom_amount: Uint128::new(100_000_000u128),
         }),
+        None,
     );
 
     // Game state extend_count after
@@ -325,6 +330,7 @@ fn test_game_end_one_winner_raffle_both_works() {
         &info,
         Some("2".to_string()),
         Some(cw721_addr.to_string()),
+        None,
     )
     .unwrap();
 
