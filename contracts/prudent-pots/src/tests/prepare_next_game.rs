@@ -35,16 +35,12 @@ mod tests {
 
         // Test case
 
-        prepare_next_game(deps.as_mut(), &env, Uint128::zero(), None, None, None).unwrap();
+        prepare_next_game(deps.as_mut(), &env, Uint128::zero(), None, None, None, None).unwrap();
 
         // Verify new GAME_STATE after running prepare next game
         let game_state = GAME_STATE.load(deps.as_mut().storage).unwrap();
         assert_eq!(game_state.start_time, env.block.time.seconds());
         assert_eq!(game_state.end_time, env.block.time.seconds() + 3600);
-
-        // @deprecated as now this is a game_end responsibility: Verify reallocation fee pool reset
-        // let reallocation_fee_pool = REALLOCATION_FEE_POOL.load(deps.as_mut().storage).unwrap();
-        // assert_eq!(reallocation_fee_pool, Uint128::zero());
 
         // TODO_FUTURE: PlayerAllocations reset assertion
 

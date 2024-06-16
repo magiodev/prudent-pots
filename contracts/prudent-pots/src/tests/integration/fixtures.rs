@@ -68,6 +68,7 @@ pub fn default_with_balances(
     num_users: u8,
     initial_balance: Vec<Coin>,
     raffle: Option<Raffle>,
+    next_game_start: Option<u64>,
 ) -> (App, Addr, Addr) {
     // Create a vector to hold the balances setup
     let mut balances = vec![(
@@ -128,6 +129,7 @@ pub fn default_with_balances(
                     decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,
                 },
+                next_game_start: None,
             };
             pp_addr = instantiate_pp(
                 &mut app,
@@ -188,6 +190,7 @@ pub fn default_with_balances(
                 ),
                 raffle.cw721_token_id,        // raffle nft prize
                 Some(cw721_addr.to_string()), // overriding the None passed from outside as contract wasnt instantiated yet
+                next_game_start,
             )
             .unwrap();
         }
@@ -207,6 +210,7 @@ pub fn default_with_balances(
                     decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,
                 },
+                next_game_start,
             };
             pp_addr = instantiate_pp(
                 &mut app,

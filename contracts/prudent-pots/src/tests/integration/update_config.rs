@@ -9,8 +9,12 @@ use crate::tests::integration::helpers::update_config;
 
 #[test]
 fn test_update_config_works() {
-    let (mut app, pp_addr, _cw721_addr) =
-        default_with_balances(1, vec![coin(100_000_000u128, DENOM_GAME.to_string())], None);
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        1,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        None,
+    );
 
     // Update config as admin
     let res = update_config(

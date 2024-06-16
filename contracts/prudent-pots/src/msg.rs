@@ -7,6 +7,7 @@ use crate::state::{GameConfig, GameState, Raffle, TokenAllocation};
 #[cw_serde]
 pub struct InstantiateMsg {
     pub config: GameConfig,
+    pub next_game_start: Option<u64>,
 }
 
 #[cw_serde]
@@ -40,6 +41,7 @@ pub enum ExecuteMsg {
     GameEnd {
         raffle_cw721_token_id: Option<String>,
         raffle_cw721_token_addr: Option<String>,
+        next_game_start: Option<u64>,
     },
 }
 

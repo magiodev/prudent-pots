@@ -40,6 +40,7 @@ pub mod tests {
             info.clone(),
             InstantiateMsg {
                 config: config.clone(),
+                next_game_start: None,
             },
         )
         .unwrap();

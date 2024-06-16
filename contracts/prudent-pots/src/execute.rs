@@ -214,6 +214,7 @@ pub fn game_end(
     info: MessageInfo,
     new_raffle_cw721_id: Option<String>,
     new_raffle_cw721_addr: Option<String>,
+    next_game_start: Option<u64>,
 ) -> Result<Response, ContractError> {
     validate_game_end_time(deps.storage, &env)?;
     validate_is_contract_admin_game_end(deps.storage, &deps.querier, &env, &info.sender)?;
@@ -283,6 +284,7 @@ pub fn game_end(
         process_raffle_winner_resp.new_raffle_cw721_id,
         process_raffle_winner_resp.new_raffle_cw721_addr,
         Some(process_raffle_winner_resp.new_raffle_denom_amount),
+        next_game_start,
     )?;
 
     Ok(Response::new()
