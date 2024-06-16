@@ -220,6 +220,11 @@ pub fn game_end(
     validate_game_end_time(deps.storage, &env)?;
     validate_is_contract_admin_game_end(deps.storage, &deps.querier, &env, &info.sender)?;
 
+    // if passed, it should be in the future
+    if next_game_start.is_some() && next_game_start.unwrap() <= env.block.time.seconds() {
+        return Err(ContractError::InvalidNextGameStart {});
+    }
+
     // Ensure both or neither options are provided
     if new_raffle_cw721_id.is_some() != new_raffle_cw721_addr.is_some() {
         return Err(ContractError::InvalidRaffleNft {});

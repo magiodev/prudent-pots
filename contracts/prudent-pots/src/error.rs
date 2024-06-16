@@ -45,6 +45,9 @@ pub enum ContractError {
     #[error("Raffle NFT specified is invalid.")]
     InvalidRaffleNft {},
 
+    #[error("The next game start time is invalid.")]
+    InvalidNextGameStart {},
+
     #[error("Expected a CW721 token transfer but none was received.")]
     Cw721TokenNotReceived {},
 
