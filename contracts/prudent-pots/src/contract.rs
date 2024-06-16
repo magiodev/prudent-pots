@@ -67,7 +67,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, config),
+        ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, *config),
         ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, env, info, pot_id),
         ExecuteMsg::ReallocateTokens {
             from_pot_id,

@@ -17,7 +17,7 @@ fn test_update_config_works() {
         &mut app,
         &pp_addr,
         &ExecuteMsg::UpdateConfig {
-            config: UpdateGameConfig {
+            config: Box::new(UpdateGameConfig {
                 fee: Some(10),
                 fee_reallocation: Some(10),
                 fee_address: Some(Addr::unchecked("new_address")),
@@ -30,7 +30,7 @@ fn test_update_config_works() {
                 min_pot_initial_allocation: Some(Uint128::new(1_000_000u128)),
                 decay_factor: Some(Decimal::from_str("0.5").unwrap()),
                 reallocations_limit: Some(10),
-            },
+            }),
         },
     )
     .unwrap();

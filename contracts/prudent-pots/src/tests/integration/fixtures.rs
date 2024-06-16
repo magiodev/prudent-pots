@@ -155,7 +155,7 @@ pub fn default_with_balances(
                 &mut app,
                 &pp_addr,
                 &ExecuteMsg::UpdateConfig {
-                    config: UpdateGameConfig {
+                    config: Box::new(UpdateGameConfig {
                         fee: None,
                         fee_reallocation: None,
                         fee_address: None,
@@ -168,7 +168,7 @@ pub fn default_with_balances(
                         min_pot_initial_allocation: None,
                         decay_factor: None,
                         reallocations_limit: None,
-                    },
+                    }),
                 },
             )
             .unwrap();

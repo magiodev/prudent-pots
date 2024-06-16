@@ -28,7 +28,7 @@ pub struct UpdateGameConfig {
 #[cw_serde]
 pub enum ExecuteMsg {
     UpdateConfig {
-        config: UpdateGameConfig,
+        config: Box<UpdateGameConfig>,
     },
     AllocateTokens {
         pot_id: u8,
