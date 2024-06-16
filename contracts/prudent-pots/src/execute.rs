@@ -63,6 +63,9 @@ pub fn update_config(
     if let Some(game_duration) = update_config.game_duration {
         game_config.game_duration = game_duration;
     }
+    if let Some(game_duration_epoch) = update_config.game_duration_epoch {
+        game_config.game_duration_epoch = game_duration_epoch;
+    }
     if let Some(game_extend) = update_config.game_extend {
         if game_extend > game_config.game_duration {
             return Err(ContractError::InvalidInput {});

@@ -17,7 +17,8 @@ pub mod tests {
     ) {
         // Define the game configuration
         let config = GameConfig {
-            game_duration: 3600,
+            game_duration: 3600,      // 1hr
+            game_duration_epoch: 600, // 10 min out of 1hr
             game_extend: 600,
             game_end_threshold: 600,
             fee: 2,

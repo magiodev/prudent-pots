@@ -304,9 +304,9 @@ pub fn process_raffle_winner(
 
 /// Helper to calculate the prize amount for raffle distribution based on game extensions.
 pub fn get_raffle_denom_prize_amounts(deps: &Deps) -> Result<(Uint128, Uint128), ContractError> {
-    let game_config: GameConfig = GAME_CONFIG.load(deps.storage)?;
-    let game_state: GameState = GAME_STATE.load(deps.storage)?;
-    let raffle: Raffle = RAFFLE.load(deps.storage)?;
+    let game_config = GAME_CONFIG.load(deps.storage)?;
+    let game_state = GAME_STATE.load(deps.storage)?;
+    let raffle = RAFFLE.load(deps.storage)?;
 
     // Apply the decay factor iteratively based on extend_count
     let mut prize_percentage = Uint128::from(100u128); // Starting from 100%
