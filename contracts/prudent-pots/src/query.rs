@@ -1,4 +1,4 @@
-use cosmwasm_std::{Deps, StdResult};
+use cosmwasm_std::{Deps, Env, StdResult};
 
 use crate::{
     helpers::{
@@ -27,9 +27,16 @@ pub fn query_game_state(deps: Deps) -> StdResult<GameStateResponse> {
     Ok(GameStateResponse { state })
 }
 
-pub fn query_bid_range(deps: Deps, address: Option<String>) -> StdResult<BidRangeResponse> {
-    let min_bid = calculate_min_bid(&deps, address).unwrap();
-    let max_bid = calculate_max_bid(&deps).unwrap();
+pub fn query_bid_range(
+    deps: Deps,
+    env: Env,
+    address: Option<String>,
+) -> StdResult<BidRangeResponse> {
+    let min_bid = calculate_min_bid(&deps, &env, address).unwrap();
+
+    // Calculate the max bid based on the original not discounted min bid
+    let original_min_bid = calculate_min_bid(&deps, &env, None).unwrap();
+    let max_bid = calculate_max_bid(&deps, original_min_bid).unwrap();
     Ok(BidRangeResponse { min_bid, max_bid })
 }
 

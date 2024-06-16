@@ -1,9 +1,10 @@
-use cosmwasm_std::{Addr, Deps, Storage, Uint128};
+use cosmwasm_std::{Addr, Deps, Env, Storage, Uint128};
 use cw721::TokensResponse;
 
 use crate::{
     state::{
-        FirstBidder, TokenAllocation, FIRST_BIDDER, GAME_CONFIG, PLAYER_ALLOCATIONS, POT_STATES,
+        FirstBidder, TokenAllocation, FIRST_BIDDER, GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS,
+        POT_STATES,
     },
     ContractError,
 };
@@ -82,15 +83,25 @@ pub fn update_pot_state(
 }
 
 // Helper to calculate the minimum bid based on the game's current state
-pub fn calculate_min_bid(deps: &Deps, address: Option<String>) -> Result<Uint128, ContractError> {
+pub fn calculate_min_bid(
+    deps: &Deps,
+    env: &Env,
+    address: Option<String>,
+) -> Result<Uint128, ContractError> {
     let game_config = GAME_CONFIG.load(deps.storage)?;
+    let game_state = GAME_STATE.load(deps.storage)?;
+    let current_timestamp = env.block.time.seconds();
 
-    let average_tokens = calculate_average_tokens(deps.storage)?;
+    // Calculate the current epoch based on the game's start time and duration
+    let current_epoch_count =
+        (current_timestamp - game_state.start_time) / game_config.game_duration_epoch;
 
-    // Validate average_tokens is not 0. This shouldn't happen but better safe than sorry
-    if average_tokens.is_zero() {
-        return Err(ContractError::InvalidInput {});
-    }
+    // This should always match tho or we will have a bug on the max_bid which is still calculated via the tokens average among pots.
+    // The starting bet cannot be higher than the min_pot_initial_allocation or a 0.1 initial allocatio will create a maxBid of 0.1 while the minBid is 1.
+    // If the minBid is 1, the maxBid should be 2, if the minBid is 0.1, the maxBid should be 0.2.
+
+    // TODO: Apply the multiplier based on current_epoch_count, each current_epoch should bump by game_config.
+    let min_bid = game_config.min_pot_initial_allocation;
 
     let mut cw721_count = 0;
 
@@ -110,10 +121,11 @@ pub fn calculate_min_bid(deps: &Deps, address: Option<String>) -> Result<Uint128
         }
     }
 
-    // Apply discount based on the number of tokens owned
-    let min_bid = calculate_discounted_bid(average_tokens, cw721_count, game_config.decay_factor);
+    // Apply discount based on the number of whitelisted NFT tokens owned
+    let discounted_min_bid =
+        calculate_discounted_bid(min_bid, cw721_count, game_config.decay_factor);
 
-    Ok(min_bid)
+    Ok(discounted_min_bid)
 }
 
 // Helper to calculate the average tokens across all pots
@@ -147,12 +159,17 @@ fn calculate_discounted_bid(
 }
 
 // Helper to calculate the maximum bid based on the game's current state
-pub fn calculate_max_bid(deps: &Deps) -> Result<Uint128, ContractError> {
-    // we hardcode 1 here to avoid creating a maxBid limit. we just want a minBid discount
-    let original_min_bid = calculate_min_bid(deps, None)?;
+pub fn calculate_max_bid(deps: &Deps, original_min_bid: Uint128) -> Result<Uint128, ContractError> {
+    // TODO: What if nobody plays the game? The maxBid will be 0.2 forever and the minBid will be increasing, maybe too much?
+    let average_tokens = calculate_average_tokens(deps.storage)?;
 
-    // Set the maximum bid as double the minimum bid or average, whichever is higher
-    let max_bid = original_min_bid.checked_mul(Uint128::from(2u128))?;
+    // Set the maximum bid as double the average of tokens in the pots, whichever is higher
+    let max_bid = average_tokens.checked_mul(Uint128::from(2u128))?;
+
+    // if the max bid calculated by average amount among pots results in a lower value than the original min bid, return the original min bid times 2
+    if max_bid.lt(&original_min_bid) {
+        return Ok(original_min_bid.checked_mul(Uint128::from(2u128))?);
+    }
 
     Ok(max_bid)
 }

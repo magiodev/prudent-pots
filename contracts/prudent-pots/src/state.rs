@@ -13,7 +13,7 @@ pub struct OldGameConfig {
     pub game_extend: u64,
     pub game_end_threshold: u64,
     pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO
-    pub decay_factor: Uint128,               // i.e. 95 as 95%
+    pub decay_factor: Uint128,               // i.e. 95 as 95% // TODO: this oculd be a Decimal(0.05)
     pub reallocations_limit: u64,
 }
 
@@ -28,7 +28,7 @@ pub struct GameConfig {
     pub game_duration_epoch: u64, // i.e., 3600 for 1 hour intervals
     pub game_extend: u64,
     pub game_end_threshold: u64,
-    pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO
+    pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO, which is also used as starting bet amount.
     pub decay_factor: Uint128,               // i.e. 95 as 95%
     pub reallocations_limit: u64,
 }

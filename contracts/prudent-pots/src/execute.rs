@@ -112,8 +112,14 @@ pub fn allocate_tokens(
     validate_existing_allocation(deps.storage, &info.sender, pot_id)?;
 
     // Dynamic bid constraints
-    let min_bid = calculate_min_bid(&deps.as_ref(), Some(info.sender.to_string()))?;
-    let max_bid = calculate_max_bid(&deps.as_ref())?;
+
+    // min bid based on current addy so we discount by NFT holding
+    let min_bid = calculate_min_bid(&deps.as_ref(), &env, Some(info.sender.to_string()))?;
+
+    // get the originial min bid calculation without taking in account NFT holding discount
+    let original_min_bid = calculate_min_bid(&deps.as_ref(), &env, None)?;
+    // max bid based on original min bid, so we don't discount by NFT holding
+    let max_bid = calculate_max_bid(&deps.as_ref(), original_min_bid)?;
     if amount < min_bid || amount > max_bid {
         return Err(ContractError::BidOutOfRange {
             min: min_bid,

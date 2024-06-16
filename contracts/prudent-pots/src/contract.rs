@@ -95,11 +95,11 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GameConfig {} => to_json_binary(&query_game_config(deps)?),
         QueryMsg::GameState {} => to_json_binary(&query_game_state(deps)?),
-        QueryMsg::BidRange { address } => to_json_binary(&query_bid_range(deps, address)?),
+        QueryMsg::BidRange { address } => to_json_binary(&query_bid_range(deps, env, address)?),
         QueryMsg::PotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
         QueryMsg::PotsState {} => to_json_binary(&query_pots_state(deps)?),
         QueryMsg::WinningPots {} => to_json_binary(&query_winning_pots(deps)?),
