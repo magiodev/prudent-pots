@@ -11,14 +11,14 @@
       </div>
     </div>
 
-    <div class="row game">
+    <div class="row game" v-if="!isCountingDownToStart">
       <div class="col">
         <StatsComponent/>
         <PotsComponent class="mt-lg-5 mt-3 mb-lg-5"/>
       </div>
     </div>
 
-    <div class="row bet position-relative bg-pp-color-5">
+    <div class="row bet position-relative bg-pp-color-5" v-if="!isCountingDownToStart">
       <div class="col py-3 py-lg-5">
         <BidComponent/>
       </div>
