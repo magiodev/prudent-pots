@@ -1,4 +1,4 @@
-import {mapActions, mapGetters, mapMutations} from "vuex";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 
 const mxGame = {
   data() {
@@ -10,17 +10,35 @@ const mxGame = {
   computed: {
     ...mapGetters(['userAddress', 'gameState', "gameActivitySelectedRound"]),
 
+    isCountingDownToStart() {
+      if (!this.gameState) return null;
+      const startTime = this.gameState.start_time * 1000;
+      return this.currentTime < startTime;
+    },
+
     timeLeftSeconds() {
       if (!this.gameState) return null;
+      // take the start time
+      const startTime = this.gameState.start_time * 1000;
+      // take the end time
       const endTime = this.gameState.end_time * 1000;
-      const timeDiff = endTime - this.currentTime;
-      return timeDiff > 0 ? Math.floor(timeDiff / 1000) : 0;
+      const now = this.currentTime;
+      if (now < startTime) {
+        // we are before the start
+        return Math.floor((startTime - now) / 1000); // Countdown to start
+      } else if (now < endTime) {
+        // we are during the game
+        return Math.floor((endTime - now) / 1000); // Countdown to end
+      } else {
+        // the game finished and it hasnt been restarted/scheduled
+        return 0;
+      }
     },
 
     timeLeftHuman() {
       const timeDiff = this.timeLeftSeconds * 1000;
       if (timeDiff <= 0) {
-        return "0d 0h 0m 0s";
+        return "Time's up!";
       }
       const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
