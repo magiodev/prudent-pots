@@ -16,9 +16,14 @@
               <b-icon-github class="text-white"></b-icon-github>
             </a>
           </li>
-          <li>
+          <li class="me-3">
             <a href="https://x.com/magiodev/status/1800558963278201023" target="_blank" rel="noopener noreferrer">
               <b-icon-twitter class="text-white"></b-icon-twitter>
+            </a>
+          </li>
+          <li>
+            <a href="https://discord.gg/madscientists" target="_blank" rel="noopener noreferrer">
+              <b-icon-discord class="text-white"></b-icon-discord>
             </a>
           </li>
         </ul>
