@@ -95,7 +95,7 @@ pub fn calculate_min_bid(
     // Calculate the current epoch based on the game's start time and duration
     let elapsed_time = current_timestamp
         .checked_sub(game_state.start_time)
-        .unwrap();
+        .unwrap_or_default(); // this could underflow due to a round scheduled in the future, so we unwrap default 0
     let current_epoch_count = elapsed_time
         .checked_div(game_config.game_duration_epoch)
         .unwrap();
