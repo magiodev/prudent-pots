@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use num_enum::{FromPrimitive, IntoPrimitive};
 
 use crate::state::{GameConfig, GameState, Raffle, TokenAllocation};
@@ -7,8 +7,7 @@ use crate::state::{GameConfig, GameState, Raffle, TokenAllocation};
 #[cw_serde]
 pub struct InstantiateMsg {
     pub config: GameConfig,
-    // pub raffle_cw721_token_ids: Vec<String>,
-    // pub raffle_denom_amount: Uint128,
+    pub next_game_start: Option<u64>,
 }
 
 #[cw_serde]
@@ -19,17 +18,18 @@ pub struct UpdateGameConfig {
     pub game_denom: Option<String>,
     pub game_cw721_addrs: Vec<Addr>,
     pub game_duration: Option<u64>,
+    pub game_duration_epoch: Option<u64>,
     pub game_extend: Option<u64>,
     pub game_end_threshold: Option<u64>,
     pub min_pot_initial_allocation: Option<Uint128>,
-    pub decay_factor: Option<Uint128>,
+    pub decay_factor: Option<Decimal>,
     pub reallocations_limit: Option<u64>,
 }
 
 #[cw_serde]
 pub enum ExecuteMsg {
     UpdateConfig {
-        config: UpdateGameConfig,
+        config: Box<UpdateGameConfig>,
     },
     AllocateTokens {
         pot_id: u8,
@@ -41,6 +41,7 @@ pub enum ExecuteMsg {
     GameEnd {
         raffle_cw721_token_id: Option<String>,
         raffle_cw721_token_addr: Option<String>,
+        next_game_start: Option<u64>,
     },
 }
 
@@ -153,4 +154,7 @@ pub struct RaffleDenomSplitResponse {
 }
 
 #[cw_serde]
-pub struct MigrateMsg {}
+pub struct MigrateMsg {
+    pub game_duration_epoch: u64,
+    pub decay_factor: Decimal,
+}

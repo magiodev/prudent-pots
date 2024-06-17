@@ -17,7 +17,7 @@ use crate::query::{
     query_winning_pots,
 };
 use crate::reply::game_end_reply;
-use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
+use crate::state::{GameConfig, GAME_CONFIG, OLD_GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:prudent-pots";
@@ -51,7 +51,15 @@ pub fn instantiate(
     REALLOCATION_FEE_POOL.save(deps.storage, &Uint128::zero())?;
 
     // Initialize game state and pots for the next game
-    prepare_next_game(deps, &env, Uint128::zero(), None, None, None)?;
+    prepare_next_game(
+        deps,
+        &env,
+        Uint128::zero(),
+        None,
+        None,
+        None,
+        msg.next_game_start,
+    )?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -67,7 +75,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, config),
+        ExecuteMsg::UpdateConfig { config } => update_config(deps, env, info, *config),
         ExecuteMsg::AllocateTokens { pot_id } => allocate_tokens(deps, env, info, pot_id),
         ExecuteMsg::ReallocateTokens {
             from_pot_id,
@@ -76,12 +84,14 @@ pub fn execute(
         ExecuteMsg::GameEnd {
             raffle_cw721_token_id,
             raffle_cw721_token_addr,
+            next_game_start,
         } => game_end(
             deps,
             env,
             info,
             raffle_cw721_token_id,
             raffle_cw721_token_addr,
+            next_game_start,
         ),
     }
 }
@@ -95,11 +105,11 @@ pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GameConfig {} => to_json_binary(&query_game_config(deps)?),
         QueryMsg::GameState {} => to_json_binary(&query_game_state(deps)?),
-        QueryMsg::BidRange { address } => to_json_binary(&query_bid_range(deps, address)?),
+        QueryMsg::BidRange { address } => to_json_binary(&query_bid_range(deps, env, address)?),
         QueryMsg::PotState { pot_id } => to_json_binary(&query_pot_state(deps, pot_id)?),
         QueryMsg::PotsState {} => to_json_binary(&query_pots_state(deps)?),
         QueryMsg::WinningPots {} => to_json_binary(&query_winning_pots(deps)?),
@@ -118,6 +128,31 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    // load the old game config
+    let old_game_config = OLD_GAME_CONFIG.load(deps.storage)?;
+
+    // Save new GameConfig at game_config_v2 storage key
+    GAME_CONFIG.save(
+        deps.storage,
+        &GameConfig {
+            fee: old_game_config.fee,
+            fee_reallocation: old_game_config.fee_reallocation,
+            fee_address: old_game_config.fee_address,
+            game_denom: old_game_config.game_denom,
+            game_cw721_addrs: old_game_config.game_cw721_addrs,
+            game_duration: old_game_config.game_duration,
+            game_duration_epoch: msg.game_duration_epoch, // this is from migrateMsg
+            game_extend: old_game_config.game_extend,
+            game_end_threshold: old_game_config.game_end_threshold,
+            min_pot_initial_allocation: old_game_config.min_pot_initial_allocation,
+            decay_factor: msg.decay_factor, // this is from migrateMsg
+            reallocations_limit: old_game_config.reallocations_limit,
+        },
+    )?;
+
+    // remove the old game config
+    OLD_GAME_CONFIG.remove(deps.storage);
+
     Ok(Response::new().add_attribute("migrate", "successful"))
 }

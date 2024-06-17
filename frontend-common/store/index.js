@@ -361,7 +361,6 @@ export default createStore({
         console.error("Querier is not initialized");
         return;
       }
-
       const data = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
         {all_players_allocations: {}}
@@ -374,7 +373,6 @@ export default createStore({
         console.error("Querier is not initialized");
         return;
       }
-
       const data = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
         {pots_state: {}}
@@ -387,7 +385,6 @@ export default createStore({
         console.error("Querier is not initialized");
         return;
       }
-
       const data = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
         {winning_pots: {}}
@@ -400,7 +397,6 @@ export default createStore({
         console.error("Querier is not initialized");
         return;
       }
-
       const data = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
         {bid_range: {address: state.user.address}}
@@ -413,7 +409,6 @@ export default createStore({
         console.error("Querier is not initialized");
         return;
       }
-
       const data = await state.user.querier.queryContractSmart(
         process.env.VUE_APP_CONTRACT,
         {reallocation_fee_pool: {}}

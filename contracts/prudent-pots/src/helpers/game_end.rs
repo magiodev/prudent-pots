@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    attr, coins, to_json_binary, Attribute, BankMsg, Coin, CosmosMsg, Deps, DepsMut, Env, Storage,
-    SubMsg, Uint128, WasmMsg,
+    attr, coins, to_json_binary, Attribute, BankMsg, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env,
+    Storage, SubMsg, Uint128, WasmMsg,
 };
 
 use crate::{
@@ -31,13 +31,15 @@ pub fn prepare_next_game(
     raffle_cw721_token_id: Option<String>,
     raffle_cw721_addr: Option<String>,
     raffle_denom_amount: Option<Uint128>,
+    next_game_start: Option<u64>, // this is intended as a unix timestamp in seconds that should replace the current timestamp, but should also be higher than the current timestamp
 ) -> Result<(u64, u64, u32), ContractError> {
     let config = GAME_CONFIG.load(deps.storage)?;
     let game_state = GAME_STATE.may_load(deps.storage)?.unwrap_or_default(); // may load due instantiate invoke
 
+    // TODO: finish the impl
     // Start the next game 1 second in the future
     let game_duration = config.game_duration;
-    let next_game_start = env.block.time.seconds() + 1;
+    let next_game_start = next_game_start.unwrap_or(env.block.time.seconds());
     let next_game_end = next_game_start + game_duration;
 
     // Validate game start and end times
@@ -304,20 +306,18 @@ pub fn process_raffle_winner(
 
 /// Helper to calculate the prize amount for raffle distribution based on game extensions.
 pub fn get_raffle_denom_prize_amounts(deps: &Deps) -> Result<(Uint128, Uint128), ContractError> {
-    let game_config: GameConfig = GAME_CONFIG.load(deps.storage)?;
-    let game_state: GameState = GAME_STATE.load(deps.storage)?;
-    let raffle: Raffle = RAFFLE.load(deps.storage)?;
+    let game_config = GAME_CONFIG.load(deps.storage)?;
+    let game_state = GAME_STATE.load(deps.storage)?;
+    let raffle = RAFFLE.load(deps.storage)?;
 
     // Apply the decay factor iteratively based on extend_count
-    let mut prize_percentage = Uint128::from(100u128); // Starting from 100%
+    let mut prize_percentage = Decimal::percent(100); // Starting from 100%
     for _ in 0..game_state.extend_count {
-        prize_percentage =
-            prize_percentage.multiply_ratio(game_config.decay_factor, Uint128::from(100u128));
+        prize_percentage *= Decimal::one() - game_config.decay_factor;
     }
 
-    let distributed_prize = raffle
-        .denom_amount
-        .multiply_ratio(prize_percentage, Uint128::from(100u128));
+    // Calculate the distributed prize and remaining prize we will send back tot reasury
+    let distributed_prize = raffle.denom_amount * prize_percentage;
     let remaining_prize = raffle.denom_amount.checked_sub(distributed_prize)?;
 
     Ok((distributed_prize, remaining_prize))

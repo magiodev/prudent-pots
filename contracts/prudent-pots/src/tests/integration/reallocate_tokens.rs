@@ -7,8 +7,12 @@ use crate::tests::integration::helpers::{allocate_tokens, reallocate_tokens};
 
 #[test]
 fn test_reallocate_tokens_works() {
-    let (mut app, pp_addr, _cw721_addr) =
-        default_with_balances(1, vec![coin(100_000_000u128, DENOM_GAME.to_string())], None);
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        1,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        None,
+    );
 
     let info = mock_info("user1", &coins(1_000_000, DENOM_GAME));
 

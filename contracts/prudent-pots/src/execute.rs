@@ -1,4 +1,8 @@
-use cosmwasm_std::{attr, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128};
+use std::str::FromStr;
+
+use cosmwasm_std::{
+    attr, BankMsg, CosmosMsg, Decimal, DepsMut, Env, MessageInfo, Response, Uint128,
+};
 
 use crate::{
     helpers::{
@@ -11,10 +15,9 @@ use crate::{
             update_player_allocation, update_pot_state,
         },
         validate::{
-            validate_and_extend_game_time, validate_existing_allocation, validate_funds,
-            validate_game_end_time, validate_increase_player_reallocations,
-            validate_is_contract_admin, validate_is_contract_admin_game_end,
-            validate_pot_limit_not_exceeded,
+            extend_game_time, validate_existing_allocation, validate_funds, validate_game_end_time,
+            validate_game_time, validate_increase_player_reallocations, validate_is_contract_admin,
+            validate_is_contract_admin_game_end, validate_pot_limit_not_exceeded,
         },
     },
     msg::UpdateGameConfig,
@@ -63,6 +66,9 @@ pub fn update_config(
     if let Some(game_duration) = update_config.game_duration {
         game_config.game_duration = game_duration;
     }
+    if let Some(game_duration_epoch) = update_config.game_duration_epoch {
+        game_config.game_duration_epoch = game_duration_epoch;
+    }
     if let Some(game_extend) = update_config.game_extend {
         if game_extend > game_config.game_duration {
             return Err(ContractError::InvalidInput {});
@@ -76,7 +82,9 @@ pub fn update_config(
         game_config.min_pot_initial_allocation = min_pot_initial_allocation;
     }
     if let Some(decay_factor) = update_config.decay_factor {
-        if decay_factor.lt(&Uint128::new(50u128)) || decay_factor.gt(&Uint128::new(99u128)) {
+        if decay_factor.lt(&Decimal::from_str("0.01")?)
+            || decay_factor.gt(&Decimal::from_str("0.99")?)
+        {
             return Err(ContractError::InvalidInput {});
         }
         game_config.decay_factor = decay_factor;
@@ -103,20 +111,28 @@ pub fn allocate_tokens(
     let game_config = GAME_CONFIG.load(deps.storage)?;
     let game_state = GAME_STATE.load(deps.storage)?;
 
-    validate_and_extend_game_time(deps.storage, &env)?;
+    validate_game_time(deps.storage, &env)?;
     let amount = validate_funds(&info.funds, &game_config.game_denom)?;
     validate_pot_limit_not_exceeded(deps.storage, pot_id, amount)?;
     validate_existing_allocation(deps.storage, &info.sender, pot_id)?;
 
     // Dynamic bid constraints
-    let min_bid = calculate_min_bid(&deps.as_ref(), Some(info.sender.to_string()))?;
-    let max_bid = calculate_max_bid(&deps.as_ref())?;
+
+    // min bid based on current addy so we discount by NFT holding
+    let min_bid = calculate_min_bid(&deps.as_ref(), &env, Some(info.sender.to_string()))?;
+
+    // get the originial min bid calculation without taking in account NFT holding discount
+    let original_min_bid = calculate_min_bid(&deps.as_ref(), &env, None)?;
+    // max bid based on original min bid, so we don't discount by NFT holding
+    let max_bid = calculate_max_bid(&deps.as_ref(), original_min_bid)?;
     if amount < min_bid || amount > max_bid {
         return Err(ContractError::BidOutOfRange {
             min: min_bid,
             max: max_bid,
         });
     }
+    // we do that here so the extend_count doesnt increase before we evaluate the min max bid amounts
+    extend_game_time(deps.storage, &env)?;
 
     // Update the player's allocation and pot state
     update_player_allocation(deps.storage, &info.sender, pot_id, amount, true)?;
@@ -148,8 +164,9 @@ pub fn reallocate_tokens(
     if from_pot_id == to_pot_id {
         return Err(ContractError::InvalidPot {});
     }
+    validate_game_time(deps.storage, &env)?;
+    extend_game_time(deps.storage, &env)?;
     validate_increase_player_reallocations(deps.storage, &info.sender)?;
-    validate_and_extend_game_time(deps.storage, &env)?;
     validate_existing_allocation(deps.storage, &info.sender, to_pot_id)?;
 
     // Load and check the player's allocations
@@ -198,9 +215,15 @@ pub fn game_end(
     info: MessageInfo,
     new_raffle_cw721_id: Option<String>,
     new_raffle_cw721_addr: Option<String>,
+    next_game_start: Option<u64>,
 ) -> Result<Response, ContractError> {
     validate_game_end_time(deps.storage, &env)?;
     validate_is_contract_admin_game_end(deps.storage, &deps.querier, &env, &info.sender)?;
+
+    // if passed, it should be in the future
+    if next_game_start.is_some() && next_game_start.unwrap() <= env.block.time.seconds() {
+        return Err(ContractError::InvalidNextGameStart {});
+    }
 
     // Ensure both or neither options are provided
     if new_raffle_cw721_id.is_some() != new_raffle_cw721_addr.is_some() {
@@ -267,6 +290,7 @@ pub fn game_end(
         process_raffle_winner_resp.new_raffle_cw721_id,
         process_raffle_winner_resp.new_raffle_cw721_addr,
         Some(process_raffle_winner_resp.new_raffle_denom_amount),
+        next_game_start,
     )?;
 
     Ok(Response::new()

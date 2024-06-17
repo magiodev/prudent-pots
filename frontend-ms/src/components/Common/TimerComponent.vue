@@ -3,7 +3,11 @@
     <img :src="imageTimer" alt="Timer" class="img-fluid"/>
 
     <div class="timer-card pt-5">
-      <h2 class="counter text-pp-color-3 mb-0 mb-md-4">{{ timeLeftSeconds ? timeLeftHuman : "Time's up!" }}</h2>
+      <h3 class="counter text-pp-color-3 mb-0 mb-md-4">
+        <span v-if="isCountingDownToStart">Next round in:<br></span>
+        <span v-else>Game ends in:<br></span>
+        {{ timeLeftHuman }}
+      </h3>
 
       <h5 class="text-pp-color-3 text-end">Extends: {{ gameState.extend_count.toString() || 'N/D' }}</h5>
     </div>
@@ -42,12 +46,12 @@ export default {
     transform: translate(-50%, -50%);
     width: 47.5%;
 
-    h2 {
+    h3, h5 {
       font-family: "Reddit Mono", monospace;
     }
 
     @media(max-width: 420px) {
-      h2 {
+      h3 {
         font-size: 1em;
       }
     }

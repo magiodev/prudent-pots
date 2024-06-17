@@ -6,9 +6,7 @@ mod tests {
         Addr, Uint128,
     };
 
-    use crate::{
-        helpers::pot::is_winning_pot, tests::instantiate::tests::setup_game_no_raffle_works,
-    };
+    use crate::{helpers::pot::is_winning_pot, tests::instantiate::tests::setup_game_works};
 
     #[test]
     fn is_winning_pot_lowest() {
@@ -16,7 +14,7 @@ mod tests {
         let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game_no_raffle_works(
+        setup_game_works(
             deps.as_mut(),
             &env,
             info,
@@ -53,7 +51,7 @@ mod tests {
         let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game_no_raffle_works(
+        setup_game_works(
             deps.as_mut(),
             &env,
             info,
@@ -90,7 +88,7 @@ mod tests {
         let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game_no_raffle_works(
+        setup_game_works(
             deps.as_mut(),
             &env,
             info,
@@ -127,7 +125,7 @@ mod tests {
         let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game_no_raffle_works(
+        setup_game_works(
             deps.as_mut(),
             &env,
             info,
@@ -164,7 +162,7 @@ mod tests {
         let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game_no_raffle_works(
+        setup_game_works(
             deps.as_mut(),
             &env,
             info,

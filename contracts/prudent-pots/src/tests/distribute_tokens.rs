@@ -8,7 +8,7 @@ mod tests {
 
     use crate::{
         helpers::game_end::get_distribution_send_msgs, state::GAME_CONFIG,
-        tests::instantiate::tests::setup_game_no_raffle_works,
+        tests::instantiate::tests::setup_game_works,
     };
 
     /// Test `get_distribution_send_msgs_single_winner` to ensure proper distribution of tokens
@@ -45,7 +45,7 @@ mod tests {
         let mut deps = mock_dependencies_with_balance(&coins(1000, "token"));
         let env = mock_env();
         let info = mock_info(Addr::unchecked("sender").as_str(), &coins(1000, "token"));
-        setup_game_no_raffle_works(
+        setup_game_works(
             deps.as_mut(),
             &env,
             info,

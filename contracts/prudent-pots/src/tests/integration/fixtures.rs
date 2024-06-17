@@ -1,5 +1,7 @@
+use std::str::FromStr;
+
 use cosmwasm_std::testing::mock_info;
-use cosmwasm_std::{coin, coins, Addr, BlockInfo, Coin, Empty, Uint128};
+use cosmwasm_std::{coin, coins, Addr, BlockInfo, Coin, Decimal, Empty, Uint128};
 use cw_multi_test::{App, AppBuilder, BankKeeper, Contract, ContractWrapper, Executor};
 
 use crate::msg::{ExecuteMsg, GameConfigResponse, InstantiateMsg, QueryMsg, UpdateGameConfig};
@@ -8,6 +10,7 @@ use crate::tests::integration::helpers::{game_end, mint_nfts, update_config};
 
 pub const DENOM_GAME: &str = "udenom";
 pub const GAME_DURATION: u64 = 3600;
+pub const GAME_EXTEND: u64 = 600;
 
 pub const ADMIN_ADDRESS: &str = "admin_address";
 pub const ADMIN_BALANCE: u128 = 1_000_000_000_000u128;
@@ -65,6 +68,7 @@ pub fn default_with_balances(
     num_users: u8,
     initial_balance: Vec<Coin>,
     raffle: Option<Raffle>,
+    next_game_start_offset: Option<u64>,
 ) -> (App, Addr, Addr) {
     // Create a vector to hold the balances setup
     let mut balances = vec![(
@@ -118,12 +122,14 @@ pub fn default_with_balances(
                     game_denom: DENOM_GAME.to_string(),
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)],
                     game_duration: 1, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
-                    game_extend: 600u64,
-                    game_end_threshold: 600u64,
+                    game_duration_epoch: GAME_EXTEND, // we hardcode 1 here in order to let the game expire inmediately, so we execute the raffle init wflow (this could be avoided by instantiating a predicatable contract)
+                    game_extend: GAME_EXTEND,
+                    game_end_threshold: GAME_EXTEND,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
-                    decay_factor: Uint128::new(95u128),
+                    decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,
                 },
+                next_game_start: None,
             };
             pp_addr = instantiate_pp(
                 &mut app,
@@ -151,26 +157,32 @@ pub fn default_with_balances(
                 &mut app,
                 &pp_addr,
                 &ExecuteMsg::UpdateConfig {
-                    config: UpdateGameConfig {
+                    config: Box::new(UpdateGameConfig {
                         fee: None,
                         fee_reallocation: None,
                         fee_address: None,
                         game_denom: None,
                         game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)], // set the same to avoid updating
                         game_duration: Some(GAME_DURATION),
+                        game_duration_epoch: None,
                         game_extend: None,
                         game_end_threshold: None,
                         min_pot_initial_allocation: None,
                         decay_factor: None,
                         reallocations_limit: None,
-                    },
+                    }),
                 },
             )
             .unwrap();
-            pp_msg.config.game_duration = 3600; // this is to make the below assert pass
+            pp_msg.config.game_duration = GAME_DURATION; // this is to make the below assert pass
 
             // Increase time to expire game
             increase_app_time(&mut app, 2);
+
+            let next_game_start_time = match next_game_start_offset {
+                Some(offset) => Some(app.block_info().time.plus_seconds(offset).seconds()),
+                None => None,
+            };
 
             // Game end to start the first real round (this would break the counter and so start from 1)
             // sending 100 extra $DENOM as raffle prize + 1 NFT
@@ -183,6 +195,7 @@ pub fn default_with_balances(
                 ),
                 raffle.cw721_token_id,        // raffle nft prize
                 Some(cw721_addr.to_string()), // overriding the None passed from outside as contract wasnt instantiated yet
+                next_game_start_time,
             )
             .unwrap();
         }
@@ -195,11 +208,16 @@ pub fn default_with_balances(
                     game_denom: DENOM_GAME.to_string(),
                     game_cw721_addrs: vec![Addr::unchecked(&cw721_addr)],
                     game_duration: GAME_DURATION,
-                    game_extend: 600u64,
-                    game_end_threshold: 600u64,
+                    game_duration_epoch: GAME_EXTEND,
+                    game_extend: GAME_EXTEND,
+                    game_end_threshold: GAME_EXTEND,
                     min_pot_initial_allocation: Uint128::new(1_000_000u128),
-                    decay_factor: Uint128::new(95u128),
+                    decay_factor: Decimal::from_str("0.05").unwrap(),
                     reallocations_limit: 10,
+                },
+                next_game_start: match next_game_start_offset {
+                    Some(offset) => Some(app.block_info().time.plus_seconds(offset).seconds()),
+                    None => None,
                 },
             };
             pp_addr = instantiate_pp(

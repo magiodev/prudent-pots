@@ -1,9 +1,9 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_storage_plus::{Item, Map};
 
 #[cw_serde]
-pub struct GameConfig {
+pub struct OldGameConfig {
     pub fee: u64,
     pub fee_reallocation: u64,
     pub fee_address: Addr,
@@ -14,6 +14,22 @@ pub struct GameConfig {
     pub game_end_threshold: u64,
     pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO
     pub decay_factor: Uint128,               // i.e. 95 as 95%
+    pub reallocations_limit: u64,
+}
+
+#[cw_serde]
+pub struct GameConfig {
+    pub fee: u64,
+    pub fee_reallocation: u64,
+    pub fee_address: Addr,
+    pub game_denom: String,
+    pub game_cw721_addrs: Vec<Addr>, // these are the cw721 addys that grant minBid discount eligibility
+    pub game_duration: u64,
+    pub game_duration_epoch: u64, // i.e., 3600 for 1 hour intervals
+    pub game_extend: u64,
+    pub game_end_threshold: u64,
+    pub min_pot_initial_allocation: Uint128, // i.e. 1000000 for 1 $OSMO, which is also used as starting bet amount.
+    pub decay_factor: Decimal,               // i.e. 0.05 as 5%
     pub reallocations_limit: u64,
 }
 
@@ -50,7 +66,8 @@ pub struct FirstBidder {
     pub time: u64,
 }
 
-pub const GAME_CONFIG: Item<GameConfig> = Item::new("game_config");
+pub const OLD_GAME_CONFIG: Item<OldGameConfig> = Item::new("game_config");
+pub const GAME_CONFIG: Item<GameConfig> = Item::new("game_config_v2");
 pub const GAME_STATE: Item<GameState> = Item::new("game_state");
 pub const POT_STATES: Map<u8, TokenAllocation> = Map::new("pot_states");
 pub const PLAYER_ALLOCATIONS: Map<String, Vec<TokenAllocation>> = Map::new("player_allocations");

@@ -153,29 +153,17 @@ pub fn validate_pot_limit_not_exceeded(
 }
 
 // Helper to validate the game's end time and extend it if necessary during the round for allocations and reallocations
-pub fn validate_and_extend_game_time(
-    storage: &mut dyn Storage,
-    env: &Env,
-) -> Result<(), ContractError> {
-    let game_config = GAME_CONFIG.load(storage)?;
-    let mut game_state = GAME_STATE.load(storage)?;
+pub fn validate_game_time(storage: &mut dyn Storage, env: &Env) -> Result<(), ContractError> {
+    let game_state = GAME_STATE.load(storage)?;
 
-    // Check if the game has already ended
-    if env.block.time.seconds() >= game_state.end_time {
-        return Err(ContractError::GameAlreadyEnded {});
+    // Check if the game is not started yet
+    if env.block.time.seconds().lt(&game_state.start_time) {
+        return Err(ContractError::GameNotStarted {});
     }
 
-    // Calculate the remaining time
-    let remaining_time = game_state
-        .end_time
-        .checked_sub(env.block.time.seconds())
-        .unwrap();
-
-    // Extend the game time if the remaining time is less than or equal to game_config.game_extend
-    if remaining_time <= game_config.game_extend {
-        game_state.end_time = env.block.time.seconds() + game_config.game_extend;
-        game_state.extend_count = game_state.extend_count.checked_add(1).unwrap();
-        GAME_STATE.save(storage, &game_state)?;
+    // Check if the game has already ended
+    if env.block.time.seconds().ge(&game_state.end_time) {
+        return Err(ContractError::GameAlreadyEnded {});
     }
 
     Ok(())
@@ -184,6 +172,11 @@ pub fn validate_and_extend_game_time(
 // Helper to validate the game's end time during game_end exeuction
 pub fn validate_game_end_time(storage: &dyn Storage, env: &Env) -> Result<(), ContractError> {
     let game_state = GAME_STATE.load(storage)?;
+
+    // Check if the game is not started yet
+    if env.block.time.seconds().lt(&game_state.start_time) {
+        return Err(ContractError::GameNotStarted {});
+    }
 
     // Check if the game is still active
     if env.block.time.seconds().lt(&game_state.end_time) {
@@ -208,4 +201,25 @@ pub fn validate_funds(funds: &[Coin], expected_denom: &str) -> Result<Uint128, C
     }
 
     Ok(total_amount)
+}
+
+// Helper to validate the game's end time and extend it if necessary during the round for allocations and reallocations
+pub fn extend_game_time(storage: &mut dyn Storage, env: &Env) -> Result<(), ContractError> {
+    let game_config = GAME_CONFIG.load(storage)?;
+    let mut game_state = GAME_STATE.load(storage)?;
+
+    // Calculate the remaining time
+    let remaining_time = game_state
+        .end_time
+        .checked_sub(env.block.time.seconds())
+        .unwrap();
+
+    // Extend the game time if the remaining time is less than or equal to game_config.game_extend
+    if remaining_time.le(&game_config.game_extend) {
+        game_state.end_time = env.block.time.seconds() + game_config.game_extend;
+        game_state.extend_count = game_state.extend_count.checked_add(1).unwrap();
+        GAME_STATE.save(storage, &game_state)?;
+    }
+
+    Ok(())
 }
