@@ -4,14 +4,14 @@
       <h3 class="mb-0">Raffle Prizes!</h3>
     </div>
 
-    <div class="col-4 offset-2 col-md-3 offset-md-3 raffle-item py-2">
+    <div v-if="raffle?.nft?.id" class="col-4 offset-2 col-md-3 offset-md-3 raffle-item py-2">
       <div class="pp-card p-2 h-100">
         <h5 v-if="raffle?.nft?.id" class="text-pp-color-4">MS #{{ raffle.nft.id }}</h5>
         <img v-if="raffle?.nft?.imageUrl" class="nft-image mb-0" :src="raffle.nft.imageUrl" alt="MS"/>
       </div>
     </div>
 
-    <div class="col-4 col-md-3 raffle-item py-2">
+    <div class="col-4 col-md-3 raffle-item py-2" :class="!raffle?.nft?.id ? 'offset-4 col-6 col-md-4' : ''">
       <div class="pp-card p-2 h-100">
         <h5 v-if="raffle.denom_amount" class="text-pp-color-4">$OSMO</h5>
         <span class="text-pp-color-4">{{ displayAmount(raffle.denom_amount, 2) }}</span> <CoinComponent/>
