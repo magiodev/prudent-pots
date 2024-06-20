@@ -12,7 +12,8 @@
         <h3>Setup and Strategy</h3>
         <p>In Mad Pots, players face off against each other by betting on 5 different pots. The goal is to guess which
           pot will win. By doing so, you can win a portion of the tokens in the winning pots and have a chance at the
-          raffle prizes. Each round lasts at least {{ gameDuration }}, with potential extensions based on player activity. All
+          raffle prizes. Each round lasts at least {{ gameDuration }}, with potential extensions based on player
+          activity. All
           pots start with an equal balance of tokens. Get ready to place your bets and strategize to come out on
           top!</p>
 
@@ -67,8 +68,18 @@
         <hr/>
 
         <h3>Dynamic Bid Constraints</h3>
-        <p>To keep things fair and strategic, minimum and maximum bet limits are set based on the average number of
-          tokens across all pots. However, these limits only apply to new allocations, not reallocations.</p>
+        <p>To keep things fair and strategic, minimum and maximum bet have limits. However, these limits only apply to
+          new allocations, not reallocations.</p>
+        <ul>
+          <li><strong>Minimum bet</strong> always starts by {{
+              displayAmount(gameConfig.min_pot_initial_allocation, 2)
+            }}
+            <CoinComponent/>
+            and is increased by a {{ parseFloat(gameConfig.decay_factor) * 100 }}% every
+            {{ gameConfig.game_duration_epoch / 60 }} minutes.
+          </li>
+          <li><strong>Maximum bet</strong> is calculated on the average number of tokens across all pots.</li>
+        </ul>
         <p>A general rule that always applies is that a single pot cannot have more tokens allocated to it than the
           combined total of the other pots. This prevents mad scientists from collectively targeting specific pots, such
           as the highest or the even/odd pots.</p>
@@ -135,10 +146,15 @@
                 <div v-if="currentPage === 1">
                   <h3>Initial Setup</h3>
                   <ul>
-                    <li>The round starts with <strong>1.0 <CoinComponent/> in each pot</strong>, for a total of <strong>5.0
-                      <CoinComponent/></strong>.
+                    <li>The round starts with <strong>1.0
+                      <CoinComponent/>
+                      in each pot</strong>, for a total of <strong>5.0
+                      <CoinComponent/>
+                    </strong>.
                     </li>
-                    <li>This round is also funded with <strong>1 Mad Scientists NFT</strong> and <strong>100 <CoinComponent/></strong> as the
+                    <li>This round is also funded with <strong>1 Mad Scientists NFT</strong> and <strong>100
+                      <CoinComponent/>
+                    </strong> as the
                       raffle prize.
                     </li>
                   </ul>
@@ -146,31 +162,56 @@
                 <div v-else-if="currentPage === 2">
                   <h3>Player Bets</h3>
                   <ul>
-                    <li><strong>Alice</strong> bets <strong>2.0 <CoinComponent/></strong> on Pot 1 (Lowest Pot).</li>
-                    <li><strong>Bob</strong> bets <strong>10.654321 <CoinComponent/></strong> on Pot 2 (Even Pot).</li>
-                    <li><strong>Carol</strong> bets <strong>7.0 <CoinComponent/></strong> on Pot 3 (Median Pot).</li>
-                    <li><strong>Dave</strong> bets <strong>5.123456 <CoinComponent/></strong> on Pot 4 (Odd Pot).</li>
-                    <li><strong>Eve</strong> bets <strong>15.0 <CoinComponent/></strong> on Pot 5 (Highest Pot).</li>
+                    <li><strong>Alice</strong> bets <strong>2.0
+                      <CoinComponent/>
+                    </strong> on Pot 1 (Lowest Pot).
+                    </li>
+                    <li><strong>Bob</strong> bets <strong>10.654321
+                      <CoinComponent/>
+                    </strong> on Pot 2 (Even Pot).
+                    </li>
+                    <li><strong>Carol</strong> bets <strong>7.0
+                      <CoinComponent/>
+                    </strong> on Pot 3 (Median Pot).
+                    </li>
+                    <li><strong>Dave</strong> bets <strong>5.123456
+                      <CoinComponent/>
+                    </strong> on Pot 4 (Odd Pot).
+                    </li>
+                    <li><strong>Eve</strong> bets <strong>15.0
+                      <CoinComponent/>
+                    </strong> on Pot 5 (Highest Pot).
+                    </li>
                   </ul>
                 </div>
                 <div v-else-if="currentPage === 3">
                   <h3>Winners Criteria Application</h3>
                   <p>Considering the 1.0 initial token allocated per pot:</p>
                   <ul>
-                    <li><strong>Pot 1 (Lowest Pot)</strong>: Ends up with <strong>3.0 <CoinComponent/></strong>, the least among
+                    <li><strong>Pot 1 (Lowest Pot)</strong>: Ends up with <strong>3.0
+                      <CoinComponent/>
+                    </strong>, the least among
                       all pots, so it wins.
                     </li>
-                    <li><strong>Pot 2 (Even Pot)</strong>: Ends up with <strong>11.654321 <CoinComponent/></strong>. Since it's an
+                    <li><strong>Pot 2 (Even Pot)</strong>: Ends up with <strong>11.654321
+                      <CoinComponent/>
+                    </strong>. Since it's an
                       odd number, it loses.
                     </li>
-                    <li><strong>Pot 3 (Median Pot)</strong>: Ends up with <strong>8.0 <CoinComponent/></strong>. The token counts
+                    <li><strong>Pot 3 (Median Pot)</strong>: Ends up with <strong>8.0
+                      <CoinComponent/>
+                    </strong>. The token counts
                       across all pots are 3.000000, 6.123456, 8.000000, 11.654321, and 16.0. The median is 8.000000, so
                       it wins.
                     </li>
-                    <li><strong>Pot 4 (Odd Pot)</strong>: Ends up with <strong>7.123456 <CoinComponent/></strong>. Since it's an
+                    <li><strong>Pot 4 (Odd Pot)</strong>: Ends up with <strong>7.123456
+                      <CoinComponent/>
+                    </strong>. Since it's an
                       even number, it loses.
                     </li>
-                    <li><strong>Pot 5 (Highest Pot)</strong>: Ends up with <strong>16.0 <CoinComponent/></strong>, the most among
+                    <li><strong>Pot 5 (Highest Pot)</strong>: Ends up with <strong>16.0
+                      <CoinComponent/>
+                    </strong>, the most among
                       all pots, so it wins.
                     </li>
                   </ul>
@@ -180,36 +221,60 @@
                   <p><strong>Winners</strong>: Alice, Carol, and Eve bet on winning pots.</p>
                   <p><strong>Losers</strong>: Bob and Dave lost their bets.</p>
                   <p><strong>Losing Pots Tokens</strong>: Pot 2 and Pot 4 contain a total of <strong>17.777777
-                    <CoinComponent/></strong> (10.654321 + 7.123456).</p>
-                  <p><strong>Half</strong> of the losing pots' tokens (<strong>8.888888 <CoinComponent/></strong>) will be split
-                    among the winning pots.</p>
-                  <p>The other half (<strong>8.888888 <CoinComponent/></strong>) will be reserved for the next round, starting
-                    with <strong>1.777777 <CoinComponent/> per pot</strong>.</p>
+                    <CoinComponent/>
+                  </strong> (10.654321 + 7.123456).
+                  </p>
+                  <p><strong>Half</strong> of the losing pots' tokens (<strong>8.888888
+                    <CoinComponent/>
+                  </strong>) will be split
+                    among the winning pots.
+                  </p>
+                  <p>The other half (<strong>8.888888
+                    <CoinComponent/>
+                  </strong>) will be reserved for the next round, starting
+                    with <strong>1.777777
+                      <CoinComponent/>
+                      per pot</strong>.
+                  </p>
                 </div>
                 <div v-else-if="currentPage === 5">
                   <h3>Distribution of Winning Pot Tokens</h3>
                   <h4>Winning Shares calculation</h4>
-                  <p>Considering the total tokens among winning pots: 3 + 8 + 16 = 27 <CoinComponent/></p>
+                  <p>Considering the total tokens among winning pots: 3 + 8 + 16 = 27
+                    <CoinComponent/>
+                  </p>
                   <ul>
                     <li><strong>Alice</strong>:
                       <ul>
                         <li>Share: 3 / 27 * 100 ≈ 10.0%</li>
-                        <li>Additional tokens: 1.0 + 8.888888 * 0.1 = 1.888888 <CoinComponent/></li>
-                        <li>Bet: 2.0, Win: 1.888888, Receive: 3.888888 <CoinComponent/></li>
+                        <li>Additional tokens: 1.0 + 8.888888 * 0.1 = 1.888888
+                          <CoinComponent/>
+                        </li>
+                        <li>Bet: 2.0, Win: 1.888888, Receive: 3.888888
+                          <CoinComponent/>
+                        </li>
                       </ul>
                     </li>
                     <li><strong>Carol</strong>:
                       <ul>
                         <li>Share: 8 / 27 * 100 ≈ 30.0%</li>
-                        <li>Additional tokens: 1.0 + 8.888888 * 0.3 = 3.666666 <CoinComponent/></li>
-                        <li>Bet: 7.0, Win: 3.666666, Receive: 10.666666 <CoinComponent/></li>
+                        <li>Additional tokens: 1.0 + 8.888888 * 0.3 = 3.666666
+                          <CoinComponent/>
+                        </li>
+                        <li>Bet: 7.0, Win: 3.666666, Receive: 10.666666
+                          <CoinComponent/>
+                        </li>
                       </ul>
                     </li>
                     <li><strong>Eve</strong>:
                       <ul>
                         <li>Share: 16 / 27 * 100 ≈ 60.0%</li>
-                        <li>Additional tokens: 1.0 + 8.888888 * 0.6 = 6.333332 <CoinComponent/></li>
-                        <li>Bet: 15.0, Win: 6.333332, Receive: 21.333332 <CoinComponent/></li>
+                        <li>Additional tokens: 1.0 + 8.888888 * 0.6 = 6.333332
+                          <CoinComponent/>
+                        </li>
+                        <li>Bet: 15.0, Win: 6.333332, Receive: 21.333332
+                          <CoinComponent/>
+                        </li>
                       </ul>
                     </li>
                   </ul>
@@ -218,15 +283,24 @@
                   <h3>Winning Fee Deduction</h3>
                   <ul>
                     <li>A <strong>5% winning fee</strong> will be deducted from the total amounts of winning pots.</li>
-                    <li>Alice will receive: 3.888888 * 0.95 = 3.694443 (fee 0.194445) <CoinComponent/></li>
-                    <li>Carol will receive: 10.666666 * 0.95 = 10.133332 (fee 0.533334) <CoinComponent/></li>
-                    <li>Eve will receive: 21.333332 * 0.95 = 20.266665 (fee 1.066667) <CoinComponent/></li>
+                    <li>Alice will receive: 3.888888 * 0.95 = 3.694443 (fee 0.194445)
+                      <CoinComponent/>
+                    </li>
+                    <li>Carol will receive: 10.666666 * 0.95 = 10.133332 (fee 0.533334)
+                      <CoinComponent/>
+                    </li>
+                    <li>Eve will receive: 21.333332 * 0.95 = 20.266665 (fee 1.066667)
+                      <CoinComponent/>
+                    </li>
                   </ul>
                 </div>
                 <div v-else-if="currentPage === 7">
                   <h3>Raffle Prize Assignation</h3>
                   <p><strong>Eve</strong> was the player with the most tokens placed. She wins both the <strong>
-                    NFT</strong> and the additional <strong>100 <CoinComponent/></strong> prize!</p>
+                    NFT</strong> and the additional <strong>100
+                    <CoinComponent/>
+                  </strong> prize!
+                  </p>
                 </div>
                 <div v-else-if="currentPage === 8">
                   <h3>Game Extension Example</h3>
@@ -255,12 +329,13 @@ import {mapGetters} from "vuex";
 import mxGame from "../../../frontend-common/mixin/game";
 import ButtonComponent from "@/components/Common/ButtonComponent.vue";
 import CoinComponent from "@/components/Common/CoinComponent.vue";
+import mxChain from "../../../frontend-common/mixin/chain";
 
 export default {
   name: 'InstructionsView',
   components: {CoinComponent, ButtonComponent},
 
-  mixins: [mxGame],
+  mixins: [mxGame, mxChain],
 
   computed: {
     ...mapGetters(['gameConfig']),
