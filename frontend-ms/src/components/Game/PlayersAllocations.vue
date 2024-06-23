@@ -24,8 +24,8 @@
             <span v-if="raffleWinner"><UserAddressComponent cut="10" :address="raffleWinner"/></span>
             <span v-else>No raffle winner in this round. Prizes will be kept for the next round.</span>
             {{ raffleWinner && timeLeftSeconds
-              ? 'but the round is still ongoing and that could change!'
-              : ''
+            ? 'but the round is still ongoing and that could change!'
+            : ''
             }}
           </td>
         </tr>
@@ -70,7 +70,9 @@
         </thead>
         <tbody>
         <tr v-for="(stats, address) in sortedPlayerStatistics" :key="address">
-          <td><UserAddressComponent :cut="10" :address="address"/></td>
+          <td>
+            <UserAddressComponent :cut="10" :address="address"/>
+          </td>
           <td>{{ displayAmount(stats.totalBet, 2) }}
           </td>
           <td>{{ displayAmount(stats.winningPots, 2) }}
@@ -178,15 +180,14 @@ export default {
 
     raffleDenomSplit() {
       const extendCount = parseInt(this.gameState.extend_count)
-      const decayFactor = parseInt(this.gameConfig.decay_factor)
+      const decayFactor = parseFloat(this.gameConfig.decay_factor)
       const denomAmount = parseInt(this.raffle.denom_amount)
 
-      let prizePercentage = 100;
-
+      let distributedPrize = denomAmount;
       for (let i = 0; i < extendCount; i++) {
-        prizePercentage *= (decayFactor / 100);
+        distributedPrize *= 1 - decayFactor;
       }
-      const distributedPrize = denomAmount * (prizePercentage / 100);
+
       const remainingPrize = denomAmount - distributedPrize;
 
       return {
@@ -282,11 +283,11 @@ export default {
 
     sortedPlayerStatistics() {
       return Object.entries(this.statistics.playerStatistics)
-          .sort(([, a], [, b]) => b.redistributionShare - a.redistributionShare)
-          .reduce((obj, [key, value]) => {
-            obj[key] = value;
-            return obj;
-          }, {});
+        .sort(([, a], [, b]) => b.redistributionShare - a.redistributionShare)
+        .reduce((obj, [key, value]) => {
+          obj[key] = value;
+          return obj;
+        }, {});
     }
   },
 

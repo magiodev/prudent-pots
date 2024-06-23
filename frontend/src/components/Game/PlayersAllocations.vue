@@ -184,15 +184,14 @@ export default {
 
     raffleDenomSplit() {
       const extendCount = parseInt(this.gameState.extend_count)
-      const decayFactor = parseInt(this.gameConfig.decay_factor)
+      const decayFactor = parseFloat(this.gameConfig.decay_factor)
       const denomAmount = parseInt(this.raffle.denom_amount)
 
-      let prizePercentage = 100;
-
+      let distributedPrize = denomAmount;
       for (let i = 0; i < extendCount; i++) {
-        prizePercentage *= (decayFactor / 100);
+        distributedPrize *= 1 - decayFactor;
       }
-      const distributedPrize = denomAmount * (prizePercentage / 100);
+
       const remainingPrize = denomAmount - distributedPrize;
 
       return {
