@@ -190,8 +190,8 @@ pub fn process_raffle_winner(
     // TODO_FUTURE: Early return here if there is no raffle
     // if raffle.nft_id && addr is none and denom_prize is_zero() return all default values.
 
-    let mut msgs = Vec::new();
-    let mut submsgs = Vec::new();
+    let mut msgs = vec![];
+    let mut submsgs = vec![];
     let mut raffle_response_attributes = vec![];
 
     // this is common for yes_raffle and no_raffle scenarios
@@ -213,7 +213,7 @@ pub fn process_raffle_winner(
                         })?,
                         funds: vec![],
                     },
-                    ReplyMsg::GameEnd as u64,
+                    ReplyMsg::TransferNft as u64,
                 );
                 submsgs.push(transfer_nft_msg);
                 // Append attributes
@@ -288,7 +288,7 @@ pub fn process_raffle_winner(
                 })?,
                 funds: vec![],
             },
-            ReplyMsg::GameEnd as u64,
+            ReplyMsg::TransferNft as u64,
         );
         submsgs.push(transfer_nft_msg);
     }

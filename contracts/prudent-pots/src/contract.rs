@@ -18,7 +18,7 @@ use crate::query::{
     query_raffle, query_raffle_denom_split, query_raffle_winner, query_reallocation_fee_pool,
     query_winning_pots,
 };
-use crate::reply::game_end_reply;
+use crate::reply::transfer_nft_reply;
 use crate::state::{GameConfig, GAME_CONFIG, OLD_GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
@@ -113,7 +113,7 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id.into() {
-        ReplyMsg::GameEnd {} => game_end_reply(msg.result),
+        ReplyMsg::TransferNft {} => transfer_nft_reply(msg.result),
         _ => Err(ContractError::UnknownReply {}),
     }
 }

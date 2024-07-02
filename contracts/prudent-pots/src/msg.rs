@@ -55,7 +55,7 @@ pub enum ExecuteMsg {
 #[derive(FromPrimitive, IntoPrimitive)]
 #[repr(u64)]
 pub enum ReplyMsg {
-    GameEnd = 1,
+    TransferNft = 1,
     #[default]
     Unknown,
 }
