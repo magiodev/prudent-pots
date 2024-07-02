@@ -359,7 +359,7 @@ pub fn update_next_game(
 
     // Handle raffle funds update, validate_funds to obtain current sent funds
     let game_denom = GAME_CONFIG.load(deps.storage)?.game_denom;
-    let total_amount = validate_funds(&info.funds, &game_denom)?;
+    let total_amount = validate_funds(&info.funds, &game_denom).unwrap_or_default();
     if !total_amount.is_zero() {
         // Update the denom amount for the next raffle incrementing any previous value
         RAFFLE.update(deps.storage, |mut raffle| -> Result<_, ContractError> {
@@ -374,11 +374,11 @@ pub fn update_next_game(
         attr("next_game_start", next_game_start.unwrap_or(0).to_string()),
         attr(
             "new_raffle_cw721_id",
-            new_raffle_cw721_id.unwrap_or_default(),
+            new_raffle_cw721_id.unwrap_or("null".to_string()),
         ),
         attr(
             "new_raffle_cw721_addr",
-            new_raffle_cw721_addr.unwrap_or_default(),
+            new_raffle_cw721_addr.unwrap_or("null".to_string()),
         ),
     ]))
 }

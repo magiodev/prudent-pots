@@ -142,7 +142,7 @@ pub fn default_with_balances(
             mint_nfts(&mut app, &cw721_addr, 1, 10, Addr::unchecked(ADMIN_ADDRESS));
 
             // ApproveAll as admin to operator pp
-            let _ = app.execute_contract(
+            app.execute_contract(
                 Addr::unchecked(ADMIN_ADDRESS),
                 cw721_addr.clone(),
                 &cw721::Cw721ExecuteMsg::ApproveAll {
@@ -150,7 +150,8 @@ pub fn default_with_balances(
                     expires: None,
                 },
                 &vec![],
-            );
+            )
+            .unwrap();
 
             // Update config to extend game duration
             update_config(
