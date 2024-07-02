@@ -5,3 +5,4 @@ mod helpers;
 mod instantiate;
 mod reallocate_tokens;
 mod update_config;
+mod update_next_game;
