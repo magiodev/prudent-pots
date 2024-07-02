@@ -43,6 +43,11 @@ pub enum ExecuteMsg {
         raffle_cw721_token_addr: Option<String>,
         next_game_start: Option<u64>,
     },
+    UpdateNextGame {
+        raffle_cw721_token_id: Option<String>,
+        raffle_cw721_token_addr: Option<String>,
+        next_game_start: Option<u64>,
+    },
 }
 
 /// Reply

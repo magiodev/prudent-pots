@@ -10,7 +10,7 @@ use crate::{
     state::{Raffle, TokenAllocation},
     tests::integration::{
         fixtures::{default_with_balances, ADMIN_ADDRESS, DENOM_GAME, GAME_EXTEND},
-        helpers::{game_end, reallocate_tokens},
+        helpers::{game_end, reallocate_tokens, update_next_game},
     },
     ContractError,
 };
@@ -19,6 +19,46 @@ use super::{
     fixtures::{increase_app_time, GAME_DURATION},
     helpers::allocate_tokens,
 };
+
+fn test_game_end_no_players_works() {
+    let (mut app, pp_addr, _cw721_addr) = default_with_balances(
+        5,
+        vec![coin(100_000_000u128, DENOM_GAME.to_string())],
+        None,
+        None,
+    );
+
+    // Game state extend_count after
+    let game_state: GameStateResponse = app
+        .wrap()
+        .query_wasm_smart(&pp_addr, &QueryMsg::GameState {})
+        .unwrap();
+    assert_eq!(game_state.state.extend_count, 0);
+    assert_eq!(game_state.state.round_count, 1);
+
+    // Increase time by GAME_DURATION second to make the game expire
+    increase_app_time(&mut app, GAME_DURATION);
+
+    // Game end and set NO raffle prizes
+    let info = mock_info(ADMIN_ADDRESS, &vec![]);
+    game_end(&mut app, &pp_addr, &info, None, None, None).unwrap();
+
+    // TODO: Update the next_game_start to be more in the future
+    update_next_game(
+        &mut app,
+        &pp_addr,
+        &mock_info(ADMIN_ADDRESS, &vec![]),
+        None,
+        None,
+        Some(app.block_info().time.plus_seconds(GAME_DURATION).seconds()), // Schedule it in the future
+    );
+
+    // TODO: Update the NFT to be some, from no NFT
+
+    // TODO: Try update the NFT with another one, we should get an error as InvalidNft
+
+    // TODO: Update the next game again sending some funds and check the Raffle state before after
+}
 
 #[test]
 fn test_game_end_one_winner_simple_works() {

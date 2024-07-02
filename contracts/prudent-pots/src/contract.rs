@@ -6,7 +6,9 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
+use crate::execute::{
+    allocate_tokens, game_end, reallocate_tokens, update_config, update_next_game,
+};
 use crate::helpers::game_end::prepare_next_game;
 use crate::helpers::validate::{validate_funds, validate_pot_initial_amount};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, ReplyMsg};
@@ -86,6 +88,18 @@ pub fn execute(
             raffle_cw721_token_addr,
             next_game_start,
         } => game_end(
+            deps,
+            env,
+            info,
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+            next_game_start,
+        ),
+        ExecuteMsg::UpdateNextGame {
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+            next_game_start,
+        } => update_next_game(
             deps,
             env,
             info,

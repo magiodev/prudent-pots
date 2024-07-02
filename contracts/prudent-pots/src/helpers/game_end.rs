@@ -218,7 +218,6 @@ pub fn process_raffle_winner(
                 submsgs.push(transfer_nft_msg);
                 // Append attributes
                 raffle_response_attributes.extend(vec![
-                    attr("raffle_winner", recipient.to_string()),
                     attr("raffle_outgoing_nft_addr", cw721_addr),
                     attr("raffle_outgoing_nft_id", token_id),
                 ]);
@@ -233,10 +232,10 @@ pub fn process_raffle_winner(
                 msgs.push(send_msg);
             }
             // Append attributes
-            raffle_response_attributes.extend(vec![attr(
-                "raffle_outgoing_tokens_winner",
-                prize_to_distribute,
-            )]);
+            raffle_response_attributes.extend(vec![
+                attr("raffle_winner", recipient.to_string()),
+                attr("raffle_outgoing_tokens_winner", prize_to_distribute),
+            ]);
 
             if !prize_to_treasury.is_zero() {
                 let send_msg = CosmosMsg::Bank(BankMsg::Send {

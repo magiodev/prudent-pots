@@ -72,6 +72,26 @@ pub fn game_end(
     )
 }
 
+pub fn update_next_game(
+    app: &mut App,
+    pp_addr: &Addr,
+    info: &MessageInfo,
+    raffle_cw721_token_id: Option<String>,
+    raffle_cw721_token_addr: Option<String>,
+    next_game_start: Option<u64>,
+) -> Result<AppResponse, AnyError> {
+    app.execute_contract(
+        info.sender.clone(),
+        pp_addr.clone(),
+        &ExecuteMsg::UpdateNextGame {
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+            next_game_start,
+        },
+        &info.funds,
+    )
+}
+
 // CW721
 
 pub fn mint_nfts(app: &mut App, cw721_addr: &Addr, start_id: u64, count: u64, to_addr: Addr) {

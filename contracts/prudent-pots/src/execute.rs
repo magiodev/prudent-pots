@@ -21,7 +21,7 @@ use crate::{
         },
     },
     msg::UpdateGameConfig,
-    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, REALLOCATION_FEE_POOL},
+    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, RAFFLE, REALLOCATION_FEE_POOL},
     ContractError,
 };
 
@@ -310,4 +310,75 @@ pub fn game_end(
         ])
         .add_attributes(process_raffle_winner_resp.attributes) // this contains the raffle event attributes including the treasury denom fee split, which is not included above
         .add_attribute("total_outgoing_tokens", total_outgoing_tokens)) // this is the total of distribution + raffle + treasury
+}
+
+pub fn update_next_game(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    new_raffle_cw721_id: Option<String>,
+    new_raffle_cw721_addr: Option<String>,
+    next_game_start: Option<u64>,
+) -> Result<Response, ContractError> {
+    validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
+
+    // Handle start time update
+    if let Some(start_time) = next_game_start {
+        // If next_game_start is passed, it should be in the future
+        if start_time <= env.block.time.seconds() {
+            return Err(ContractError::InvalidNextGameStart {});
+        }
+
+        let game_duration = GAME_CONFIG.load(deps.storage)?.game_duration;
+        GAME_STATE.update(deps.storage, |mut game_state| -> Result<_, ContractError> {
+            game_state.start_time = start_time;
+            game_state.end_time = start_time + game_duration;
+            Ok(game_state)
+        })?;
+    }
+
+    // Handle raffle NFT update, if a raffle_id is passed we assume we want to set an NFT for the next round's raffle
+    if let Some(raffle_id) = &new_raffle_cw721_id {
+        // Ensure both or neither options are provided or throw an error
+        if new_raffle_cw721_id.is_some() != new_raffle_cw721_addr.is_some() {
+            return Err(ContractError::InvalidRaffleNft {});
+        }
+
+        // Update the raffle CW721 token ID and address, only if there is no one yet
+        RAFFLE.update(deps.storage, |mut raffle| -> Result<_, ContractError> {
+            if raffle.cw721_token_id.is_none() {
+                raffle.cw721_token_id = Some(raffle_id.clone());
+                raffle.cw721_addr = new_raffle_cw721_addr.clone();
+            } else {
+                // Otherwise throw
+                return Err(ContractError::InvalidRaffleNft {});
+            }
+            Ok(raffle)
+        })?;
+    }
+
+    // Handle raffle funds update, validate_funds to obtain current sent funds
+    let game_denom = GAME_CONFIG.load(deps.storage)?.game_denom;
+    let total_amount = validate_funds(&info.funds, &game_denom)?;
+    if !total_amount.is_zero() {
+        // Update the denom amount for the next raffle incrementing any previous value
+        RAFFLE.update(deps.storage, |mut raffle| -> Result<_, ContractError> {
+            raffle.denom_amount += total_amount;
+            Ok(raffle)
+        })?;
+    }
+
+    Ok(Response::new().add_attributes(vec![
+        attr("method", "execute"),
+        attr("action", "update_next_game"),
+        attr("next_game_start", next_game_start.unwrap_or(0).to_string()),
+        attr(
+            "new_raffle_cw721_id",
+            new_raffle_cw721_id.unwrap_or_default(),
+        ),
+        attr(
+            "new_raffle_cw721_addr",
+            new_raffle_cw721_addr.unwrap_or_default(),
+        ),
+    ]))
 }
