@@ -159,7 +159,4 @@ pub struct RaffleDenomSplitResponse {
 }
 
 #[cw_serde]
-pub struct MigrateMsg {
-    pub game_duration_epoch: u64,
-    pub decay_factor: Decimal,
-}
+pub struct MigrateMsg {}
