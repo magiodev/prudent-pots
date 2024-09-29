@@ -9,19 +9,20 @@
         {{ timeLeftHuman }}
       </h3>
 
-      <h5 v-if="timeLeftSeconds > 0" class="text-pp-color-3 text-end">Extends: {{ gameState.extend_count.toString() || "N/D" }}</h5>
+      <h5 v-if="timeLeftSeconds > 0" class="text-pp-color-3 text-end">
+        Extends: {{ gameState.extend_count.toString() || "N/D" }}
+      </h5>
     </div>
 
     <!-- Add the restart game button -->
-    
   </div>
   <ButtonComponent
-      v-if="timeLeftSeconds <= 0"
-      :isDisabled="isBusy || !userAddress"
-      :isBusy="isBusy"
-      text="Restart Game"
-      @click="onRestartGame"
-    />
+    v-if="timeLeftSeconds <= 0"
+    :isDisabled="isBusy || !userAddress"
+    :isBusy="isBusy"
+    text="Restart Game"
+    @click="onRestartGame"
+  />
 </template>
 
 <script>

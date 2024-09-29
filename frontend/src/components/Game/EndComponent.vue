@@ -15,6 +15,10 @@
       <!-- Input for raffleCw721TokenIds as a comma-separated string -->
       <label for="tokenId" class="form-label">Token ID:</label>
       <input id="tokenId" class="form-control" v-model="tokenId" placeholder="e.g., 1234">
+
+      <!-- Input for Next Game Start as a future unit timestamp -->
+      <label for="nextGameStart" class="form-label">Next Game Start:</label>
+      <input id="nextGameStart" class="form-control" v-model="nextGameStart" placeholder="e.g., unit timestamp">
     </div>
 
     <ButtonComponent
@@ -47,7 +51,8 @@ export default {
       isBusy: false,
       tokenContract: null,
       tokenId: null,
-      denomAmount: 0
+      denomAmount: 0,
+      nextGameStart: null
     };
   },
 
@@ -57,7 +62,7 @@ export default {
     async onEndGame() {
       this.isBusy = true
       try {
-        const tx = await this.endGame(this.tokenContract, this.tokenId, this.denomAmount)
+        const tx = await this.endGame(this.tokenContract, this.tokenId, this.denomAmount, this.nextGameStart)
         this.toast.success(`Tx successful. ${tx.transactionHash}`)
         await this.fetchInterval()
         await this.fetchPlayerData()

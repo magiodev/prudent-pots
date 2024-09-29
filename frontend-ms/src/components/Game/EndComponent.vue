@@ -17,8 +17,8 @@
       <input id="tokenId" class="form-control" v-model="tokenId" placeholder="e.g., 1234">
 
       <!-- Input for Next Game Start as a future unit timestamp -->
-      <label for="tokenId" class="form-label">Token ID:</label>
-      <input id="tokenId" class="form-control" v-model="nextGameStart" placeholder="e.g., unit timestamp">
+      <label for="nextGameStart" class="form-label">Next Game Start:</label>
+      <input id="nextGameStart" class="form-control" v-model="nextGameStart" placeholder="e.g., unit timestamp">
     </div>
 
     <ButtonComponent

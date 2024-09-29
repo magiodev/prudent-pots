@@ -1,7 +1,7 @@
 <template>
 
   <div class="container-fluid">
-    <div class="row banner mb-5">
+    <div class="row banner">
       <TimerComponent/>
     </div>
 

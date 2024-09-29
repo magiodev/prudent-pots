@@ -91,7 +91,7 @@ const mxChain = {
       return this._submitTx(msg)
     },
 
-    async endGame(tokenContract, tokenId, denomAmount) {
+    async endGame(tokenContract, tokenId, denomAmount, nextGameStart) {
       /** @type {import("@cosmjs/proto-signing").EncodeObject} */
       let msg = {
         typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
@@ -101,7 +101,8 @@ const mxChain = {
           msg: toUtf8(JSON.stringify({
             game_end: {
               raffle_cw721_token_addr: tokenContract || null,
-              raffle_cw721_token_id: tokenId || null
+              raffle_cw721_token_id: tokenId || null,
+              next_game_start: nextGameStart || null,
             }
           })),
           funds: [],
