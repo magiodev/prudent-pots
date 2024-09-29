@@ -6,7 +6,9 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::execute::{allocate_tokens, game_end, reallocate_tokens, update_config};
+use crate::execute::{
+    allocate_tokens, game_end, reallocate_tokens, update_config, update_next_game,
+};
 use crate::helpers::game_end::prepare_next_game;
 use crate::helpers::validate::{validate_funds, validate_pot_initial_amount};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, ReplyMsg};
@@ -16,8 +18,8 @@ use crate::query::{
     query_raffle, query_raffle_denom_split, query_raffle_winner, query_reallocation_fee_pool,
     query_winning_pots,
 };
-use crate::reply::game_end_reply;
-use crate::state::{GameConfig, GAME_CONFIG, OLD_GAME_CONFIG, REALLOCATION_FEE_POOL};
+use crate::reply::transfer_nft_reply;
+use crate::state::{GAME_CONFIG, REALLOCATION_FEE_POOL};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:prudent-pots";
@@ -93,13 +95,25 @@ pub fn execute(
             raffle_cw721_token_addr,
             next_game_start,
         ),
+        ExecuteMsg::UpdateNextGame {
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+            next_game_start,
+        } => update_next_game(
+            deps,
+            env,
+            info,
+            raffle_cw721_token_id,
+            raffle_cw721_token_addr,
+            next_game_start,
+        ),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(_deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id.into() {
-        ReplyMsg::GameEnd {} => game_end_reply(msg.result),
+        ReplyMsg::TransferNft {} => transfer_nft_reply(msg.result),
         _ => Err(ContractError::UnknownReply {}),
     }
 }
@@ -128,31 +142,6 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
-    // load the old game config
-    let old_game_config = OLD_GAME_CONFIG.load(deps.storage)?;
-
-    // Save new GameConfig at game_config_v2 storage key
-    GAME_CONFIG.save(
-        deps.storage,
-        &GameConfig {
-            fee: old_game_config.fee,
-            fee_reallocation: old_game_config.fee_reallocation,
-            fee_address: old_game_config.fee_address,
-            game_denom: old_game_config.game_denom,
-            game_cw721_addrs: old_game_config.game_cw721_addrs,
-            game_duration: old_game_config.game_duration,
-            game_duration_epoch: msg.game_duration_epoch, // this is from migrateMsg
-            game_extend: old_game_config.game_extend,
-            game_end_threshold: old_game_config.game_end_threshold,
-            min_pot_initial_allocation: old_game_config.min_pot_initial_allocation,
-            decay_factor: msg.decay_factor, // this is from migrateMsg
-            reallocations_limit: old_game_config.reallocations_limit,
-        },
-    )?;
-
-    // remove the old game config
-    OLD_GAME_CONFIG.remove(deps.storage);
-
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     Ok(Response::new().add_attribute("migrate", "successful"))
 }

@@ -43,6 +43,11 @@ pub enum ExecuteMsg {
         raffle_cw721_token_addr: Option<String>,
         next_game_start: Option<u64>,
     },
+    UpdateNextGame {
+        raffle_cw721_token_id: Option<String>,
+        raffle_cw721_token_addr: Option<String>,
+        next_game_start: Option<u64>,
+    },
 }
 
 /// Reply
@@ -50,7 +55,7 @@ pub enum ExecuteMsg {
 #[derive(FromPrimitive, IntoPrimitive)]
 #[repr(u64)]
 pub enum ReplyMsg {
-    GameEnd = 1,
+    TransferNft = 1,
     #[default]
     Unknown,
 }
@@ -154,7 +159,4 @@ pub struct RaffleDenomSplitResponse {
 }
 
 #[cw_serde]
-pub struct MigrateMsg {
-    pub game_duration_epoch: u64,
-    pub decay_factor: Decimal,
-}
+pub struct MigrateMsg {}

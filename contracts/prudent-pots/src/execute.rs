@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
 use cosmwasm_std::{
-    attr, BankMsg, CosmosMsg, Decimal, DepsMut, Env, MessageInfo, Response, Uint128,
+    attr, to_json_binary, BankMsg, CosmosMsg, Decimal, DepsMut, Env, MessageInfo, Response, SubMsg,
+    Uint128, WasmMsg,
 };
 
 use crate::{
@@ -20,8 +21,8 @@ use crate::{
             validate_is_contract_admin_game_end, validate_pot_limit_not_exceeded,
         },
     },
-    msg::UpdateGameConfig,
-    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, REALLOCATION_FEE_POOL},
+    msg::{ReplyMsg, UpdateGameConfig},
+    state::{GAME_CONFIG, GAME_STATE, PLAYER_ALLOCATIONS, RAFFLE, REALLOCATION_FEE_POOL},
     ContractError,
 };
 
@@ -310,4 +311,106 @@ pub fn game_end(
         ])
         .add_attributes(process_raffle_winner_resp.attributes) // this contains the raffle event attributes including the treasury denom fee split, which is not included above
         .add_attribute("total_outgoing_tokens", total_outgoing_tokens)) // this is the total of distribution + raffle + treasury
+}
+
+pub fn update_next_game(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    new_raffle_cw721_id: Option<String>,
+    new_raffle_cw721_addr: Option<String>,
+    next_game_start: Option<u64>,
+) -> Result<Response, ContractError> {
+    validate_is_contract_admin(&deps.querier, &env, &info.sender)?;
+
+    let mut submsgs: Vec<SubMsg> = vec![];
+    let mut response_attributes = vec![];
+
+    // Handle start time update
+    if let Some(start_time) = next_game_start {
+        // If next_game_start is passed, it should be in the future
+        if start_time <= env.block.time.seconds() {
+            return Err(ContractError::InvalidNextGameStart {});
+        }
+
+        let game_duration = GAME_CONFIG.load(deps.storage)?.game_duration;
+        GAME_STATE.update(deps.storage, |mut game_state| -> Result<_, ContractError> {
+            game_state.start_time = start_time;
+            game_state.end_time = start_time + game_duration;
+            Ok(game_state)
+        })?;
+
+        response_attributes.push(attr("next_game_start", start_time.to_string()));
+    }
+
+    // Handle raffle NFT update, if a raffle_id is passed we assume we want to set an NFT for the next round's raffle
+    if let Some(raffle_id) = &new_raffle_cw721_id {
+        // Ensure both or neither options are provided or throw an error
+        if new_raffle_cw721_id.is_some() != new_raffle_cw721_addr.is_some() {
+            return Err(ContractError::InvalidRaffleNft {});
+        }
+
+        // Update the raffle CW721 token ID and address, only if there is no one yet
+        RAFFLE.update(deps.storage, |mut raffle| -> Result<_, ContractError> {
+            if raffle.cw721_token_id.is_none() {
+                raffle.cw721_token_id = Some(raffle_id.clone());
+                raffle.cw721_addr = new_raffle_cw721_addr.clone();
+            } else {
+                // Otherwise throw
+                return Err(ContractError::InvalidRaffleNft {});
+            }
+            Ok(raffle)
+        })?;
+
+        // Transfer the NFT
+        let transfer_nft_msg = SubMsg::reply_always(
+            WasmMsg::Execute {
+                contract_addr: new_raffle_cw721_addr.clone().unwrap(),
+                msg: to_json_binary(&cw721::Cw721ExecuteMsg::TransferNft {
+                    recipient: env.contract.address.to_string(),
+                    token_id: raffle_id.to_string(),
+                })?,
+                funds: vec![],
+            },
+            ReplyMsg::TransferNft as u64,
+        );
+        submsgs.push(transfer_nft_msg);
+        response_attributes.extend(vec![
+            attr("raffle_cw721_addr", new_raffle_cw721_addr.unwrap()),
+            attr("raffle_cw721_id", raffle_id),
+        ]);
+    }
+
+    // Handle raffle funds update, validate_funds to obtain current sent funds
+    let game_denom = GAME_CONFIG.load(deps.storage)?.game_denom;
+    let total_amount = validate_funds(&info.funds, &game_denom).unwrap_or_default();
+    if !total_amount.is_zero() {
+        // Update the denom amount for the next raffle incrementing any previous value
+        RAFFLE.update(deps.storage, |mut raffle| -> Result<_, ContractError> {
+            raffle.denom_amount += total_amount;
+            Ok(raffle)
+        })?;
+        response_attributes.push(attr("raffle_denom_amount", total_amount.to_string()));
+        // this is only the new amount sent
+    }
+
+    // Throw an error if we did nothing in the previous workflow, this method is meant to be executed for a reason
+    if response_attributes.is_empty() {
+        return Err(ContractError::InvalidInput {});
+    }
+
+    // Create response with dynamic attributes based on the current execution
+    let mut response = Response::new()
+        .add_attributes(vec![
+            attr("method", "execute"),
+            attr("action", "update_next_game"),
+        ])
+        .add_attributes(response_attributes);
+
+    // If submsgs is not empty, append the message to transfer the NFT
+    if !submsgs.is_empty() {
+        response = response.add_submessages(submsgs);
+    }
+
+    Ok(response)
 }

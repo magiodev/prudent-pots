@@ -66,7 +66,6 @@ pub struct FirstBidder {
     pub time: u64,
 }
 
-pub const OLD_GAME_CONFIG: Item<OldGameConfig> = Item::new("game_config");
 pub const GAME_CONFIG: Item<GameConfig> = Item::new("game_config_v2");
 pub const GAME_STATE: Item<GameState> = Item::new("game_state");
 pub const POT_STATES: Map<u8, TokenAllocation> = Map::new("pot_states");

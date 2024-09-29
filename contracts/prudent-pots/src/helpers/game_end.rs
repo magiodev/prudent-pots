@@ -190,8 +190,8 @@ pub fn process_raffle_winner(
     // TODO_FUTURE: Early return here if there is no raffle
     // if raffle.nft_id && addr is none and denom_prize is_zero() return all default values.
 
-    let mut msgs = Vec::new();
-    let mut submsgs = Vec::new();
+    let mut msgs = vec![];
+    let mut submsgs = vec![];
     let mut raffle_response_attributes = vec![];
 
     // this is common for yes_raffle and no_raffle scenarios
@@ -213,12 +213,11 @@ pub fn process_raffle_winner(
                         })?,
                         funds: vec![],
                     },
-                    ReplyMsg::GameEnd as u64,
+                    ReplyMsg::TransferNft as u64,
                 );
                 submsgs.push(transfer_nft_msg);
                 // Append attributes
                 raffle_response_attributes.extend(vec![
-                    attr("raffle_winner", recipient.to_string()),
                     attr("raffle_outgoing_nft_addr", cw721_addr),
                     attr("raffle_outgoing_nft_id", token_id),
                 ]);
@@ -233,10 +232,10 @@ pub fn process_raffle_winner(
                 msgs.push(send_msg);
             }
             // Append attributes
-            raffle_response_attributes.extend(vec![attr(
-                "raffle_outgoing_tokens_winner",
-                prize_to_distribute,
-            )]);
+            raffle_response_attributes.extend(vec![
+                attr("raffle_winner", recipient.to_string()),
+                attr("raffle_outgoing_tokens_winner", prize_to_distribute),
+            ]);
 
             if !prize_to_treasury.is_zero() {
                 let send_msg = CosmosMsg::Bank(BankMsg::Send {
@@ -289,7 +288,7 @@ pub fn process_raffle_winner(
                 })?,
                 funds: vec![],
             },
-            ReplyMsg::GameEnd as u64,
+            ReplyMsg::TransferNft as u64,
         );
         submsgs.push(transfer_nft_msg);
     }
